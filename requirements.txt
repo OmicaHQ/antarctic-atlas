@@ -1,0 +1,7 @@
+streamlit
+pdfplumber
+requests
+pandas
+plotly
+jieba
+numpy
