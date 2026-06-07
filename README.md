@@ -2,7 +2,7 @@ Antarctic Research Atlas
 
 An interactive educational and research platform for exploring the Antarctic Ice Sheet
 
-Live Demo
+🌐Live Demo
 
 Explore the online application:
 
@@ -32,11 +32,12 @@ Generate scientific stories and animations based on the paper.
 🧪 Mini Research Lab
 Conduct small experiments and data analysis interactively.
 
+🧭 Research Directions
+Explore suggested research questions and directions in Antarctic science.
+
 📄 Read Raw Paper
 Access the full review paper PDF and navigate it within the app.
 
-🧭 Research Directions
-Explore suggested research questions and directions in Antarctic science.
 
 Why this project?
 
