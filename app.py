@@ -2134,30 +2134,30 @@ Why this fits your Atlas:
 elif module == "Antarctic System Explorer":
     st.markdown("""
     <style>
-      /* Antarctic System Explorer: compact top controls, no overlap */
+      /* Antarctic System Explorer: online-safe responsive controls. */
       .block-container {
-        padding-top: 2.65rem !important;
+        padding-top: 2.35rem !important;
       }
       h1, h2, h3 {
         margin-top: .38rem !important;
         margin-bottom: .38rem !important;
       }
 
-      /* Remove the previous negative margins that caused overlapping. */
-      div[data-testid="stVerticalBlock"] { gap: .18rem !important; }
-      div[data-testid="stHorizontalBlock"] { gap: .34rem !important; }
+      /* Keep controls compact without forcing columns into a single crowded strip. */
+      div[data-testid="stVerticalBlock"] { gap: .20rem !important; }
+      div[data-testid="stHorizontalBlock"] { gap: .55rem !important; }
       div[data-testid="stSelectbox"] { margin-top: 0 !important; }
       div[data-testid="stToggle"] {
-        margin-top: 1.82rem !important;
+        margin-top: 0 !important;
         padding-top: 0 !important;
         min-height: 1.9rem !important;
       }
       div[data-testid="stSelectbox"] > label {
-        padding-bottom: .20rem !important;
+        padding-bottom: .18rem !important;
       }
       div[data-testid="stSelectbox"] label,
       div[data-testid="stToggle"] label {
-        margin-bottom: .46rem !important;
+        margin-bottom: .34rem !important;
         font-size: .82rem !important;
         font-weight: 760 !important;
       }
@@ -2166,14 +2166,14 @@ elif module == "Antarctic System Explorer":
         display: flex;
         align-items: baseline;
         gap: 18px;
-        margin: .55rem 0 .62rem 0;
+        margin: .55rem 0 .58rem 0;
         flex-wrap: wrap;
       }
       .system-title-row .system-title {
         margin: 0;
         color: #f8fbff;
-        font-size: 2.72rem;
-        line-height: 1.20;
+        font-size: clamp(2.05rem, 4vw, 2.72rem);
+        line-height: 1.18;
         font-weight: 800;
         letter-spacing: -0.03em;
       }
@@ -2184,61 +2184,65 @@ elif module == "Antarctic System Explorer":
         font-weight: 500;
         max-width: 980px;
       }
-      .system-control-title {
-        margin: .03rem 0 .82rem 0 !important;
-        padding-bottom: .12rem !important;
-        font-size: .84rem;
-        font-weight: 850;
-        letter-spacing: .01em;
-        color: rgba(158, 216, 245, .82);
-      }
-      .system-layer-row {
-        /* Keep the Observation layers title fixed, but move the six pills
-           a little lower and align them with even visual spacing. */
-        margin-top: 1.86rem !important;
-        margin-left: 0 !important;
-      }
       .system-control-strip {
-        margin-top: .18rem;
+        margin-top: .10rem;
         padding: 0;
         border-radius: 0;
         background: transparent !important;
         border: 0 !important;
         box-shadow: none !important;
       }
+      .system-control-title {
+        margin: .42rem 0 .34rem 0 !important;
+        padding-bottom: .02rem !important;
+        font-size: .84rem;
+        font-weight: 850;
+        letter-spacing: .01em;
+        color: rgba(158, 216, 245, .82);
+      }
+      .system-layer-row {
+        margin-top: .12rem !important;
+        margin-left: 0 !important;
+      }
 
-      /* Observation layer buttons: compact translucent pills. */
-      div.stButton > button[kind="secondary"],
-      
-div.stButton > button[kind="primary"] {
-    border-radius: 999px !important;
-    padding: 0.7rem 1.35rem !important;
-    font-weight: 700 !important;
-    background: rgba(56, 189, 248, 0.46) !important; /* 半透明蓝 */
-    border: 1px solid rgba(125, 211, 252, 0.72) !important;
-    color: rgba(232, 250, 255, 0.98) !important;
-    text-shadow: 0 0 6px rgba(255,255,255,0.18);
-    box-shadow:
-        0 0 4px rgba(56, 189, 248, 0.4),
-        0 0 16px rgba(56, 189, 248, 0.26),
-        inset 0 0 2px rgba(224,252,255,0.2);
-    backdrop-filter: blur(8px);
-    transition: all 0.16s ease !important;
-}
+      /* Observation layer buttons: compact translucent pills, equal width, deployment-safe. */
+      div.stButton > button {
+        min-height: 44px !important;
+        height: 44px !important;
+        border-radius: 999px !important;
+        padding: .48rem .78rem !important;
+        font-size: .84rem !important;
+        line-height: 1.05 !important;
+        font-weight: 780 !important;
+        white-space: nowrap !important;
+        background: rgba(56, 189, 248, 0.34) !important;
+        border: 1px solid rgba(125, 211, 252, 0.58) !important;
+        color: rgba(232, 250, 255, 0.98) !important;
+        text-shadow: 0 0 6px rgba(255,255,255,0.15);
+        box-shadow:
+          0 0 4px rgba(56, 189, 248, 0.26),
+          0 0 14px rgba(56, 189, 248, 0.18),
+          inset 0 0 2px rgba(224,252,255,0.16);
+        backdrop-filter: blur(8px);
+        transition: all 0.16s ease !important;
+      }
+      div.stButton > button[kind="primary"] {
+        background: rgba(56, 189, 248, 0.52) !important;
+        border-color: rgba(186, 230, 253, 0.90) !important;
+        box-shadow:
+          0 0 8px rgba(56, 189, 248, 0.44),
+          0 0 24px rgba(56, 189, 248, 0.30),
+          inset 0 0 4px rgba(224,252,255,0.22) !important;
+      }
+      div.stButton > button:hover {
+        background: rgba(14, 165, 233, 0.56) !important;
+        border-color: rgba(186, 230, 253, 0.92) !important;
+        transform: translateY(-1px);
+      }
 
-div.stButton > button[kind="primary"]:hover {
-    background: rgba(14, 165, 233, 0.58) !important;
-    border-color: rgba(186, 230, 253, 0.90) !important;
-    box-shadow:
-        0 0 8px rgba(56, 189, 248, 0.46),
-        0 0 24px rgba(56, 189, 248, 0.36),
-        inset 0 0 4px rgba(224,252,255,0.25);
-    transform: translateY(-1px);
-}
-
-      /* Let the visualization start closer to the controls. */
+      /* Let the visualization start close to the controls without overlap. */
       iframe[title="streamlit_component.streamlit.components.v1.html"] {
-        margin-top: -0.18rem !important;
+        margin-top: .05rem !important;
       }
     </style>
     """, unsafe_allow_html=True)
@@ -2597,7 +2601,11 @@ div.stButton > button[kind="primary"]:hover {
         st.session_state["system_visual_layers"] = [st.session_state["system_tool_select"]]
 
     st.markdown("<div class='system-control-strip'>", unsafe_allow_html=True)
-    case_col, layers_col, mode_col = st.columns([0.24, 0.47, 0.29], gap="small")
+
+    # Deployment-safe layout: keep Case Study and Multi-layer mode on the first row,
+    # then give Observation layers a full row. This prevents Streamlit Cloud / browser
+    # width differences from squeezing the toggle to the far right or overlapping pills.
+    case_col, mode_col = st.columns([0.58, 0.42], gap="large")
     with case_col:
         selected_case = st.selectbox("Case Study", list(cases.keys()), key="system_case_select")
     with mode_col:
@@ -2607,41 +2615,41 @@ div.stButton > button[kind="primary"]:hover {
             key="system_multilayer_mode",
             help="Off: buttons choose the primary observation layer. On: buttons become multi-select visible layers."
         )
-    with layers_col:
-        st.markdown("<div class='system-control-title'>Observation layers</div>", unsafe_allow_html=True)
-        st.markdown("<div class='system-layer-row'>", unsafe_allow_html=True)
-        layer_cols = st.columns([1, 1, 1, 1, 1, 1], gap="small")
-        for i, layer_name in enumerate(tool_order):
-            with layer_cols[i]:
-                if layer_mode:
-                    active = layer_name in st.session_state["system_visual_layers"]
-                    if st.button(
-                        layer_label_map[layer_name],
-                        key=f"system_layer_btn_multi_{i}",
-                        type="primary" if active else "secondary",
-                        use_container_width=False
-                    ):
-                        current_layers = list(st.session_state.get("system_visual_layers", []))
-                        if layer_name in current_layers:
-                            current_layers = [x for x in current_layers if x != layer_name]
-                        else:
-                            current_layers.append(layer_name)
-                        if not current_layers:
-                            current_layers = [st.session_state["system_tool_select"]]
-                        st.session_state["system_visual_layers"] = current_layers
-                        st.rerun()
-                else:
-                    active = layer_name == st.session_state["system_tool_select"]
-                    if st.button(
-                        layer_label_map[layer_name],
-                        key=f"system_layer_btn_single_{i}",
-                        type="primary" if active else "secondary",
-                        use_container_width=False
-                    ):
-                        st.session_state["system_tool_select"] = layer_name
-                        st.session_state["system_visual_layers"] = [layer_name]
-                        st.rerun()
-        st.markdown("</div>", unsafe_allow_html=True)
+
+    st.markdown("<div class='system-control-title'>Observation layers</div>", unsafe_allow_html=True)
+    st.markdown("<div class='system-layer-row'>", unsafe_allow_html=True)
+    layer_cols = st.columns([1, 1, 1, 1, 1, 1], gap="small")
+    for i, layer_name in enumerate(tool_order):
+        with layer_cols[i]:
+            if layer_mode:
+                active = layer_name in st.session_state["system_visual_layers"]
+                if st.button(
+                    layer_label_map[layer_name],
+                    key=f"system_layer_btn_multi_{i}",
+                    type="primary" if active else "secondary",
+                    use_container_width=True
+                ):
+                    current_layers = list(st.session_state.get("system_visual_layers", []))
+                    if layer_name in current_layers:
+                        current_layers = [x for x in current_layers if x != layer_name]
+                    else:
+                        current_layers.append(layer_name)
+                    if not current_layers:
+                        current_layers = [st.session_state["system_tool_select"]]
+                    st.session_state["system_visual_layers"] = current_layers
+                    st.rerun()
+            else:
+                active = layer_name == st.session_state["system_tool_select"]
+                if st.button(
+                    layer_label_map[layer_name],
+                    key=f"system_layer_btn_single_{i}",
+                    type="primary" if active else "secondary",
+                    use_container_width=True
+                ):
+                    st.session_state["system_tool_select"] = layer_name
+                    st.session_state["system_visual_layers"] = [layer_name]
+                    st.rerun()
+    st.markdown("</div>", unsafe_allow_html=True)
     st.markdown("</div>", unsafe_allow_html=True)
 
     selected_tool = st.session_state["system_tool_select"]
