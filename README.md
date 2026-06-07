@@ -23,28 +23,28 @@ The platform combines scientific visualization, interactive exploration, AI-assi
 ## Features
 
 ### 🌌 Research Universe Explorer
+![Research Universe Explorer](Research Universe Explorer.png)
+Screenshot: Explore key concepts and relationships.
 
-Explore key concepts and relationships in Antarctic Ice Sheet research.
-
-### 🛰️ Antarctic System Explorer
-
-Visualize satellite observations and compare different glaciers and ice shelves.
-
-### 🎨 AI Visualizer
-
-Generate scientific stories and animations based on the paper.
+### 🧭 Research Compass
+![Research Compass](Research Compass.png)
+Screenshot: Navigate suggested research questions and directions.
 
 ### 🧪 Mini Research Lab
+![Mini Research Lab 1](Mini Research Lab1.png)
+![Mini Research Lab 1-1](Mini Research Lab1-1.png)
+![Mini Research Lab 2](Mini Research Lab2.png)
+![Mini Research Lab 3](Mini Research Lab3.png)
+Screenshot: Conduct small experiments and data analysis interactively.
 
-Conduct small experiments and data analysis interactively.
+### 🛰️ Antarctic System Explorer
+Screenshot: Visualize satellite observations and compare different glaciers and ice shelves.
 
 ### 📄 Read Raw Paper
-
 Access the full review paper PDF and navigate it within the app.
 
-### 🧭 Research Directions
-
-Explore suggested research questions and directions in Antarctic science.
+### 🎨 AI Visualizer
+Generate scientific stories and animations based on the paper.
 
 ---
 
@@ -58,8 +58,8 @@ This project explores a different approach: transforming a scientific review int
 
 ## Technical Notes
 
-* The local AI model based on Ollama only works on the developer's machine.
-* Online users can use DeepSeek API or OpenAI API for AI-driven features.
+- The local AI model based on Ollama only works on the developer's machine.  
+- Online users can use DeepSeek API or OpenAI API for AI-driven features.
 
 ---
 
@@ -69,34 +69,24 @@ Clone the repository:
 
 ```bash
 git clone https://github.com/OmicaHQ/antarctic-atlas.git
-```
 
 Install dependencies:
 
-```bash
 pip install -r requirements.txt
-```
 
 Run the app locally:
 
-```bash
 streamlit run app.py
-```
 
 Then open:
 
-```text
 http://localhost:8501
-```
+Credits
 
----
-
-## Credits
-
-Developed by **Omica Chow**
+Developed by Omica Chow
 
 Based on:
 
-**Noble et al. (2020), Reviews of Geophysics**
+Noble et al. (2020), Reviews of Geophysics
 
-Built with **Streamlit** and **Python**.
+Built with Streamlit and Python.
