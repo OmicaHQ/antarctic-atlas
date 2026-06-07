@@ -4,7 +4,7 @@
 
 🌐 **Live Demo**
 
-https://antarctic-research-atlas.streamlit.app/
+https://antarctic-research-atlas.streamlit.app
 
 ---
 
