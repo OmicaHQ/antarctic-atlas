@@ -104,4 +104,7 @@ Based on:
 
 Noble et al. (2020), Reviews of Geophysics
 
+## License
+
+This project is licensed under the MIT License.
 Built with Streamlit and Python.
