@@ -96,7 +96,10 @@ streamlit run app.py
 Then open:
 
 http://localhost:8501
-Credits
+
+```
+
+## Credits
 
 Developed by Omica Chow
 
@@ -105,8 +108,6 @@ Based on:
 Noble et al. (2020), Reviews of Geophysics
 
 Built with Streamlit and Python.
-
-```
 
 ## License
 
