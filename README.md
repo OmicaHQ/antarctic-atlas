@@ -23,29 +23,44 @@ The platform combines scientific visualization, interactive exploration, AI-assi
 ## Features
 
 ### 🌌 Research Universe Explorer
-![Research Universe Explorer](Research Universe Explorer.png)
-Screenshot: Explore key concepts and relationships.
 
-### 🧭 Research Compass
-![Research Compass](Research Compass.png)
-Screenshot: Navigate suggested research questions and directions.
+![Research Universe Explorer](research_universe_explorer.png)
 
-### 🧪 Mini Research Lab
-![Mini Research Lab 1](Mini Research Lab1.png)
-![Mini Research Lab 1-1](Mini Research Lab1-1.png)
-![Mini Research Lab 2](Mini Research Lab2.png)
-![Mini Research Lab 3](Mini Research Lab3.png)
-Screenshot: Conduct small experiments and data analysis interactively.
+Explore key concepts and relationships in Antarctic Ice Sheet research through an interactive knowledge universe.
 
 ### 🛰️ Antarctic System Explorer
-Screenshot: Visualize satellite observations and compare different glaciers and ice shelves.
 
-### 📄 Read Raw Paper
-Access the full review paper PDF and navigate it within the app.
+![Antarctic System Explorer](antarctic_system_explorer.png)
+
+Visualize satellite observations and compare different glaciers and ice shelves using multiple observation layers.
 
 ### 🎨 AI Visualizer
-Generate scientific stories and animations based on the paper.
 
+![AI Visualizer](ai_visualizer.png)
+
+Generate scientific stories and animations based on the review paper.
+
+### 🧪 Mini Research Lab
+
+![Mini Research Lab](mini_research_lab1.png)
+
+![Mini Research Lab](mini_research_lab2.png)
+
+![Mini Research Lab](mini_research_lab3.png)
+
+![Mini Research Lab](mini_research_lab4.png)
+
+Conduct interactive experiments and explore Antarctic system responses under different scenarios.
+
+### 🧭 Research Compass
+
+![Research Compass](research_compass.png)
+
+Explore future research questions, open scientific challenges, and emerging directions in Antarctic science.
+
+### 📄 Read Raw Paper
+
+Access the full review paper PDF and navigate it directly within the platform.
 ---
 
 ## Why This Project?
