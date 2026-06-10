@@ -4,45 +4,45 @@
 
 Current release: **v2.0.5**
 
-🌐 **Live Demo**
+[Live Demo](https://antarctic-research-atlas.streamlit.app/)
 
-https://antarctic-research-atlas.streamlit.app/
+[Download the latest Windows installer](https://github.com/OmicaHQ/antarctic-atlas/releases/latest)
 
 ---
 
 ## Project Overview
 
-Antarctic Research Atlas transforms a 89-page review paper:
+Antarctic Research Atlas transforms an 89-page review paper:
 
-**Noble, T. L. et al. (2020). *The Sensitivity of the Antarctic Ice Sheet to a Changing Climate: Past, Present, and Future.* Reviews of Geophysics, 58, e2019RG000663.**
+**Noble, T. L. et al. (2020). _The Sensitivity of the Antarctic Ice Sheet to a Changing Climate: Past, Present, and Future._ Reviews of Geophysics, 58, e2019RG000663.**
 
 into a visual, AI-assisted platform where users can explore Antarctic research interactively.
 
-The platform combines scientific visualization, interactive exploration, AI-assisted storytelling, educational tools, and a desktop wrapper for local use.
+The platform combines scientific visualization, interactive exploration, AI-assisted storytelling, educational tools, and a Windows desktop wrapper for local use.
 
 ---
 
 ## Features
 
-### 🌌 Research Universe Explorer
+### Research Universe Explorer
 
 ![Research Universe Explorer](research_universe_explorer.png)
 
 Explore key concepts and relationships in Antarctic Ice Sheet research through an interactive knowledge universe.
 
-### 🛰️ Antarctic System Explorer
+### Antarctic System Explorer
 
 ![Antarctic System Explorer](antarctic_system_explorer.png)
 
 Visualize satellite observations and compare different glaciers and ice shelves using multiple observation layers.
 
-### 🎨 AI Visualizer
+### AI Visualizer
 
 ![AI Visualizer](ai_visualizer.png)
 
 Generate scientific stories and animations based on the review paper.
 
-### 🧪 Mini Research Lab
+### Mini Research Lab
 
 ![Mini Research Lab](mini_research_lab1.png)
 
@@ -54,35 +54,36 @@ Generate scientific stories and animations based on the review paper.
 
 Conduct interactive experiments and explore Antarctic system responses under different scenarios.
 
-### 🧭 Research Compass
+### Research Compass
 
 ![Research Compass](research_compass.png)
 
 Explore future research questions, open scientific challenges, and emerging directions in Antarctic science.
 
-### 📄 Read Raw Paper
+### Read Raw Paper
 
 Access the full review paper PDF and navigate it directly within the platform.
 
 ---
 
-## Why This Project?
+## Windows Desktop App
 
-Most review papers are read linearly from beginning to end.
+The recommended Windows download is the latest installer on the GitHub Releases page:
 
-This project explores a different approach: transforming a scientific review into an interactive environment where users can navigate concepts, observations, visualizations, experiments, and future research directions.
+[Antarctic Atlas v2.0.5 - Windows Desktop Installer](https://github.com/OmicaHQ/antarctic-atlas/releases/tag/v2.0.5)
+
+Installer file:
+
+- `Antarctic-Atlas-v2.0.5-Setup.exe`
+- SHA256: `C1F8734F7BBB56CFD7CBF6C3922479B9FCBDE9B34C78EDAB69C02FAA42B4AD11`
+
+The installer creates Start Menu and optional Desktop shortcuts for one-click launch. No Python, Streamlit, or manual dependency setup is required for the installer version.
+
+Note: the installer metadata shows `Omica Chow`, but the installer is not code-signed yet. Windows may still show an unknown-publisher warning until a code-signing certificate is applied.
 
 ---
 
-## Technical Notes
-
-- The local AI backend uses Ollama and currently targets `gemma4:e4b`.
-- Online users can use DeepSeek API or OpenAI API for AI-driven features.
-- API keys are optional; evidence-only mode works without an API key.
-
----
-
-## Getting Started
+## Run From Source
 
 Clone the repository:
 
@@ -97,7 +98,7 @@ Install dependencies:
 pip install -r requirements.txt
 ```
 
-Run the app locally:
+Run the Streamlit app locally:
 
 ```bash
 streamlit run app.py
@@ -118,9 +119,9 @@ DEEPSEEK_API_KEY = ""
 OPENAI_API_KEY = ""
 ```
 
-Do not commit real API keys.
+Do not commit real API keys. Evidence-only mode works without an API key.
 
-## Desktop App
+## Desktop Build Notes
 
 The repository includes the desktop app entry point and PyInstaller build configuration:
 
@@ -140,26 +141,19 @@ Build the Windows desktop app:
 pyinstaller "Antarctic Atlas.spec"
 ```
 
-Build outputs are ignored by Git and should be distributed through release assets rather than committed to the repository.
-
-Windows installer:
-
-- `release-assets/Antarctic-Atlas-v2.0.5-Setup.exe`
-- SHA256: `C1F8734F7BBB56CFD7CBF6C3922479B9FCBDE9B34C78EDAB69C02FAA42B4AD11`
-
-The installer creates Start Menu and optional Desktop shortcuts for one-click launch.
+Release installers should be distributed through GitHub Releases. The `release-assets/` folder is kept for historical package references.
 
 See `CHANGELOG.md` for version notes.
 
 ## Version History
 
 - `v1.0`: Preserved GitHub version before the local desktop and visual polish update.
-- `v2.0`: Current local version with iOS-style visual polish, desktop packaging support, improved module layouts, local Ollama model update, and UI bug fixes.
+- `v2.0`: Local version with iOS-style visual polish, desktop packaging support, improved module layouts, local Ollama model update, and UI bug fixes.
 - `v2.0.1`: Documentation update for the desktop app side and changelog.
 - `v2.0.2`: Bug fix for the Research Universe map knowledge card.
-- `v2.0.3`: Bug fix for the Research Universe diagonal glass highlight artifact and Windows installer refresh.
+- `v2.0.3`: Windows installer release and Research Universe diagonal glass highlight fix.
 - `v2.0.4`: Bug fix for the desktop window icon and remaining Research Universe diagonal background artifact.
-- `v2.0.5`: Installer metadata update with `Omica Chow` as publisher.
+- `v2.0.5`: Current Windows desktop release with installer publisher metadata updated to `Omica Chow`.
 
 ## Credits
 
