@@ -1,5 +1,9 @@
 # Antarctic Research Atlas
 
+<p align="center">
+  <img src="assets/antarctic-atlas-logo.png" alt="Antarctic Atlas logo" width="720">
+</p>
+
 **An interactive educational and research platform for exploring the Antarctic Ice Sheet**
 
 Current release: **v2.0.5**
