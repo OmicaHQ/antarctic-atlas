@@ -1,7 +1,7 @@
 # Antarctic Research Atlas
 
 <p align="center">
-  <img src="assets/antarctic-atlas-logo.png" alt="Antarctic Atlas logo" width="720">
+  <img src="assets/antarctic-atlas-social-preview.png" alt="Antarctic Atlas logo" width="820">
 </p>
 
 **An interactive educational and research platform for exploring the Antarctic Ice Sheet**
