@@ -2,7 +2,7 @@
 
 **An interactive educational and research platform for exploring the Antarctic Ice Sheet**
 
-Current release: **v2.0**
+Current release: **v2.0.1**
 
 🌐 **Live Demo**
 
@@ -120,9 +120,21 @@ OPENAI_API_KEY = ""
 
 Do not commit real API keys.
 
-## Desktop Build
+## Desktop App
 
-The repository includes a PyInstaller wrapper for the Windows desktop app.
+The repository includes the desktop app entry point and PyInstaller build configuration:
+
+- `desktop_app.py`: launches the Streamlit project inside a desktop window.
+- `Antarctic Atlas.spec`: PyInstaller configuration for building the Windows app package.
+- `app.py`: shared app source used by both Streamlit and the desktop wrapper.
+
+Run the desktop app from source:
+
+```bash
+python desktop_app.py
+```
+
+Build the Windows desktop app:
 
 ```bash
 pyinstaller "Antarctic Atlas.spec"
@@ -130,10 +142,13 @@ pyinstaller "Antarctic Atlas.spec"
 
 Build outputs are ignored by Git and should be distributed through release assets rather than committed to the repository.
 
+See `CHANGELOG.md` for version notes.
+
 ## Version History
 
 - `v1.0`: Preserved GitHub version before the local desktop and visual polish update.
 - `v2.0`: Current local version with iOS-style visual polish, desktop packaging support, improved module layouts, local Ollama model update, and UI bug fixes.
+- `v2.0.1`: Documentation update for the desktop app side and changelog.
 
 ## Credits
 
