@@ -2,9 +2,11 @@
 
 **An interactive educational and research platform for exploring the Antarctic Ice Sheet**
 
+Current release: **v2.0**
+
 🌐 **Live Demo**
 
-https://antarctic-research-atlas.streamlit.app
+https://antarctic-research-atlas.streamlit.app/
 
 ---
 
@@ -16,7 +18,7 @@ Antarctic Research Atlas transforms a 89-page review paper:
 
 into a visual, AI-assisted platform where users can explore Antarctic research interactively.
 
-The platform combines scientific visualization, interactive exploration, AI-assisted storytelling, and educational tools to make Antarctic Ice Sheet research more accessible.
+The platform combines scientific visualization, interactive exploration, AI-assisted storytelling, educational tools, and a desktop wrapper for local use.
 
 ---
 
@@ -62,6 +64,7 @@ Explore future research questions, open scientific challenges, and emerging dire
 
 Access the full review paper PDF and navigate it directly within the platform.
 
+---
 
 ## Why This Project?
 
@@ -73,8 +76,9 @@ This project explores a different approach: transforming a scientific review int
 
 ## Technical Notes
 
-- The local AI model based on Ollama only works on the developer's machine.  
+- The local AI backend uses Ollama and currently targets `gemma4:e4b`.
 - Online users can use DeepSeek API or OpenAI API for AI-driven features.
+- API keys are optional; evidence-only mode works without an API key.
 
 ---
 
@@ -84,20 +88,52 @@ Clone the repository:
 
 ```bash
 git clone https://github.com/OmicaHQ/antarctic-atlas.git
+cd antarctic-atlas
+```
 
 Install dependencies:
 
+```bash
 pip install -r requirements.txt
+```
 
 Run the app locally:
 
+```bash
 streamlit run app.py
+```
 
 Then open:
 
+```text
 http://localhost:8501
-
 ```
+
+## API Keys
+
+AI features are optional. For local development, copy `.streamlit/secrets.example.toml` to `.streamlit/secrets.toml` and add your own keys:
+
+```toml
+DEEPSEEK_API_KEY = ""
+OPENAI_API_KEY = ""
+```
+
+Do not commit real API keys.
+
+## Desktop Build
+
+The repository includes a PyInstaller wrapper for the Windows desktop app.
+
+```bash
+pyinstaller "Antarctic Atlas.spec"
+```
+
+Build outputs are ignored by Git and should be distributed through release assets rather than committed to the repository.
+
+## Version History
+
+- `v1.0`: Preserved GitHub version before the local desktop and visual polish update.
+- `v2.0`: Current local version with iOS-style visual polish, desktop packaging support, improved module layouts, local Ollama model update, and UI bug fixes.
 
 ## Credits
 

@@ -1,0 +1,16 @@
+.streamlit/secrets.toml
+.streamlit/*.log
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+.env
+.DS_Store
+*.log
+atlas_desktop.log
+build/
+dist/
+backups/
+*.tmp
+*.bak

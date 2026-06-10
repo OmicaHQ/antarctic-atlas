@@ -5,3 +5,5 @@ pandas
 plotly
 jieba
 numpy
+pywebview
+pyinstaller

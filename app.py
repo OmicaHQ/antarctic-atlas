@@ -1,4 +1,4 @@
-import streamlit as st
+﻿import streamlit as st
 import streamlit.components.v1 as components
 import pdfplumber
 import re
@@ -10,25 +10,40 @@ import json
 import os
 import numpy as np
 import textwrap
+import html
+from pathlib import Path
 
 st.set_page_config(page_title="Antarctic Research Atlas", layout="wide", initial_sidebar_state="collapsed")
 
-PDF_PATH = "Reviews of Geophysics - 2020 - Noble - The Sensitivity of the Antarctic Ice Sheet to a Changing Climate  Past  Present  and.pdf"
+BASE_DIR = Path(__file__).resolve().parent
+PDF_FILENAME = "Reviews of Geophysics - 2020 - Noble - The Sensitivity of the Antarctic Ice Sheet to a Changing Climate  Past  Present  and.pdf"
+PDF_PATH = BASE_DIR / PDF_FILENAME
 OLLAMA_URL = "http://127.0.0.1:11434"
-OLLAMA_MODEL = "gemma3:4b"
+OLLAMA_MODEL = "gemma4:e4b"
 DEEPSEEK_BASE_URL = "https://api.deepseek.com"
 DEEPSEEK_MODEL = "deepseek-chat"
 OPENAI_BASE_URL = "https://api.openai.com/v1"
 OPENAI_MODEL = "gpt-4o"
+OPENAI_MODEL_OPTIONS = ["gpt-4o", "gpt-4.1"]
 
 @st.cache_data
 def load_pdf():
+    if not PDF_PATH.exists():
+        st.error(
+            "Source PDF not found. Put the review paper in the project root with this exact filename: "
+            f"{PDF_FILENAME}"
+        )
+        st.stop()
+
     pages = []
     with pdfplumber.open(PDF_PATH) as pdf:
         for i, page in enumerate(pdf.pages):
             text = page.extract_text()
             if text:
                 pages.append({"page": i + 1, "text": text})
+    if not pages:
+        st.error("The PDF was found, but no readable text could be extracted.")
+        st.stop()
     return pages
 
 def clean_text(text):
@@ -52,6 +67,30 @@ def search_pages(pages, keywords, max_results=5):
             if item["page"] in [1, 2, 3, 4, 5]:
                 results.append({"page": item["page"], "score": 0, "text": clean_text(item["text"])})
     return results
+
+def build_search_excerpt(text, keywords, radius=220):
+    cleaned = clean_text(text)
+    lowered = cleaned.lower()
+    hit_positions = [lowered.find(k.lower()) for k in keywords if k and lowered.find(k.lower()) >= 0]
+    if hit_positions:
+        center = min(hit_positions)
+        start = max(0, center - radius)
+        end = min(len(cleaned), center + radius)
+    else:
+        start, end = 0, min(len(cleaned), radius * 2)
+    excerpt = cleaned[start:end]
+    prefix = "..." if start > 0 else ""
+    suffix = "..." if end < len(cleaned) else ""
+    escaped = html.escape(prefix + excerpt + suffix)
+    for keyword in sorted(set(keywords), key=len, reverse=True):
+        if len(keyword) > 1:
+            escaped = re.sub(
+                re.escape(html.escape(keyword)),
+                lambda m: f"<mark>{m.group(0)}</mark>",
+                escaped,
+                flags=re.IGNORECASE,
+            )
+    return escaped
 
 def check_ollama():
     try:
@@ -506,7 +545,7 @@ if not st.session_state["entered_project"]:
     </style>
     <div class="landing-wrap">
       <div class="landing-card">
-        <h1>🌍 Antarctic Ice Sheet Research Atlas</h1>
+        <h1>&#127758; Antarctic Ice Sheet Research Atlas</h1>
         <p>An interactive research universe for exploring the Antarctic Ice Sheet review paper.</p>
         <div class="pdf-loaded">PDF loaded successfully, __TOTAL_PAGES__ pages</div>
       </div>
@@ -542,7 +581,325 @@ module = sidebar_module_map[selected_sidebar_label]
 st.markdown("""
 <style>
   .block-container {
-    padding-top: 1.25rem !important;
+    padding-top: 1.65rem !important;
+    max-width: 1280px !important;
+  }
+
+  :root {
+    --ios-bg-0: #030712;
+    --ios-bg-1: #07111f;
+    --ios-glass: rgba(11, 23, 43, .62);
+    --ios-glass-strong: rgba(15, 31, 56, .78);
+    --ios-stroke: rgba(190, 226, 255, .18);
+    --ios-stroke-hot: rgba(132, 208, 255, .48);
+    --ios-text: #f4f9ff;
+    --ios-muted: rgba(220, 236, 248, .70);
+    --ios-blue: #5aa7ff;
+    --ios-cyan: #7edcff;
+    --ios-green: #73f0a2;
+    --ios-shadow: 0 24px 70px rgba(0, 0, 0, .34);
+    --ios-glass-edge: rgba(225, 244, 255, .26);
+    --ios-liquid-sheen: linear-gradient(120deg, transparent 0%, rgba(255,255,255,.13) 28%, rgba(126,220,255,.22) 46%, rgba(255,255,255,.10) 58%, transparent 76%);
+  }
+
+  @keyframes iosRiseIn {
+    from { opacity: 0; transform: translateY(10px) scale(.992); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+  @keyframes iosSoftPulse {
+    0%, 100% { box-shadow: 0 0 0 rgba(126, 220, 255, 0); }
+    50% { box-shadow: 0 0 28px rgba(126, 220, 255, .18); }
+  }
+  @keyframes iosLiquidDrift {
+    0% { background-position: 0% 0%, 100% 18%, 50% 50%; }
+    50% { background-position: 8% 7%, 92% 25%, 53% 45%; }
+    100% { background-position: 0% 0%, 100% 18%, 50% 50%; }
+  }
+  @keyframes iosSheenSweep {
+    from { transform: translateX(-140%) rotate(10deg); opacity: 0; }
+    28% { opacity: 1; }
+    to { transform: translateX(140%) rotate(10deg); opacity: 0; }
+  }
+  @keyframes iosGlassBloom {
+    0%, 100% { border-color: rgba(190, 226, 255, .16); box-shadow: inset 0 1px 0 rgba(255,255,255,.055), 0 14px 38px rgba(0,0,0,.18); }
+    50% { border-color: rgba(126, 220, 255, .32); box-shadow: inset 0 1px 0 rgba(255,255,255,.11), 0 18px 46px rgba(72, 164, 255, .12); }
+  }
+
+  .stApp {
+    color: var(--ios-text);
+    background:
+      radial-gradient(circle at 18% 10%, rgba(90, 167, 255, .16), transparent 28%),
+      radial-gradient(circle at 86% 34%, rgba(126, 220, 255, .08), transparent 26%),
+      linear-gradient(135deg, var(--ios-bg-0) 0%, var(--ios-bg-1) 48%, #020617 100%) !important;
+    background-size: 140% 140%, 160% 160%, 100% 100% !important;
+    animation: iosLiquidDrift 24s ease-in-out infinite;
+  }
+  .stApp::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    background:
+      linear-gradient(135deg, transparent 0%, rgba(255,255,255,.035) 38%, transparent 60%),
+      radial-gradient(circle at 42% 12%, rgba(126,220,255,.08), transparent 28%);
+    mix-blend-mode: screen;
+  }
+  .main .block-container {
+    position: relative;
+    z-index: 1;
+    animation: iosRiseIn .34s cubic-bezier(.2,.8,.2,1) both;
+  }
+
+  h1, h2, h3 {
+    letter-spacing: 0 !important;
+    color: var(--ios-text) !important;
+    text-wrap: balance;
+  }
+  h1 {
+    margin-top: .35rem !important;
+    line-height: 1.14 !important;
+    margin-bottom: .55rem !important;
+    animation: iosRiseIn .34s cubic-bezier(.2,.8,.2,1) both;
+    text-shadow: 0 0 28px rgba(126, 220, 255, .10);
+  }
+
+  .atlas-module-title,
+  .visualizer-intro,
+  .directions-title-row,
+  .system-title-row {
+    position: relative !important;
+    overflow: hidden !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 18px !important;
+    flex-wrap: wrap !important;
+    margin: 1.12rem 0 .68rem 0 !important;
+    padding: 18px 20px !important;
+    border-radius: 28px !important;
+    border: 1px solid rgba(210, 238, 255, .18) !important;
+    background:
+      radial-gradient(circle at 12% 0%, rgba(255,255,255,.11), transparent 35%),
+      radial-gradient(circle at 82% 30%, rgba(126,220,255,.08), transparent 30%),
+      linear-gradient(180deg, rgba(17,35,62,.62), rgba(5,13,27,.38)) !important;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.12), 0 18px 52px rgba(0,0,0,.20) !important;
+    backdrop-filter: blur(22px) saturate(1.32);
+    animation: iosRiseIn .34s cubic-bezier(.2,.8,.2,1) both;
+  }
+  .atlas-module-title::before,
+  .visualizer-intro::before,
+  .directions-title-row::before,
+  .system-title-row::before {
+    content: "";
+    position: absolute;
+    inset: -80% -35%;
+    background: var(--ios-liquid-sheen);
+    transform: translateX(-28%) rotate(10deg);
+    opacity: .36;
+    pointer-events: none;
+  }
+  .atlas-module-title h1,
+  .visualizer-intro h1,
+  .directions-title-row h1 {
+    position: relative;
+    margin: 0 !important;
+    font-size: clamp(2rem, 4vw, 2.65rem) !important;
+    line-height: 1.1 !important;
+    white-space: normal !important;
+  }
+  .system-title-row .system-title {
+    position: relative;
+    margin: 0 !important;
+    font-size: clamp(2rem, 4vw, 2.65rem) !important;
+    line-height: 1.1 !important;
+  }
+  .atlas-module-title p,
+  .visualizer-intro p,
+  .directions-title-row p,
+  .system-title-row .system-inline-hint {
+    position: relative;
+    flex: 1 1 420px;
+    min-width: 260px;
+    margin: 0 !important;
+    color: rgba(221, 240, 252, .76) !important;
+    font-size: .9rem !important;
+    line-height: 1.35 !important;
+    max-width: 980px !important;
+  }
+
+  div[data-testid="stVerticalBlock"] > div:has(> div[data-testid="stMetric"]),
+  div[data-testid="stAlert"],
+  div[data-testid="stExpander"],
+  div[data-testid="stTextArea"] textarea {
+    position: relative;
+    overflow: hidden;
+    border-radius: 18px !important;
+    border: 1px solid var(--ios-glass-edge) !important;
+    background:
+      radial-gradient(circle at 12% 0%, rgba(255,255,255,.10), transparent 32%),
+      linear-gradient(180deg, rgba(20, 38, 66, .78), rgba(7, 15, 29, .54)) !important;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.12), inset 0 -1px 0 rgba(126,220,255,.07), 0 18px 48px rgba(0,0,0,.22) !important;
+    backdrop-filter: blur(22px) saturate(1.35);
+  }
+
+  div[data-testid="stAlert"] {
+    animation: iosRiseIn .28s cubic-bezier(.2,.8,.2,1) both;
+  }
+
+  div[data-testid="stSelectbox"] [data-baseweb="select"] > div,
+  div[data-testid="stTextInput"] input,
+  div[data-testid="stTextArea"] textarea {
+    border-radius: 14px !important;
+    border-color: rgba(190, 226, 255, .20) !important;
+    background: rgba(14, 27, 49, .82) !important;
+    color: var(--ios-text) !important;
+    transition: border-color .2s ease, box-shadow .2s ease, background .2s ease;
+  }
+  div[data-testid="stTextInput"] input:focus,
+  div[data-testid="stTextArea"] textarea:focus {
+    border-color: var(--ios-stroke-hot) !important;
+    box-shadow: 0 0 0 3px rgba(90, 167, 255, .16) !important;
+  }
+
+  div.stButton > button {
+    position: relative;
+    overflow: hidden;
+    border-radius: 999px !important;
+    border: 1px solid rgba(190, 226, 255, .22) !important;
+    background: linear-gradient(180deg, rgba(92, 171, 255, .98), rgba(22, 126, 248, .94)) !important;
+    box-shadow: 0 10px 26px rgba(36, 135, 255, .24), inset 0 1px 0 rgba(255,255,255,.28) !important;
+    transition: transform .16s ease, box-shadow .16s ease, filter .16s ease;
+  }
+  div.stButton > button::before {
+    content: "";
+    position: absolute;
+    inset: -60% -30%;
+    background: var(--ios-liquid-sheen);
+    transform: translateX(-140%) rotate(10deg);
+    opacity: 0;
+    pointer-events: none;
+  }
+  div.stButton > button:hover {
+    transform: translateY(-1px);
+    filter: brightness(1.05);
+    box-shadow: 0 16px 34px rgba(36, 135, 255, .30), inset 0 1px 0 rgba(255,255,255,.32) !important;
+  }
+  div.stButton > button:hover::before {
+    animation: iosSheenSweep .82s cubic-bezier(.2,.8,.2,1);
+  }
+  div.stButton > button:active {
+    transform: translateY(0) scale(.985);
+  }
+
+  div[data-testid="stSidebar"] {
+    background: rgba(5, 11, 24, .74) !important;
+    border-right: 1px solid rgba(190, 226, 255, .11);
+    backdrop-filter: blur(20px) saturate(1.25);
+  }
+  div[data-testid="stSidebar"] [role="radio"] {
+    border-radius: 999px;
+    transition: background .18s ease, transform .18s ease;
+  }
+  div[data-testid="stSidebar"] [role="radio"]:hover {
+    background: rgba(90, 167, 255, .08);
+    transform: translateX(2px);
+  }
+
+  div[data-testid="stMetric"] {
+    padding: 14px 16px;
+    border-radius: 18px;
+    background: linear-gradient(180deg, rgba(13, 26, 48, .72), rgba(7, 15, 29, .54));
+    border: 1px solid rgba(190, 226, 255, .16);
+    box-shadow: 0 16px 42px rgba(0,0,0,.18);
+    animation: iosRiseIn .32s cubic-bezier(.2,.8,.2,1) both;
+  }
+
+  div[data-testid="stPlotlyChart"],
+  div[data-testid="stDataFrame"],
+  div[data-testid="stCodeBlock"],
+  div[data-testid="stJson"] {
+    border-radius: 22px !important;
+    overflow: hidden !important;
+    border: 1px solid rgba(190, 226, 255, .16) !important;
+    background:
+      radial-gradient(circle at 18% 0%, rgba(255,255,255,.08), transparent 34%),
+      linear-gradient(180deg, rgba(15, 31, 56, .62), rgba(5, 12, 25, .46)) !important;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.08), 0 20px 52px rgba(0,0,0,.22) !important;
+    animation: iosRiseIn .34s cubic-bezier(.2,.8,.2,1) both;
+  }
+  div[data-testid="stIFrame"] iframe {
+    border-radius: 28px !important;
+    background:
+      radial-gradient(circle at 18% 0%, rgba(255,255,255,.08), transparent 34%),
+      rgba(5, 12, 25, .42) !important;
+    box-shadow: 0 22px 62px rgba(0,0,0,.25);
+  }
+  div[data-testid="stIFrame"] {
+    scroll-margin-top: 96px !important;
+  }
+  div[data-testid="stSlider"] {
+    padding: 2px 0 8px 0;
+  }
+  div[data-testid="stSlider"] [data-baseweb="slider"] {
+    filter: drop-shadow(0 0 14px rgba(126, 220, 255, .10));
+  }
+  div[data-testid="stRadio"] [role="radio"],
+  div[data-testid="stCheckbox"] label,
+  div[data-testid="stToggle"] label {
+    transition: transform .16s ease, opacity .16s ease, color .16s ease;
+  }
+  div[data-testid="stRadio"] [role="radio"]:hover,
+  div[data-testid="stCheckbox"] label:hover,
+  div[data-testid="stToggle"] label:hover {
+    transform: translateY(-1px);
+  }
+
+  mark {
+    color: #05111f;
+    background: linear-gradient(180deg, #bff0ff, #75d8ff);
+    border-radius: 6px;
+    padding: 0 .18em;
+  }
+
+  .ios-result-card {
+    position: relative;
+    overflow: hidden;
+    margin: 10px 0;
+    padding: 14px 16px;
+    border-radius: 18px;
+    border: 1px solid rgba(190, 226, 255, .22);
+    background:
+      radial-gradient(circle at 14% 0%, rgba(255,255,255,.10), transparent 34%),
+      linear-gradient(180deg, rgba(17, 35, 62, .78), rgba(7, 15, 29, .54));
+    box-shadow: 0 18px 48px rgba(0,0,0,.22), inset 0 1px 0 rgba(255,255,255,.10);
+    animation: iosRiseIn .28s cubic-bezier(.2,.8,.2,1) both;
+  }
+  .ios-result-card::before {
+    content: "";
+    position: absolute;
+    inset: -70% -30%;
+    background: var(--ios-liquid-sheen);
+    transform: translateX(-140%) rotate(10deg);
+    opacity: .0;
+    pointer-events: none;
+  }
+  .ios-result-card:hover {
+    border-color: rgba(126, 220, 255, .38);
+    animation: iosGlassBloom 1.8s ease-in-out infinite;
+  }
+  .ios-result-card:hover::before {
+    animation: iosSheenSweep 1s cubic-bezier(.2,.8,.2,1);
+  }
+  .ios-kicker {
+    color: var(--ios-cyan);
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+  }
+  .ios-muted {
+    color: var(--ios-muted);
+    line-height: 1.5;
   }
 
   /* Keep the page from visually dimming while AI requests are running. */
@@ -584,36 +941,17 @@ st.markdown("""
     line-height: 1.25 !important;
   }
 
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: .01ms !important;
+      animation-iteration-count: 1 !important;
+      scroll-behavior: auto !important;
+      transition-duration: .01ms !important;
+    }
+  }
+
 </style>
 """, unsafe_allow_html=True)
-
-# Best-effort: if the sidebar is open after a rerun, click the collapse control once.
-# Streamlit does not expose a stable Python API for this, so the app still works if the DOM selector changes.
-components.html("""
-<script>
-(function(){
-  function tryCollapseSidebar(){
-    try {
-      const doc = window.parent.document;
-      const sidebar = doc.querySelector('[data-testid="stSidebar"]');
-      if (!sidebar) return;
-      const rect = sidebar.getBoundingClientRect();
-      if (rect.width < 80) return;
-      const buttons = Array.from(doc.querySelectorAll('button'));
-      const collapseBtn = buttons.find(b => {
-        const label = (b.getAttribute('aria-label') || b.title || b.innerText || '').toLowerCase();
-        const text = (b.innerText || '').trim();
-        return label.includes('collapse') || label.includes('hide sidebar') || label.includes('close sidebar') || text.includes('«') || text.includes('‹');
-      });
-      if (collapseBtn) collapseBtn.click();
-    } catch(e) {}
-  }
-  setTimeout(tryCollapseSidebar, 350);
-  setTimeout(tryCollapseSidebar, 900);
-  setTimeout(tryCollapseSidebar, 1500);
-})();
-</script>
-""", height=0, width=0)
 
 if module == "Research Universe Explorer":
 
@@ -848,43 +1186,43 @@ if module == "Research Universe Explorer":
             "Antarctic Ice Sheet": {
                 "parent": "Core system",
                 "keywords": [
-                    "antarctic ice sheet", "ais", "ice sheet", "antarctica", "climate forcing", "earth system",
-                    "南极冰盖", "南极", "冰盖", "气候强迫"
+                    "antarctic ice sheet", "ais", "ice sheet", "antarctica",
+                    "climate forcing", "earth system", "sea level"
                 ]
             }
         }
         manual_keywords = {
-            "Ocean": ["ocean", "southern ocean", "cdw", "circumpolar deep water", "basal melt", "heat transport", "shelf break", "warm water", "ocean forcing", "海洋", "暖水", "基底融化"],
-            "CDW Intrusion": ["cdw", "circumpolar deep water", "intrusion", "warm deep water", "amundsen", "bellingshausen", "totten", "绕极深层水", "暖深水"],
-            "Cross-shelf Heat Transport": ["cross shelf", "heat transport", "eddy", "eddies", "tide", "winds", "shelf break", "slope front", "热输送", "陆架"],
-            "Ice-shelf Basal Melt": ["basal melt", "ice shelf melt", "melting from below", "sub ice shelf", "cavity", "冰架底部融化", "基底融化"],
-            "Freshwater Feedback": ["freshwater", "meltwater", "stratification", "aabw", "feedback", "淡水", "分层", "反馈"],
-            "Ice Dynamics": ["ice dynamics", "ice flow", "grounding line", "buttressing", "misi", "mici", "basal sliding", "冰动力", "接地线", "冰流"],
-            "Buttressing": ["buttressing", "back stress", "ice shelf support", "pinning point", "被动冰架", "支撑", "背应力"],
-            "Grounding Line Retreat": ["grounding line", "grounding zone", "retreat", "migration", "接地线", "退缩"],
-            "MISI": ["misi", "marine ice sheet instability", "retrograde bed", "self sustaining retreat", "海洋冰盖不稳定", "逆坡床"],
-            "MICI": ["mici", "marine ice cliff instability", "ice cliff", "hydrofracture", "cliff failure", "冰崖", "水力压裂"],
-            "Basal Sliding": ["basal sliding", "basal slip", "sliding", "friction", "till deformation", "water pressure", "底滑", "基底滑动", "摩擦"],
-            "Solid Earth": ["solid earth", "bedrock", "gia", "topography", "geothermal", "subglacial hydrology", "固体地球", "基岩", "地形"],
-            "GIA": ["gia", "glacial isostatic adjustment", "isostatic", "bedrock uplift", "rebound", "viscosity", "冰后回弹", "均衡调整"],
-            "Bed Topography": ["bed topography", "bedmap", "subglacial basin", "trough", "bathymetry", "retrograde bed", "床地形", "冰下盆地", "地形"],
-            "Geothermal Heat Flux": ["geothermal", "heat flux", "basal temperature", "volcanism", "地热", "热流"],
-            "Subglacial Hydrology": ["subglacial hydrology", "subglacial lake", "basal water", "drainage", "hydrology", "冰下水文", "冰下湖"],
-            "Observations": ["observation", "satellite", "remote sensing", "insar", "grace", "altimetry", "radar", "观测", "遥感", "卫星"],
-            "Satellite Altimetry": ["altimetry", "icesat", "cryosat", "elevation", "surface height", "测高", "高度计"],
-            "InSAR Velocity": ["insar", "sar", "velocity", "ice velocity", "interferometry", "形变", "速度"],
-            "GRACE / GRACE-FO": ["grace", "grace-fo", "gravity", "mass balance", "gravimetry", "重力", "质量变化"],
-            "Radar & Field Data": ["radar", "field data", "ice penetrating radar", "apres", "gnss", "gps", "雷达", "野外"],
-            "Paleoclimate": ["paleoclimate", "pliocene", "last interglacial", "ice core", "marine sediment", "past climate", "古气候", "上新世", "间冰期"],
-            "Pliocene": ["pliocene", "mid pliocene", "warm period", "上新世"],
-            "Last Interglacial": ["last interglacial", "lig", "eemian", "末次间冰期", "间冰期"],
-            "Ice Cores": ["ice core", "accumulation", "temperature record", "isotope", "冰芯", "冰核"],
-            "Marine Sediments": ["marine sediment", "sediment core", "paleo record", "foraminifera", "海洋沉积", "沉积物"],
-            "Future Projections": ["future", "projection", "sea level", "uncertainty", "model", "rcp", "2100", "2300", "未来", "预测", "不确定性", "海平面"],
-            "Sea-level Contribution": ["sea level", "gmsl", "sea-level rise", "coast", "contribution", "海平面", "海平面上升"],
-            "Coupled Models": ["coupled model", "ice ocean model", "earth system model", "ismip", "misomip", "模型耦合", "耦合模型"],
-            "Uncertainty Quantification": ["uncertainty", "ensemble", "probability", "risk", "projection uncertainty", "不确定性", "风险"],
-            "AI for Earth Observation": ["ai", "machine learning", "deep learning", "earth observation", "knowledge graph", "人工智能", "机器学习", "知识图谱"]
+            "Ocean": ["ocean", "southern ocean", "cdw", "circumpolar deep water", "basal melt", "heat transport", "shelf break", "warm water", "ocean forcing"],
+            "CDW Intrusion": ["cdw", "circumpolar deep water", "intrusion", "warm deep water", "amundsen", "bellingshausen", "totten"],
+            "Cross-shelf Heat Transport": ["cross shelf", "heat transport", "eddy", "eddies", "tide", "winds", "shelf break", "slope front"],
+            "Ice-shelf Basal Melt": ["basal melt", "ice shelf melt", "melting from below", "sub ice shelf", "cavity"],
+            "Freshwater Feedback": ["freshwater", "meltwater", "stratification", "aabw", "feedback"],
+            "Ice Dynamics": ["ice dynamics", "ice flow", "grounding line", "buttressing", "misi", "mici", "basal sliding"],
+            "Buttressing": ["buttressing", "back stress", "ice shelf support", "pinning point"],
+            "Grounding Line Retreat": ["grounding line", "grounding zone", "retreat", "migration"],
+            "MISI": ["misi", "marine ice sheet instability", "retrograde bed", "self sustaining retreat"],
+            "MICI": ["mici", "marine ice cliff instability", "ice cliff", "hydrofracture", "cliff failure"],
+            "Basal Sliding": ["basal sliding", "basal slip", "sliding", "friction", "till deformation", "water pressure"],
+            "Solid Earth": ["solid earth", "bedrock", "gia", "topography", "geothermal", "subglacial hydrology"],
+            "GIA": ["gia", "glacial isostatic adjustment", "isostatic", "bedrock uplift", "rebound", "viscosity"],
+            "Bed Topography": ["bed topography", "bedmap", "subglacial basin", "trough", "bathymetry", "retrograde bed"],
+            "Geothermal Heat Flux": ["geothermal", "heat flux", "basal temperature", "volcanism"],
+            "Subglacial Hydrology": ["subglacial hydrology", "subglacial lake", "basal water", "drainage", "hydrology"],
+            "Observations": ["observation", "satellite", "remote sensing", "insar", "grace", "altimetry", "radar"],
+            "Satellite Altimetry": ["altimetry", "icesat", "cryosat", "elevation", "surface height"],
+            "InSAR Velocity": ["insar", "sar", "velocity", "ice velocity", "interferometry"],
+            "GRACE / GRACE-FO": ["grace", "grace-fo", "gravity", "mass balance", "gravimetry"],
+            "Radar & Field Data": ["radar", "field data", "ice penetrating radar", "apres", "gnss", "gps"],
+            "Paleoclimate": ["paleoclimate", "pliocene", "last interglacial", "ice core", "marine sediment", "past climate"],
+            "Pliocene": ["pliocene", "mid pliocene", "warm period"],
+            "Last Interglacial": ["last interglacial", "lig", "eemian"],
+            "Ice Cores": ["ice core", "accumulation", "temperature record", "isotope"],
+            "Marine Sediments": ["marine sediment", "sediment core", "paleo record", "foraminifera"],
+            "Future Projections": ["future", "projection", "sea level", "uncertainty", "model", "rcp", "2100", "2300"],
+            "Sea-level Contribution": ["sea level", "gmsl", "sea-level rise", "coast", "contribution"],
+            "Coupled Models": ["coupled model", "ice ocean model", "earth system model", "ismip", "misomip"],
+            "Uncertainty Quantification": ["uncertainty", "ensemble", "probability", "risk", "projection uncertainty"],
+            "AI for Earth Observation": ["ai", "machine learning", "deep learning", "earth observation", "knowledge graph"]
         }
         for area_name, area in research_areas.items():
             topic_index[area_name] = {
@@ -901,7 +1239,7 @@ if module == "Research Universe Explorer":
 
     def classify_universe_question(question, topic_index):
         """Keyword fallback classifier. Used only when the AI classifier is unavailable or invalid."""
-        q = question.lower().replace("‐", "-").replace("‑", "-")
+        q = question.lower().replace("-", "-")
         best_topic = "Antarctic Ice Sheet"
         best_score = 0
         for topic, meta in topic_index.items():
@@ -930,6 +1268,8 @@ if module == "Research Universe Explorer":
         DeepSeek API is used when selected; otherwise local Ollama is used.
         If the selected backend fails or returns an invalid node, fallback to keyword matching.
         """
+        if backend == "Evidence only":
+            return classify_universe_question(question, topic_index)
         if backend == "DeepSeek API":
             ds_result = classify_universe_question_with_deepseek(question, topic_index)
             if ds_result:
@@ -1013,32 +1353,71 @@ Return JSON in this exact format:
     <div id="research-universe-root">
       <style>
         #research-universe-root {
-          height: 700px; width: 100%; overflow: hidden; position: relative; border-radius: 26px;
+          height: 700px; width: 100%; overflow: hidden; position: relative; border-radius: 30px; isolation:isolate;
           background:
             radial-gradient(circle at 22% 20%, rgba(78,163,241,0.22), transparent 28%),
             radial-gradient(circle at 70% 70%, rgba(149,117,205,0.24), transparent 30%),
             radial-gradient(circle at 45% 45%, rgba(221,238,255,0.10), transparent 22%),
             linear-gradient(135deg, #030712 0%, #07111f 45%, #020617 100%);
+          background-size: 135% 135%, 150% 150%, 125% 125%, 100% 100%;
           font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-          color: #eef6ff; box-shadow: inset 0 0 80px rgba(78,163,241,0.10);
+          color: #eef6ff; box-shadow: inset 0 0 90px rgba(78,163,241,0.13), 0 26px 80px rgba(0,0,0,.34);
+          animation: ruNebulaDrift 22s ease-in-out infinite;
         }
-        #research-universe-root .title { position:absolute; top:22px; left:26px; z-index:7; max-width:470px; padding:16px 18px; border-radius:18px; background:rgba(3,7,18,.42); border:1px solid rgba(170,215,255,.12); backdrop-filter:blur(8px); }
-        #research-universe-root .title h2 { margin:0; font-size:24px; color:#f8fbff; letter-spacing:.2px; }
+        #research-universe-root::before,
+        #research-universe-root::after { content:""; position:absolute; inset:-18%; pointer-events:none; z-index:1; }
+        #research-universe-root::before {
+          background:
+            linear-gradient(115deg, transparent 8%, rgba(255,255,255,.055) 38%, transparent 58%),
+            radial-gradient(circle at 32% 20%, rgba(190,240,255,.12), transparent 24%);
+          mix-blend-mode:screen; opacity:.72; animation:ruGlassSweep 13s ease-in-out infinite;
+        }
+        #research-universe-root::after {
+          background: radial-gradient(ellipse at 50% 50%, transparent 35%, rgba(2,6,23,.38) 82%);
+          z-index:1;
+        }
+        @keyframes ruNebulaDrift {
+          0%,100% { background-position:0% 0%, 100% 90%, 52% 48%, 0 0; }
+          50% { background-position:9% 8%, 90% 78%, 45% 54%, 0 0; }
+        }
+        @keyframes ruGlassSweep {
+          0%,100% { transform:translateX(-7%) rotate(-3deg); opacity:.52; }
+          50% { transform:translateX(7%) rotate(3deg); opacity:.86; }
+        }
+        @keyframes ruCardIn {
+          from { opacity:0; transform:translateY(12px) scale(.985); }
+          to { opacity:1; transform:translateY(0) scale(1); }
+        }
+        @keyframes ruLinkFlow { to { stroke-dashoffset:-40; } }
+        @keyframes ruNodeBreath {
+          0%,100% { filter:drop-shadow(0 0 14px rgba(130,210,255,.60)); }
+          50% { filter:drop-shadow(0 0 24px rgba(210,245,255,.85)); }
+        }
+        #research-universe-root .title { position:absolute; top:22px; left:26px; z-index:7; width:46%; max-width:390px; min-width:290px; padding:15px 17px; border-radius:20px; overflow:hidden; background:linear-gradient(180deg, rgba(14,27,49,.62), rgba(4,12,25,.40)); border:1px solid rgba(210,238,255,.20); backdrop-filter:blur(18px) saturate(1.3); box-shadow:inset 0 1px 0 rgba(255,255,255,.13), 0 16px 44px rgba(0,0,0,.18); animation:ruCardIn .38s cubic-bezier(.2,.8,.2,1) both; }
+        #research-universe-root .title::before { content:""; position:absolute; inset:-80% -35%; background:linear-gradient(120deg, transparent 0%, rgba(255,255,255,.10) 38%, rgba(126,220,255,.18) 48%, transparent 66%); transform:translateX(-30%) rotate(10deg); opacity:.70; pointer-events:none; }
+        #research-universe-root .title h2 { margin:0; font-size:22px; color:#f8fbff; letter-spacing:.2px; }
         #research-universe-root .title p { margin:7px 0 0 0; color:rgba(231,245,255,.72); line-height:1.38; font-size:13px; }
-        #research-universe-svg { position:absolute; inset:0; width:100%; height:100%; }
+        #research-universe-svg { position:absolute; inset:0; width:100%; height:100%; z-index:2; }
         #research-universe-root .star { position:absolute; width:2px; height:2px; border-radius:50%; background:rgba(255,255,255,.75); box-shadow:0 0 9px rgba(255,255,255,.55); animation:twinkle 3.5s infinite ease-in-out alternate; }
         @keyframes twinkle { from { opacity:.25; transform:scale(.8); } to { opacity:.95; transform:scale(1.25); } }
-        #research-universe-root .card { position:absolute; right:22px; top:28px; width:275px; max-height:600px; overflow-y:auto; scrollbar-width:none; z-index:6; border:1px solid rgba(170,215,255,.26); border-radius:22px; padding:20px; background:linear-gradient(180deg,rgba(8,18,34,.90),rgba(7,15,29,.74)); backdrop-filter:blur(14px); box-shadow:0 20px 60px rgba(0,0,0,.35), inset 0 0 30px rgba(78,163,241,.08); opacity:1; transform:translateY(0); transition:opacity .24s ease, transform .24s ease; }
+        #research-universe-root .card { position:absolute; right:22px; top:28px; width:35%; max-width:275px; min-width:235px; max-height:460px; overflow-y:auto; overscroll-behavior:contain; scrollbar-width:none; z-index:6; border:1px solid rgba(210,238,255,.30); border-radius:24px; padding:19px; background:radial-gradient(circle at 12% 0%, rgba(255,255,255,.12), transparent 34%), linear-gradient(180deg,rgba(12,25,46,.88),rgba(5,13,27,.68)); backdrop-filter:blur(22px) saturate(1.38); box-shadow:0 24px 70px rgba(0,0,0,.38), inset 0 1px 0 rgba(255,255,255,.14), inset 0 -1px 0 rgba(126,220,255,.08); opacity:1; transform:translateY(0); transition:opacity .24s ease, transform .24s ease, border-color .24s ease, box-shadow .24s ease; animation:ruCardIn .42s cubic-bezier(.2,.8,.2,1) both; }
+        #research-universe-root .card::before { content:""; position:absolute; inset:-70% -35%; background:linear-gradient(120deg, transparent 0%, rgba(255,255,255,.12) 36%, rgba(126,220,255,.18) 47%, transparent 65%); transform:translateX(-35%) rotate(10deg); opacity:.42; pointer-events:none; }
         #research-universe-root .card::-webkit-scrollbar { display:none; }
-        #research-universe-root .card.is-fading { opacity:0; transform:translateY(8px); }
+        #research-universe-root .card.is-fading { opacity:0; transform:translateY(10px) scale(.985); }
         #research-universe-root .badge { display:inline-block; padding:6px 10px; border-radius:999px; background:rgba(78,163,241,.14); border:1px solid rgba(142,207,255,.25); color:#bfe6ff; font-size:12px; letter-spacing:.25px; margin-bottom:14px; }
-        #research-universe-root .card h3 { margin:0 0 10px 0; font-size:22px; color:#fff; }
+        #research-universe-root .card h3 { margin:0 0 10px 0; font-size:20px; color:#fff; }
         #research-universe-root .card .label { margin-top:14px; color:#8ccfff; font-size:11px; text-transform:uppercase; letter-spacing:1px; }
         #research-universe-root .card p { margin:5px 0 0 0; color:rgba(239,248,255,.84); line-height:1.45; font-size:13px; }
-        #research-universe-root .hint { position:absolute; left:32px; bottom:24px; color:rgba(231,245,255,.64); font-size:13px; z-index:5; }
+        #research-universe-root .hint { position:absolute; left:32px; bottom:24px; max-width:calc(100% - 64px); color:rgba(231,245,255,.64); font-size:13px; z-index:5; padding:8px 11px; border-radius:999px; background:rgba(2,6,23,.30); border:1px solid rgba(210,238,255,.10); backdrop-filter:blur(10px); }
+        @media (max-width: 640px) {
+          #research-universe-root .title { display:none; }
+          #research-universe-root .card { left:26px; right:auto; top:24px; width:300px; max-width:calc(100% - 52px); min-width:0; max-height:330px; }
+        }
         .ru-link { stroke:rgba(118,200,255,.30); stroke-linecap:round; transition:all .55s ease; }
+        .ru-link.active { stroke-dasharray:9 10; animation:ruLinkFlow 1.55s linear infinite; filter:drop-shadow(0 0 9px rgba(126,220,255,.55)); }
         .ru-node { cursor:pointer; transition:opacity .55s ease; }
-        .ru-node circle.main { filter:drop-shadow(0 0 14px rgba(130,210,255,.65)); transition:all .55s ease; }
+        .ru-node circle.main { filter:drop-shadow(0 0 14px rgba(130,210,255,.65)); transition:all .55s ease; animation:ruNodeBreath 4.2s ease-in-out infinite; }
+        .ru-node.focused circle.main { filter:drop-shadow(0 0 34px rgba(255,255,255,.96)); }
         .ru-node text { pointer-events:none; fill:rgba(246,251,255,.94); font-weight:650; text-anchor:middle; paint-order:stroke; stroke:rgba(2,6,23,.90); stroke-width:4px; stroke-linejoin:round; }
         .ru-node.ai-target-pulse circle.main { animation: aiTargetPulse .78s ease-in-out 2; }
         .ru-node.ai-target-pulse text { animation: aiTextPulse .78s ease-in-out 2; }
@@ -1055,7 +1434,7 @@ Return JSON in this exact format:
       </style>
       <div class="title"><h2>Antarctic Research Universe</h2><p>Ask a question; AI locates the matching node. You can also click any sphere manually.</p></div>
       <div class="card" id="knowledge-card"></div>
-      <div class="hint">Click a sphere · Ask AI below · matched module auto-focuses here</div>
+      <div class="hint">Click a sphere · Ask below · matched module auto-focuses here</div>
       <svg id="research-universe-svg" viewBox="0 0 1180 760" preserveAspectRatio="xMidYMid meet"></svg>
     </div>
 
@@ -1102,7 +1481,7 @@ Return JSON in this exact format:
       Object.entries(data.areas).forEach(([areaName, area]) => {
         const p = polar(area.angle, 205);
         nodes.push({ id:areaName, parent:data.center.name, group:areaName, level:1, r:38, color:area.color,
-          question:area.key_question, why:area.importance, status:"Research area", regions:area.topics.map(t => t.name).join(" · "), home:p });
+          question:area.key_question, why:area.importance, status:"Research area", regions:area.topics.map(t => t.name).join(" - "), home:p });
         links.push({source:data.center.name, target:areaName, type:"area"});
         area.topics.forEach((topic, i) => {
           const localAngle = area.angle + (i - (area.topics.length - 1) / 2) * 19;
@@ -1139,7 +1518,7 @@ Return JSON in this exact format:
       });
 
       function addWrappedText(g, text, fs) {
-        const words = text.split(/\s+/);
+        const words = text.split(/\\s+/);
         const lines = text.length > 15 && words.length > 1 ? [words.slice(0, Math.ceil(words.length/2)).join(" "), words.slice(Math.ceil(words.length/2)).join(" ")] : [text];
         const t = el("text", { "font-size": fs });
         lines.forEach((line, i) => {
@@ -1233,6 +1612,14 @@ Return JSON in this exact format:
               if (saved.strokeWidth) line.setAttribute("stroke-width", saved.strokeWidth);
             });
           }
+          if (focusedId && nodeById.has(focusedId)) {
+            const rel = related(focusedId);
+            nodeEls.forEach(g => g.classList.toggle("focused", g.dataset.id === focusedId));
+            linkEls.forEach(line => {
+              const on = rel.has(line.dataset.source) && rel.has(line.dataset.target);
+              line.classList.toggle("active", on);
+            });
+          }
           draw();
           if (focusedId && nodeById.has(focusedId)) updateCard(nodeById.get(focusedId), false);
           else updateCard(nodeById.get(data.center.name), false);
@@ -1290,11 +1677,13 @@ Return JSON in this exact format:
           <div class="label">Key regions / linked topics</div><p>${safe(d.regions)}</p>`;
         if (!animated) {
           card.innerHTML = html;
+          card.scrollTop = 0;
           return;
         }
         card.classList.add("is-fading");
         window.setTimeout(() => {
           card.innerHTML = html;
+          card.scrollTop = 0;
           card.classList.remove("is-fading");
         }, 180);
       }
@@ -1324,12 +1713,14 @@ Return JSON in this exact format:
         animateToTargets(850);
         nodeEls.forEach(g => {
           const n = nodeById.get(g.dataset.id), main = g.querySelector("circle.main");
+          g.classList.toggle("focused", n.id === d.id);
           g.style.opacity = (rel.has(n.id) || n.group === d.group) ? 1 : .24;
           main.setAttribute("stroke-width", n.id === d.id ? 4.4 : rel.has(n.id) ? 2.8 : 1);
           main.setAttribute("fill-opacity", n.id === d.id ? 1 : rel.has(n.id) ? .92 : .30);
         });
         linkEls.forEach(line => {
           const on = rel.has(line.dataset.source) && rel.has(line.dataset.target);
+          line.classList.toggle("active", on);
           line.setAttribute("stroke", on ? "rgba(163,226,255,.92)" : "rgba(118,200,255,.12)");
           line.setAttribute("stroke-width", on ? 3.2 : 1);
         });
@@ -1342,12 +1733,14 @@ Return JSON in this exact format:
         else { nodes.forEach(n => { n.x = n.targetX; n.y = n.targetY; n.scale = n.targetScale; }); draw(); }
         nodeEls.forEach(g => {
           const n = nodeById.get(g.dataset.id), main = g.querySelector("circle.main");
+          g.classList.remove("focused");
           g.style.opacity = 1;
           main.setAttribute("stroke-width", n.level === 0 ? 2.6 : 1.5);
           main.setAttribute("fill-opacity", n.level === 2 ? .70 : .88);
         });
         linkEls.forEach(line => {
           const type = links.find(l => l.source === line.dataset.source && l.target === line.dataset.target).type;
+          line.classList.remove("active");
           line.setAttribute("stroke", "rgba(118,200,255,.30)");
           line.setAttribute("stroke-width", type === "area" ? 2.2 : 1.25);
         });
@@ -1393,14 +1786,14 @@ Return JSON in this exact format:
     # Page title sits above the workspace.
     # The explanatory caption is placed inside the left column so the Copilot can start slightly higher,
     # close to the caption line rather than down at the map top.
-    st.header("🌌 Research Universe Explorer")
+    st.markdown("<div class='atlas-module-title'><h1>&#127756; Research Universe Explorer</h1></div>", unsafe_allow_html=True)
 
     # Two-column explorer layout:
     # Left: Research Universe caption + map. Right: lightweight Copilot input and classification status only.
     # Retrieved passages and generated answer are rendered below the two-column workspace.
     universe_col, copilot_col = st.columns([0.76, 0.24], gap="large")
 
-    ai_backend = st.session_state.get("ai_backend", "Local Ollama")
+    ai_backend = st.session_state.get("ai_backend", "Evidence only")
     ok, model_names, err = check_ollama()
 
     with universe_col:
@@ -1411,14 +1804,14 @@ Return JSON in this exact format:
         # Start the Copilot at the same vertical level as the caption above the map.
         st.subheader("Research Copilot")
 
-        backend_options = ["Local Ollama", "DeepSeek API", "OpenAI API"]
-        current_backend = st.session_state.get("ai_backend", "Local Ollama")
+        backend_options = ["Evidence only", "Local Ollama", "DeepSeek API", "OpenAI API"]
+        current_backend = st.session_state.get("ai_backend", "Evidence only")
         ai_backend = st.selectbox(
             "AI Backend",
             backend_options,
             index=backend_options.index(current_backend) if current_backend in backend_options else 0,
             key="ai_backend",
-            help="Choose whether Research Copilot uses your local Ollama model, DeepSeek API, or the official OpenAI API."
+            help="Evidence only always works locally. AI backends add generated answers when configured."
         )
 
         # If the user switches backend, remove old classification/result text.
@@ -1442,16 +1835,21 @@ Return JSON in this exact format:
             st.rerun()
         st.session_state["ai_backend_last_rendered"] = ai_backend
 
-        if ai_backend == "Local Ollama":
+        if ai_backend == "Evidence only":
+            st.info("Evidence-only mode is active. Questions will focus the map and retrieve relevant passages without calling an AI API.")
+        elif ai_backend == "Local Ollama":
             if ok:
-                st.success(f"Ollama is connected, current model: {OLLAMA_MODEL}")
+                st.success(f"Local Ollama is connected. Current local model: {OLLAMA_MODEL}")
             else:
-                st.warning("Ollama is not connected. You can still see retrieved passages after asking.")
+                st.warning(f"Local Ollama is not ready for {OLLAMA_MODEL}. You can still retrieve paper passages, but local AI answers need this model available in Ollama.")
                 if err:
                     with st.expander("Connection error"):
                         st.code(err)
                 if model_names:
-                    st.write("Detected models:", model_names)
+                    st.write("Detected Ollama models:", model_names)
+                    st.caption(f"Switch Ollama to {OLLAMA_MODEL}, or run `ollama pull {OLLAMA_MODEL}` if it is not installed.")
+                else:
+                    st.caption(f"Start Ollama and make sure the local model dropdown is set to {OLLAMA_MODEL}.")
         elif ai_backend == "DeepSeek API":
             selected_deepseek_model = st.selectbox(
                 "DeepSeek Model",
@@ -1499,7 +1897,7 @@ Return JSON in this exact format:
                         st.error(st.session_state["deepseek_status_message"])
 
         elif ai_backend == "OpenAI API":
-            openai_models = ["gpt-4o", "gpt-4.1", "gpt-5", "gpt-5.5"]
+            openai_models = OPENAI_MODEL_OPTIONS
             current_openai_model = st.session_state.get("openai_model_select", OPENAI_MODEL)
             selected_openai_model = st.selectbox(
                 "OpenAI Model",
@@ -1561,15 +1959,19 @@ Return JSON in this exact format:
             label_visibility="collapsed",
             on_change=submit_universe_question
         )
-        if st.button("Ask AI and focus map", type="primary", use_container_width=True):
+        ask_button_label = "Search evidence" if ai_backend == "Evidence only" else "Ask AI and focus map"
+        if st.button(ask_button_label, type="primary", use_container_width=True):
             submit_universe_question()
 
         pending_question = st.session_state.pop("universe_pending_question", "").strip()
         feedback_box = st.empty()
 
         if pending_question:
-            feedback_box.info("AI is locating the matching knowledge module and retrieving paper passages...")
-            matched_topic, matched_parent, score, classifier_source = classify_universe_question_with_ai(pending_question, universe_topic_index, backend=st.session_state.get("ai_backend", "Local Ollama"))
+            if st.session_state.get("ai_backend", "Evidence only") == "Evidence only":
+                feedback_box.info("Searching the paper and focusing the matching knowledge module...")
+            else:
+                feedback_box.info("AI is locating the matching knowledge module and retrieving paper passages...")
+            matched_topic, matched_parent, score, classifier_source = classify_universe_question_with_ai(pending_question, universe_topic_index, backend=st.session_state.get("ai_backend", "Evidence only"))
             st.session_state["universe_question"] = pending_question
             st.session_state["universe_focus_topic"] = matched_topic
             st.session_state["universe_focus_parent"] = matched_parent
@@ -1587,9 +1989,9 @@ Return JSON in this exact format:
             classifier_source = st.session_state.get("universe_classifier_source", "keyword_fallback")
             if classifier_source in ["ai", "deepseek", "openai"]:
                 backend_name = "DeepSeek" if classifier_source == "deepseek" else ("OpenAI" if classifier_source == "openai" else "AI")
-                st.info(f"{backend_name} 已识别：这个问题属于 **{display_module}** 知识模块，可在上方知识图中查看详情。引用和生成内容请在下方查看。")
+                st.info(f"{backend_name} matched this question to **{display_module}**. The map is focused above; evidence and generated content appear below.")
             else:
-                st.info(f"这个问题属于 **{display_module}** 知识模块，可在上方知识图中查看详情。当前使用关键词兜底分类；引用和生成内容请在下方查看。")
+                st.info(f"This question matches **{display_module}**. Evidence-only mode used keyword matching; paper passages appear below.")
 
     # Full-width evidence and answer area below the map + Copilot workspace.
     active_question = st.session_state.get("universe_question", "").strip()
@@ -1609,9 +2011,9 @@ Return JSON in this exact format:
         st.subheader("Evidence and AI Answer")
         if classifier_source in ["ai", "deepseek", "openai"]:
             backend_name = "DeepSeek" if classifier_source == "deepseek" else ("OpenAI" if classifier_source == "openai" else "AI")
-            st.info(f"{backend_name} 已识别：这个问题属于 **{display_module}** 知识模块，可在上方知识图中查看详情。")
+            st.info(f"{backend_name} matched this question to **{display_module}**. The map is focused above.")
         else:
-            st.info(f"这个问题属于 **{display_module}** 知识模块，可在上方知识图中查看详情。当前使用关键词兜底分类。")
+            st.info(f"This question matches **{display_module}**. Evidence-only mode used keyword matching.")
 
         if not results:
             st.warning("No relevant passages found.")
@@ -1621,7 +2023,7 @@ Return JSON in this exact format:
                     st.markdown(f"**Page {r['page']} | Score: {r['score']}**")
                     st.write(r["text"][:1600] + "...")
 
-            current_backend = st.session_state.get("ai_backend", "Local Ollama")
+            current_backend = st.session_state.get("ai_backend", "Evidence only")
             backend_ready = (current_backend == "DeepSeek API" and bool(get_deepseek_api_key())) or (current_backend == "OpenAI API" and bool(get_openai_api_key())) or (current_backend == "Local Ollama" and ok)
             if backend_ready:
                 st.subheader("AI Answer")
@@ -1629,9 +2031,9 @@ Return JSON in this exact format:
                 text_box = st.empty()
                 if classifier_source in ["ai", "deepseek", "openai"]:
                     backend_name = "DeepSeek" if classifier_source == "deepseek" else ("OpenAI" if classifier_source == "openai" else "AI")
-                    answer_prefix = f"{backend_name} 已识别：这个问题属于 **{display_module}** 知识模块，可在上方知识图中查看详情。"
+                    answer_prefix = f"{backend_name} matched this question to **{display_module}**. "
                 else:
-                    answer_prefix = f"这个问题属于 **{display_module}** 知识模块，可在上方知识图中查看详情。"
+                    answer_prefix = f"This question matches **{display_module}**. "
                 try:
                     stream_ai_answer(st.session_state.get("ai_backend", "Local Ollama"), active_question, results, text_box, progress_bar, answer_prefix=answer_prefix)
                     st.success("Generation completed")
@@ -1639,16 +2041,16 @@ Return JSON in this exact format:
                     st.error(f"{st.session_state.get('ai_backend', 'Local Ollama')} call failed")
                     st.code(str(e))
             else:
-                st.info(f"{st.session_state.get('ai_backend', 'Local Ollama')} unavailable, showing only retrieved passages.")
+                st.info("AI answer generation is off or unavailable, so only retrieved paper passages are shown.")
 
 elif module == "Research Directions":
     st.markdown("""
     <style>
-      .block-container { padding-top: .62rem !important; }
+      .block-container { padding-top: 1.05rem !important; }
 
       /* Compact Research Compass header: keeps the first screen focused on the actual tool. */
       .directions-title-row {
-        margin: 1.5rem 0 .55rem 0;
+        margin: 1.72rem 0 .55rem 0;
         padding: 10px 14px 11px 14px;
         border-radius: 20px;
         border: 1px solid rgba(170,215,255,.18);
@@ -1666,7 +2068,7 @@ elif module == "Research Directions":
         margin: 0;
         font-size: 2.18rem;
         line-height: 1.12;
-        letter-spacing: -0.04em;
+        letter-spacing: 0;
         color: #f8fbff;
         white-space: nowrap;
       }
@@ -1715,6 +2117,60 @@ elif module == "Research Directions":
         font-size: 12px;
         font-weight: 700;
       }
+      .direction-metric-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 14px;
+        margin-bottom: 16px;
+      }
+      .direction-metric {
+        position: relative;
+        overflow: hidden;
+        min-height: 96px;
+        padding: 13px 14px;
+        border-radius: 18px;
+        border: 1px solid rgba(190,226,255,.18);
+        background:
+          radial-gradient(circle at 18% 0%, rgba(255,255,255,.10), transparent 34%),
+          linear-gradient(180deg, rgba(17,35,62,.72), rgba(7,15,29,.50));
+        box-shadow: inset 0 1px 0 rgba(255,255,255,.10), 0 16px 42px rgba(0,0,0,.18);
+        backdrop-filter: blur(18px) saturate(1.28);
+      }
+      .direction-metric::before {
+        content: "";
+        position: absolute;
+        inset: -80% -35%;
+        background: linear-gradient(120deg, transparent 0%, rgba(255,255,255,.10) 38%, rgba(126,220,255,.16) 48%, transparent 66%);
+        transform: translateX(-34%) rotate(10deg);
+        opacity: .36;
+        pointer-events: none;
+      }
+      .direction-metric .k {
+        position: relative;
+        color: rgba(235,248,255,.82);
+        font-size: 12px;
+        font-weight: 760;
+      }
+      .direction-metric .v {
+        position: relative;
+        margin-top: 8px;
+        color: #fff;
+        font-size: 1.75rem;
+        line-height: 1;
+        font-weight: 850;
+      }
+      .direction-metric .sub {
+        position: relative;
+        margin-top: 5px;
+        color: rgba(220,236,248,.62);
+        font-size: 12px;
+        font-weight: 700;
+      }
+      .direction-metric .v.time {
+        font-size: 1.05rem;
+        line-height: 1.25;
+        white-space: normal;
+      }
       .direction-mini-note {
         padding: 11px 13px;
         border-radius: 16px;
@@ -1746,19 +2202,19 @@ elif module == "Research Directions":
       }
     </style>
     <div class="directions-title-row">
-      <h1>🧭 Research Compass</h1>
+      <h1>&#129517; Research Compass</h1>
       <p>Explore frontier questions from the review paper: choose a theme, inspect uncertainty, connect regions and methods, then generate a starter research idea.</p>
     </div>
     """, unsafe_allow_html=True)
 
     research_directions = {
         "Ocean heat pathways": {
-            "emoji": "🌊",
-            "system": "Ocean–ice shelf interaction",
+            "emoji": "*",
+            "system": "Ocean-ice shelf interaction",
             "uncertainty": 92,
             "impact": 94,
             "observability": 58,
-            "time_scale": "days → decades",
+            "time_scale": "days ->decades",
             "regions": ["Amundsen Sea", "Bellingshausen Sea", "Totten Glacier", "Filchner-Ronne"],
             "methods": ["Ocean moorings", "AUV", "CTD", "High-resolution ocean models"],
             "core_question": "How does warm Circumpolar Deep Water cross the continental shelf and reach ice-shelf cavities?",
@@ -1772,12 +2228,12 @@ elif module == "Research Directions":
             ]
         },
         "Grounding-line instability": {
-            "emoji": "📉",
+            "emoji": "*",
             "system": "Ice dynamics",
             "uncertainty": 88,
             "impact": 96,
             "observability": 64,
-            "time_scale": "years → centuries",
+            "time_scale": "years ->centuries",
             "regions": ["Thwaites", "Pine Island", "Wilkes Basin", "Aurora Basin"],
             "methods": ["InSAR", "Satellite altimetry", "Radar sounding", "Ice-sheet models"],
             "core_question": "When does grounding-line retreat become self-sustaining on retrograde bed topography?",
@@ -1791,12 +2247,12 @@ elif module == "Research Directions":
             ]
         },
         "Ice-shelf fracture and calving": {
-            "emoji": "🧊",
-            "system": "Atmosphere–ice shelf coupling",
+            "emoji": "*",
+            "system": "Atmosphere-ice shelf coupling",
             "uncertainty": 85,
             "impact": 90,
             "observability": 70,
-            "time_scale": "days → years",
+            "time_scale": "days ->years",
             "regions": ["Antarctic Peninsula", "Larsen B", "Wilkins", "Roi Baudouin"],
             "methods": ["Optical imagery", "SAR", "Surface melt mapping", "Fracture models"],
             "core_question": "How do surface melt, hydrofracturing, and calving change ice-shelf buttressing?",
@@ -1810,12 +2266,12 @@ elif module == "Research Directions":
             ]
         },
         "Subglacial water and basal sliding": {
-            "emoji": "💧",
+            "emoji": "*",
             "system": "Subglacial hydrology",
             "uncertainty": 91,
             "impact": 82,
             "observability": 42,
-            "time_scale": "hours → millennia",
+            "time_scale": "hours ->millennia",
             "regions": ["Siple Coast", "Thwaites", "Byrd Glacier", "Subglacial lakes"],
             "methods": ["Radar", "Altimetry lake detection", "Boreholes", "Hydrology models"],
             "core_question": "How does water beneath the ice sheet control basal friction and ice velocity?",
@@ -1829,12 +2285,12 @@ elif module == "Research Directions":
             ]
         },
         "Solid-Earth feedbacks": {
-            "emoji": "🪨",
-            "system": "Solid Earth–ice interaction",
+            "emoji": "*",
+            "system": "Solid Earth-ice interaction",
             "uncertainty": 87,
             "impact": 84,
             "observability": 50,
-            "time_scale": "decades → millennia",
+            "time_scale": "decades ->millennia",
             "regions": ["West Antarctica", "Amundsen Sea", "Antarctic Peninsula", "East Antarctica"],
             "methods": ["GPS/GNSS", "GRACE correction", "Seismology", "GIA models"],
             "core_question": "Can bedrock uplift and sea-level fingerprints slow or reshape ice-sheet retreat?",
@@ -1848,18 +2304,18 @@ elif module == "Research Directions":
             ]
         },
         "Paleo constraints for future projections": {
-            "emoji": "⏳",
-            "system": "Past–future bridge",
+            "emoji": "*",
+            "system": "Past-future bridge",
             "uncertainty": 80,
             "impact": 88,
             "observability": 56,
-            "time_scale": "centuries → millions of years",
+            "time_scale": "centuries ->millions of years",
             "regions": ["Pliocene", "Last Interglacial", "Marine margins", "Ice-core sites"],
             "methods": ["Marine sediment cores", "Ice cores", "Sea-level records", "Model-data comparison"],
             "core_question": "How can past warm periods constrain future Antarctic sea-level contribution?",
             "why_now": "The satellite era is too short to reveal the full AIS response, so paleo records are essential for testing long-term sensitivity.",
             "gap": "Paleo sea-level and ice-extent reconstructions have large uncertainties, making it hard to validate specific model physics.",
-            "student_angle": "Build a Past–Present–Future evidence chain showing what each archive can and cannot prove.",
+            "student_angle": "Build a Past-Present-Future evidence chain showing what each archive can and cannot prove.",
             "starter_questions": [
                 "Which past warm intervals are most useful analogs for future Antarctic change?",
                 "How can paleo records test whether high-end collapse mechanisms are realistic?",
@@ -1867,12 +2323,12 @@ elif module == "Research Directions":
             ]
         },
         "AI-assisted Antarctic research": {
-            "emoji": "🤖",
+            "emoji": "*",
             "system": "AI + Earth observation",
             "uncertainty": 74,
             "impact": 78,
             "observability": 86,
-            "time_scale": "now → next decade",
+            "time_scale": "now ->next decade",
             "regions": ["Remote sensing", "Literature synthesis", "Education", "Model workflows"],
             "methods": ["Knowledge graphs", "RAG", "Computer vision", "Interactive visualization"],
             "core_question": "How can AI help organize observations, literature, and model uncertainty without replacing scientific reasoning?",
@@ -1909,11 +2365,15 @@ elif module == "Research Directions":
     selected_info = research_directions[selected_direction]
 
     with top_col:
-        d1, d2, d3, d4 = st.columns(4)
-        d1.metric("Impact", f"{selected_info['impact']} / 100")
-        d2.metric("Uncertainty", f"{selected_info['uncertainty']} / 100")
-        d3.metric("Observability", f"{selected_info['observability']} / 100")
-        d4.metric("Time scale", selected_info["time_scale"])
+        safe_time_scale = html.escape(selected_info["time_scale"]).replace("-&gt;", "&rarr; ")
+        st.markdown(f"""
+        <div class="direction-metric-grid">
+          <div class="direction-metric"><div class="k">Impact</div><div class="v">{selected_info['impact']}</div><div class="sub">/ 100</div></div>
+          <div class="direction-metric"><div class="k">Uncertainty</div><div class="v">{selected_info['uncertainty']}</div><div class="sub">/ 100</div></div>
+          <div class="direction-metric"><div class="k">Observability</div><div class="v">{selected_info['observability']}</div><div class="sub">/ 100</div></div>
+          <div class="direction-metric"><div class="k">Time scale</div><div class="v time">{safe_time_scale}</div></div>
+        </div>
+        """, unsafe_allow_html=True)
 
         card_a, card_b, card_c = st.columns([0.34, 0.33, 0.33], gap="small")
         with card_a:
@@ -1950,7 +2410,7 @@ elif module == "Research Directions":
             "Uncertainty": meta["uncertainty"],
             "Observability": meta["observability"],
             "System": meta["system"],
-            "Emoji": meta["emoji"],
+            "emoji": "*",
             "Selected": name == selected_direction,
             "Size": 20 + meta["impact"] * 0.55,
             "Label": f"{meta['emoji']} {name}"
@@ -2166,7 +2626,7 @@ elif module == "Antarctic System Explorer":
         display: flex;
         align-items: baseline;
         gap: 18px;
-        margin: .55rem 0 .58rem 0;
+        margin: .95rem 0 .58rem 0;
         flex-wrap: wrap;
       }
       .system-title-row .system-title {
@@ -2175,7 +2635,7 @@ elif module == "Antarctic System Explorer":
         font-size: clamp(2.05rem, 4vw, 2.72rem);
         line-height: 1.18;
         font-weight: 800;
-        letter-spacing: -0.03em;
+        letter-spacing: 0;
       }
       .system-title-row .system-inline-hint {
         color: rgba(188, 221, 239, .72);
@@ -2249,7 +2709,7 @@ elif module == "Antarctic System Explorer":
 
     st.markdown("""
     <div class="system-title-row">
-      <div class="system-title">🛰️ Antarctic System Explorer</div>
+      <div class="system-title">&#128752; Antarctic System Explorer</div>
       <div class="system-inline-hint">
         Explore how different observation tools see the same Antarctic case study. Choose a glacier or ice-shelf case, then switch the sensor layer to see what that tool would reveal.
       </div>
@@ -2267,58 +2727,58 @@ elif module == "Antarctic System Explorer":
             "visual_seed": "thwaites",
             "tools": {
                 "Satellite Altimetry": {
-                    "icon": "🛰️",
+                    "icon": "*",
                     "measures": "Surface elevation change",
                     "observed": "Surface lowering and dynamic thinning near the glacier trunk and grounding zone.",
                     "result": "The satellite-era record indicates strong thinning in the Amundsen Sea sector.",
                     "interpretation": "Lower surface elevation is consistent with ice-shelf thinning and faster discharge of grounded ice.",
                     "visual": "Laser/radar tracks scan across the glacier while a blue-to-red thinning layer appears over the trunk.",
-                    "process": "Elevation loss → thinner ice shelf → weaker buttressing → faster flow"
+                    "process": "Elevation loss ->thinner ice shelf ->weaker buttressing ->faster flow"
                 },
                 "InSAR Velocity": {
-                    "icon": "📡",
+                    "icon": "*",
                     "measures": "Ice velocity and deformation",
                     "observed": "Fast flow and acceleration toward the floating ice shelf.",
                     "result": "Velocity patterns reveal where ice discharge is concentrated and where flow responds to buttressing loss.",
                     "interpretation": "Faster flow suggests reduced resistance near the grounding line and shelf front.",
                     "visual": "Orange velocity vectors appear over the glacier trunk and lengthen downstream.",
-                    "process": "Phase difference → displacement → velocity field → ice discharge"
+                    "process": "Phase difference ->displacement ->velocity field ->ice discharge"
                 },
                 "GRACE / GRACE-FO": {
-                    "icon": "🌍",
+                    "icon": "*",
                     "measures": "Regional mass change from gravity",
                     "observed": "Large-scale negative mass balance in West Antarctica.",
                     "result": "GRACE-like observations connect glacier change to regional mass loss.",
                     "interpretation": "Mass loss contributes to global mean sea-level rise, but requires GIA correction.",
                     "visual": "A broad red gravity-anomaly style field covers the regional basin.",
-                    "process": "Gravity change → mass balance → sea-level contribution"
+                    "process": "Gravity change ->mass balance ->sea-level contribution"
                 },
                 "GPS / GNSS": {
-                    "icon": "📍",
+                    "icon": "*",
                     "measures": "Point motion and bedrock response",
                     "observed": "Sparse station-style points track crustal motion and local displacement.",
                     "result": "GNSS helps separate ice-mass change from solid-Earth motion.",
                     "interpretation": "This is important for constraining GIA and interpreting gravity-based mass estimates.",
                     "visual": "Station markers pulse, with small vectors showing motion/uplift.",
-                    "process": "Station position → crustal motion → GIA correction"
+                    "process": "Station position ->crustal motion ->GIA correction"
                 },
                 "Ice-penetrating Radar": {
-                    "icon": "📻",
+                    "icon": "*",
                     "measures": "Ice thickness, bed topography, internal layers",
                     "observed": "Bed geometry and possible retrograde slopes beneath the glacier system.",
                     "result": "Radar-style profiles reveal the hidden boundary conditions controlling retreat.",
                     "interpretation": "Bed topography determines whether retreat can become self-sustaining.",
                     "visual": "Radar flight lines and a glowing subglacial cross-section appear beneath the ice.",
-                    "process": "Radar echo → bed map → instability assessment"
+                    "process": "Radar echo ->bed map ->instability assessment"
                 },
                 "Ice / Marine Sediment Cores": {
-                    "icon": "🧊",
+                    "icon": "*",
                     "measures": "Past climate and retreat history",
                     "observed": "Marine records help reconstruct previous grounding-line positions and retreat episodes.",
                     "result": "Paleo evidence extends interpretation beyond the short satellite era.",
                     "interpretation": "Past retreat provides context for how the system may respond to future forcing.",
                     "visual": "Core sites appear offshore, connected to a time-depth archive strip.",
-                    "process": "Core record → past retreat → future sensitivity constraint"
+                    "process": "Core record ->past retreat ->future sensitivity constraint"
                 }
             }
         },
@@ -2332,58 +2792,58 @@ elif module == "Antarctic System Explorer":
             "visual_seed": "pine",
             "tools": {
                 "Satellite Altimetry": {
-                    "icon": "🛰️",
+                    "icon": "*",
                     "measures": "Surface elevation change",
                     "observed": "Strong thinning along the glacier and ice shelf.",
                     "result": "Altimetry-style evidence shows where surface lowering is concentrated.",
                     "interpretation": "Surface lowering reflects dynamic thinning and enhanced basal melting.",
                     "visual": "Repeated satellite tracks reveal a thinning corridor near the grounding zone.",
-                    "process": "Repeated elevation profiles → thinning map → dynamic response"
+                    "process": "Repeated elevation profiles ->thinning map ->dynamic response"
                 },
                 "InSAR Velocity": {
-                    "icon": "📡",
+                    "icon": "*",
                     "measures": "Ice velocity and grounding-zone motion",
                     "observed": "Fast outlet flow toward Pine Island Bay.",
                     "result": "Velocity vectors show the main discharge pathway.",
                     "interpretation": "Acceleration is consistent with reduced ice-shelf buttressing.",
                     "visual": "Dense downstream arrows highlight the fast-flowing trunk.",
-                    "process": "SAR phase → velocity → ice discharge"
+                    "process": "SAR phase ->velocity ->ice discharge"
                 },
                 "GRACE / GRACE-FO": {
-                    "icon": "🌍",
+                    "icon": "*",
                     "measures": "Regional mass balance",
                     "observed": "Part of the broader Amundsen Sea mass-loss signal.",
                     "result": "Gravity change captures integrated regional loss rather than local glacier detail.",
                     "interpretation": "Useful for linking local dynamic change to total mass loss.",
                     "visual": "A basin-scale mass-loss halo overlays the map.",
-                    "process": "Gravity anomaly → regional mass trend → sea-level signal"
+                    "process": "Gravity anomaly ->regional mass trend ->sea-level signal"
                 },
                 "GPS / GNSS": {
-                    "icon": "📍",
+                    "icon": "*",
                     "measures": "Bedrock and surface motion at stations",
                     "observed": "Point observations can help constrain solid-Earth response.",
                     "result": "GNSS is precise but spatially sparse.",
                     "interpretation": "Important for separating ice signals from bedrock uplift.",
                     "visual": "Station points blink at the margin with uplift arrows.",
-                    "process": "Position time series → uplift rate → correction"
+                    "process": "Position time series ->uplift rate ->correction"
                 },
                 "Ice-penetrating Radar": {
-                    "icon": "📻",
+                    "icon": "*",
                     "measures": "Bed and cavity geometry",
                     "observed": "Troughs and bed features that route ocean heat toward the grounding line.",
                     "result": "Radar and bathymetry reveal pathways for warm water access.",
                     "interpretation": "Geometry helps explain why Pine Island is sensitive to ocean forcing.",
                     "visual": "Subglacial troughs glow beneath the ice image.",
-                    "process": "Bed sounding → trough geometry → ocean access pathway"
+                    "process": "Bed sounding ->trough geometry ->ocean access pathway"
                 },
                 "Ice / Marine Sediment Cores": {
-                    "icon": "🧊",
+                    "icon": "*",
                     "measures": "Past retreat and ocean conditions",
                     "observed": "Marine archives record earlier ice-margin behavior in Pine Island Trough.",
                     "result": "Sediment evidence helps test whether retreat was rapid or episodic.",
                     "interpretation": "Past retreat constrains model scenarios for future instability.",
                     "visual": "Offshore core dots and a layered sediment strip appear.",
-                    "process": "Sediment layers → retreat history → model constraint"
+                    "process": "Sediment layers ->retreat history ->model constraint"
                 }
             }
         },
@@ -2397,58 +2857,58 @@ elif module == "Antarctic System Explorer":
             "visual_seed": "totten",
             "tools": {
                 "Satellite Altimetry": {
-                    "icon": "🛰️",
+                    "icon": "*",
                     "measures": "Surface height change",
                     "observed": "Surface lowering in a vulnerable East Antarctic outlet system.",
                     "result": "Altimetry helps detect whether EAIS outlet glaciers are thinning or thickening.",
                     "interpretation": "Thinning suggests ocean forcing can affect parts of East Antarctica too.",
                     "visual": "Satellite tracks cross an East Antarctic outlet with localized thinning colors.",
-                    "process": "Elevation change → outlet thinning → EAIS vulnerability"
+                    "process": "Elevation change ->outlet thinning ->EAIS vulnerability"
                 },
                 "InSAR Velocity": {
-                    "icon": "📡",
+                    "icon": "*",
                     "measures": "Ice velocity",
                     "observed": "Fast flow through the Totten outlet toward the coast.",
                     "result": "InSAR-style velocity mapping identifies dynamic outlet behavior.",
                     "interpretation": "Flow pattern links inland catchment ice to coastal forcing.",
                     "visual": "Flow arrows converge toward the outlet glacier trunk.",
-                    "process": "Velocity field → discharge pathway → dynamic thinning"
+                    "process": "Velocity field ->discharge pathway ->dynamic thinning"
                 },
                 "GRACE / GRACE-FO": {
-                    "icon": "🌍",
+                    "icon": "*",
                     "measures": "Large-scale mass balance",
                     "observed": "EAIS mass change is harder to isolate because signals are broad and uncertain.",
                     "result": "GRACE provides continent-scale mass context but local attribution is limited.",
                     "interpretation": "Needs careful regional interpretation and GIA correction.",
                     "visual": "A broad, softer mass-balance field overlays the East Antarctic sector.",
-                    "process": "Gravity trend → regional mass estimate → uncertainty"
+                    "process": "Gravity trend ->regional mass estimate ->uncertainty"
                 },
                 "GPS / GNSS": {
-                    "icon": "📍",
+                    "icon": "*",
                     "measures": "Crustal motion and vertical uplift",
                     "observed": "Sparse geodetic constraints for East Antarctic solid-Earth response.",
                     "result": "GNSS helps improve corrections to mass-balance estimates.",
                     "interpretation": "Especially important where mass-change signals are subtle.",
                     "visual": "Few station markers emphasize sparse but precise measurements.",
-                    "process": "GNSS station → uplift correction → better mass estimate"
+                    "process": "GNSS station ->uplift correction ->better mass estimate"
                 },
                 "Ice-penetrating Radar": {
-                    "icon": "📻",
+                    "icon": "*",
                     "measures": "Ice thickness, bed, subglacial basin structure",
                     "observed": "Marine-based geometry and bed pathways beneath the outlet system.",
                     "result": "Radar is central for identifying hidden EAIS vulnerabilities.",
                     "interpretation": "Bed shape controls whether ocean-driven retreat can propagate inland.",
                     "visual": "A deep basin cross-section appears below the satellite-style surface.",
-                    "process": "Radar profile → marine basin → retreat sensitivity"
+                    "process": "Radar profile ->marine basin ->retreat sensitivity"
                 },
                 "Ice / Marine Sediment Cores": {
-                    "icon": "🧊",
+                    "icon": "*",
                     "measures": "Past EAIS and ocean conditions",
                     "observed": "Marine sediment records can indicate past margin retreat and ocean warmth.",
                     "result": "Paleo data helps evaluate long-term East Antarctic sensitivity.",
                     "interpretation": "Useful because satellite records are too short for millennial-scale behavior.",
                     "visual": "Core archive marks appear along the continental shelf.",
-                    "process": "Paleo archive → warm-period behavior → future analog"
+                    "process": "Paleo archive ->warm-period behavior ->future analog"
                 }
             }
         },
@@ -2462,58 +2922,58 @@ elif module == "Antarctic System Explorer":
             "visual_seed": "larsen",
             "tools": {
                 "Satellite Altimetry": {
-                    "icon": "🛰️",
+                    "icon": "*",
                     "measures": "Surface elevation before/after collapse",
                     "observed": "Elevation and surface morphology changed dramatically after shelf breakup.",
                     "result": "Altimetry-like monitoring helps quantify post-collapse glacier thinning.",
                     "interpretation": "After shelf loss, tributary glaciers can accelerate and thin.",
                     "visual": "Before/after scan lines reveal lowered tributary glacier surfaces.",
-                    "process": "Ice-shelf loss → tributary thinning → reduced stability"
+                    "process": "Ice-shelf loss ->tributary thinning ->reduced stability"
                 },
                 "InSAR Velocity": {
-                    "icon": "📡",
+                    "icon": "*",
                     "measures": "Tributary glacier acceleration",
                     "observed": "Glaciers feeding the former shelf accelerated after collapse.",
                     "result": "Velocity mapping directly shows the dynamic impact of buttressing loss.",
                     "interpretation": "This is a clear example of why floating shelves matter for grounded ice.",
                     "visual": "Arrows behind the former shelf become longer and brighter.",
-                    "process": "Shelf collapse → lower back stress → faster tributary flow"
+                    "process": "Shelf collapse ->lower back stress ->faster tributary flow"
                 },
                 "GRACE / GRACE-FO": {
-                    "icon": "🌍",
+                    "icon": "*",
                     "measures": "Regional mass change",
                     "observed": "Regional signal is smaller and harder to isolate than WAIS basin-scale loss.",
                     "result": "GRACE gives context but is not the primary local diagnostic here.",
                     "interpretation": "Better used with altimetry and velocity for this case.",
                     "visual": "A faint regional mass-change layer appears over the Peninsula.",
-                    "process": "Regional gravity → mass context → multi-sensor interpretation"
+                    "process": "Regional gravity ->mass context ->multi-sensor interpretation"
                 },
                 "GPS / GNSS": {
-                    "icon": "📍",
+                    "icon": "*",
                     "measures": "Local motion and crustal response",
                     "observed": "Point measurements can support local deformation and uplift context.",
                     "result": "GNSS is useful but sparse relative to satellite imagery.",
                     "interpretation": "Best interpreted together with optical/SAR records.",
                     "visual": "A few station vectors appear along the Peninsula.",
-                    "process": "Station motion → local deformation → context"
+                    "process": "Station motion ->local deformation ->context"
                 },
                 "Ice-penetrating Radar": {
-                    "icon": "📻",
+                    "icon": "*",
                     "measures": "Shelf and tributary geometry",
                     "observed": "Internal structure and thickness help explain shelf weakness and tributary response.",
                     "result": "Radar can support understanding of mechanical vulnerability.",
                     "interpretation": "Geometry and crevasse structure affect collapse potential.",
                     "visual": "Crack-like internal layers and radar profiles appear across the shelf.",
-                    "process": "Internal structure → fracture vulnerability → collapse risk"
+                    "process": "Internal structure ->fracture vulnerability ->collapse risk"
                 },
                 "Ice / Marine Sediment Cores": {
-                    "icon": "🧊",
+                    "icon": "*",
                     "measures": "Longer-term shelf and climate history",
                     "observed": "Records can help determine whether collapse was unusual in recent millennia.",
                     "result": "Paleo context tells whether modern breakup exceeds natural variability.",
                     "interpretation": "Important for connecting recent atmospheric warming to shelf stability.",
                     "visual": "Core archive appears near the shelf front and former embayment.",
-                    "process": "Archive record → shelf history → modern anomaly"
+                    "process": "Archive record ->shelf history ->modern anomaly"
                 }
             }
         },
@@ -2527,58 +2987,58 @@ elif module == "Antarctic System Explorer":
             "visual_seed": "wilkes",
             "tools": {
                 "Satellite Altimetry": {
-                    "icon": "🛰️",
+                    "icon": "*",
                     "measures": "Broad surface elevation trends",
                     "observed": "Surface elevation provides a first view of present-day change over a large basin.",
                     "result": "Altimetry helps detect whether the basin is stable, thinning, or thickening.",
                     "interpretation": "Present changes must be interpreted against snowfall and firn processes.",
                     "visual": "Wide satellite tracks sweep across the basin surface.",
-                    "process": "Elevation trend → basin-scale change → mass-balance clue"
+                    "process": "Elevation trend ->basin-scale change ->mass-balance clue"
                 },
                 "InSAR Velocity": {
-                    "icon": "📡",
+                    "icon": "*",
                     "measures": "Outlet velocity patterns",
                     "observed": "Velocity fields show where ice can drain from the basin toward the coast.",
                     "result": "InSAR identifies fast-flow corridors and outlet controls.",
                     "interpretation": "Flow pathways connect interior basin geometry to coastal vulnerability.",
                     "visual": "Flow arrows trace drainage from the basin toward the margin.",
-                    "process": "Velocity map → drainage structure → discharge risk"
+                    "process": "Velocity map ->drainage structure ->discharge risk"
                 },
                 "GRACE / GRACE-FO": {
-                    "icon": "🌍",
+                    "icon": "*",
                     "measures": "Large-scale mass change",
                     "observed": "Broad gravity signals help monitor basin-scale mass balance.",
                     "result": "Spatial resolution is coarse, so interpretation is regional.",
                     "interpretation": "GIA correction is essential in East Antarctica.",
                     "visual": "A broad mass-balance wash appears across Wilkes Land.",
-                    "process": "Gravity field → basin mass trend → GIA-sensitive estimate"
+                    "process": "Gravity field ->basin mass trend ->GIA-sensitive estimate"
                 },
                 "GPS / GNSS": {
-                    "icon": "📍",
+                    "icon": "*",
                     "measures": "Crustal uplift and solid-Earth correction",
                     "observed": "Sparse but valuable constraints on vertical bedrock motion.",
                     "result": "GNSS improves the correction needed for gravity-derived ice mass.",
                     "interpretation": "Important for reducing uncertainty in East Antarctic mass balance.",
                     "visual": "Uplift vectors appear as fixed station points over the basin margin.",
-                    "process": "Uplift rate → GIA model → corrected ice mass"
+                    "process": "Uplift rate ->GIA model ->corrected ice mass"
                 },
                 "Ice-penetrating Radar": {
-                    "icon": "📻",
+                    "icon": "*",
                     "measures": "Hidden basin geometry and bed slope",
                     "observed": "Deep subglacial basin and retrograde-bed style geometry.",
                     "result": "Radar is the most visually important tool for this case because the key feature is hidden beneath ice.",
                     "interpretation": "Bed topography controls long-term marine ice-sheet sensitivity.",
                     "visual": "A large glowing subglacial basin appears beneath the ice surface.",
-                    "process": "Bed echo → basin geometry → marine instability potential"
+                    "process": "Bed echo ->basin geometry ->marine instability potential"
                 },
                 "Ice / Marine Sediment Cores": {
-                    "icon": "🧊",
+                    "icon": "*",
                     "measures": "Past warm-period ice extent",
                     "observed": "Paleo records test whether marine-based EAIS sectors retreated in past warm climates.",
                     "result": "Core evidence helps constrain long-term sensitivity that satellites cannot capture.",
                     "interpretation": "Useful for Pliocene and interglacial analogs.",
                     "visual": "Archive markers connect the basin to past warm-period evidence.",
-                    "process": "Past margin record → warm-climate response → future constraint"
+                    "process": "Past margin record ->warm-climate response ->future constraint"
                 }
             }
         }
@@ -2587,12 +3047,12 @@ elif module == "Antarctic System Explorer":
     tool_order = ["Satellite Altimetry", "InSAR Velocity", "GRACE / GRACE-FO", "GPS / GNSS", "Ice-penetrating Radar", "Ice / Marine Sediment Cores"]
 
     layer_label_map = {
-        "Satellite Altimetry": "🛰 Altimetry",
-        "InSAR Velocity": "📡 InSAR",
-        "GRACE / GRACE-FO": "🌍 GRACE",
-        "GPS / GNSS": "📍 GNSS",
-        "Ice-penetrating Radar": "📻 Radar",
-        "Ice / Marine Sediment Cores": "🧊 Cores"
+        "Satellite Altimetry": "Altimetry",
+        "InSAR Velocity": "InSAR",
+        "GRACE / GRACE-FO": "GRACE",
+        "GPS / GNSS": "GNSS",
+        "Ice-penetrating Radar": "Radar",
+        "Ice / Marine Sediment Cores": "Cores"
     }
 
     if "system_tool_select" not in st.session_state or st.session_state["system_tool_select"] not in tool_order:
@@ -2601,6 +3061,7 @@ elif module == "Antarctic System Explorer":
         st.session_state["system_visual_layers"] = [st.session_state["system_tool_select"]]
 
     st.markdown("<div class='system-control-strip'>", unsafe_allow_html=True)
+    st.caption("Conceptual visualization: the base scene and sensor layers illustrate observation logic, not downloaded raw remote-sensing data.")
 
     # Deployment-safe layout: keep Case Study and Multi-layer mode on the first row,
     # then give Observation layers a full row. This prevents Streamlit Cloud / browser
@@ -2679,21 +3140,38 @@ elif module == "Antarctic System Explorer":
     <div id="sensor-explorer-root">
       <style>
         #sensor-explorer-root {
-          width: 100%; height: 655px; overflow: hidden; position: relative; border-radius: 28px;
+          width: 100%; height: 655px; overflow: hidden; position: relative; border-radius: 32px; isolation:isolate;
           color: #edf8ff; font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
           background:
             radial-gradient(circle at 20% 18%, rgba(78,163,241,.24), transparent 30%),
             radial-gradient(circle at 86% 20%, rgba(149,117,205,.18), transparent 26%),
             linear-gradient(135deg, #030712 0%, #07111f 48%, #020617 100%);
-          box-shadow: inset 0 0 90px rgba(78,163,241,.12);
+          background-size: 135% 135%, 150% 150%, 100% 100%;
+          box-shadow: inset 0 0 100px rgba(78,163,241,.14), 0 26px 82px rgba(0,0,0,.34);
+          animation: sensorNebulaDrift 24s ease-in-out infinite;
         }
         #sensor-explorer-root * { box-sizing: border-box; }
+        #sensor-explorer-root::before,
+        #sensor-explorer-root::after { content:""; position:absolute; inset:-18%; pointer-events:none; z-index:1; }
+        #sensor-explorer-root::before {
+          background:linear-gradient(115deg, transparent 8%, rgba(255,255,255,.055) 38%, rgba(126,220,255,.10) 49%, transparent 63%);
+          mix-blend-mode:screen; opacity:.70; animation:sensorGlassDrift 13s ease-in-out infinite;
+        }
+        #sensor-explorer-root::after {
+          background:radial-gradient(ellipse at 52% 52%, transparent 35%, rgba(2,6,23,.36) 84%);
+          z-index:1;
+        }
+        @keyframes sensorNebulaDrift { 0%,100% { background-position:0% 0%, 100% 18%, 0 0; } 50% { background-position:8% 7%, 91% 26%, 0 0; } }
+        @keyframes sensorGlassDrift { 0%,100% { transform:translateX(-7%) rotate(-3deg); opacity:.52; } 50% { transform:translateX(7%) rotate(3deg); opacity:.86; } }
+        @keyframes sensorPanelIn { from { opacity:0; transform:translateY(12px) scale(.985); } to { opacity:1; transform:translateY(0) scale(1); } }
         .sensor-title {
           position:absolute; top:10px; left:22px; z-index:9;
           max-width: calc(100% - 44px); width: auto;
           display:flex; align-items:center; gap:16px;
-          padding:9px 13px; border-radius:16px; background:rgba(3,7,18,.50);
-          border:1px solid rgba(170,215,255,.15); backdrop-filter: blur(10px);
+          padding:9px 13px; border-radius:18px; overflow:hidden; background:radial-gradient(circle at 14% 0%, rgba(255,255,255,.10), transparent 34%), linear-gradient(180deg, rgba(14,27,49,.60), rgba(4,12,25,.40));
+          border:1px solid rgba(210,238,255,.20); backdrop-filter: blur(18px) saturate(1.28);
+          box-shadow:inset 0 1px 0 rgba(255,255,255,.12), 0 16px 44px rgba(0,0,0,.18);
+          animation:sensorPanelIn .36s cubic-bezier(.2,.8,.2,1) both;
           white-space: nowrap;
         }
         .sensor-title h2 {
@@ -2714,9 +3192,11 @@ elif module == "Antarctic System Explorer":
         }
         .sat-frame {
           position:absolute; left:22px; top:62px; width:66%; height:570px; border-radius:26px; overflow:hidden;
-          border:1px solid rgba(170,215,255,.22); background:#06111e;
-          box-shadow: 0 22px 70px rgba(0,0,0,.42), inset 0 0 60px rgba(110,210,255,.09);
+          z-index:4; border:1px solid rgba(210,238,255,.22); background:#06111e;
+          box-shadow: 0 24px 74px rgba(0,0,0,.42), inset 0 1px 0 rgba(255,255,255,.10), inset 0 0 62px rgba(110,210,255,.10);
+          animation:sensorPanelIn .42s cubic-bezier(.2,.8,.2,1) both;
         }
+        .sat-frame::before { content:""; position:absolute; inset:-60% -30%; z-index:2; pointer-events:none; background:linear-gradient(120deg, transparent 0%, rgba(255,255,255,.08) 38%, rgba(126,220,255,.12) 48%, transparent 66%); opacity:.50; transform:translateX(-26%) rotate(10deg); }
         .sat-image {
           position:absolute; inset:0;
           background:
@@ -2766,7 +3246,8 @@ elif module == "Antarctic System Explorer":
         .case-wilkes .glacier-outline { left:21%; top:15%; width:58%; height:72%; border-radius:50%; transform:rotate(0deg); }
         .ocean-label, .ice-label, .case-label {
           position:absolute; z-index:3; padding:7px 10px; border-radius:999px; font-size:12px;
-          background:rgba(2,6,23,.48); border:1px solid rgba(210,238,255,.18); backdrop-filter: blur(8px);
+          background:rgba(2,6,23,.50); border:1px solid rgba(210,238,255,.20); backdrop-filter: blur(12px) saturate(1.24);
+          box-shadow:inset 0 1px 0 rgba(255,255,255,.08), 0 10px 24px rgba(0,0,0,.14);
         }
         .ice-label { left:48px; bottom:36px; }
         .ocean-label { right:40px; bottom:38px; color:#bdefff; }
@@ -2795,7 +3276,7 @@ elif module == "Antarctic System Explorer":
         @keyframes flow { 0%,100%{transform:translateX(-6px);opacity:.55} 50%{transform:translateX(12px);opacity:1} }
         .grace .mass-blob { position:absolute; left:20%; top:24%; width:430px; height:360px; border-radius:50%; background:radial-gradient(circle, rgba(255,68,68,.68), rgba(255,132,60,.42) 42%, rgba(0,120,255,.10) 68%, transparent 78%); filter:blur(2px); mix-blend-mode:screen; animation:pulse 2.8s ease-in-out infinite; }
         .gnss .station { position:absolute; width:16px; height:16px; border-radius:50%; background:#9dffb6; border:2px solid white; box-shadow:0 0 16px rgba(120,255,170,.9); animation:pulse 1.8s infinite; }
-        .gnss .station::after { content:"↗"; position:absolute; left:14px; top:-18px; color:#9dffb6; font-weight:900; font-size:22px; text-shadow:0 0 12px rgba(120,255,170,.95); }
+        .gnss .station::after { content:"→"; position:absolute; left:14px; top:-18px; color:#9dffb6; font-weight:900; font-size:22px; text-shadow:0 0 12px rgba(120,255,170,.95); }
         .gnss .s1{left:31%;top:42%}.gnss .s2{left:48%;top:57%;animation-delay:.3s}.gnss .s3{left:62%;top:36%;animation-delay:.6s}.gnss .s4{left:24%;top:66%;animation-delay:.9s}
         .radar .radar-line { position:absolute; height:3px; background:rgba(255,255,255,.80); box-shadow:0 0 16px rgba(255,255,255,.88); transform:rotate(-12deg); }
         .radar .r1{left:22%;top:34%;width:340px}.radar .r2{left:26%;top:50%;width:300px}.radar .r3{left:30%;top:65%;width:260px}
@@ -2806,27 +3287,28 @@ elif module == "Antarctic System Explorer":
         .legend-pill { position:absolute; left:32px; bottom:76px; z-index:6; padding:9px 13px; border-radius:999px; background:rgba(2,6,23,.62); border:1px solid rgba(210,238,255,.18); color:#cfeeff; font-size:12px; }
         .side-card {
           position:absolute; right:22px; top:62px; width:30%; height:570px; border-radius:26px; padding:18px;
-          background:linear-gradient(180deg, rgba(8,18,34,.92), rgba(7,15,29,.76)); border:1px solid rgba(170,215,255,.25);
-          box-shadow:0 22px 70px rgba(0,0,0,.40), inset 0 0 28px rgba(78,163,241,.08); backdrop-filter:blur(14px); overflow:auto; scrollbar-width:none;
+          z-index:6; background:radial-gradient(circle at 12% 0%, rgba(255,255,255,.12), transparent 34%), linear-gradient(180deg, rgba(12,25,46,.90), rgba(5,13,27,.70)); border:1px solid rgba(210,238,255,.30);
+          box-shadow:0 24px 74px rgba(0,0,0,.40), inset 0 1px 0 rgba(255,255,255,.14), inset 0 -1px 0 rgba(126,220,255,.08); backdrop-filter:blur(24px) saturate(1.38); overflow:auto; scrollbar-width:none;
+          animation:sensorPanelIn .46s cubic-bezier(.2,.8,.2,1) both;
         }
-        .side-card::-webkit-scrollbar{display:none}.badge{display:inline-flex; gap:7px; align-items:center; padding:7px 11px; border-radius:999px; color:#bfe6ff; background:rgba(78,163,241,.14); border:1px solid rgba(142,207,255,.25); font-size:12px; font-weight:700}.side-card h3{margin:15px 0 8px 0; font-size:24px}.meta{color:rgba(235,248,255,.70); font-size:13px; line-height:1.45}.label{margin-top:15px; color:#8ccfff; font-size:11px; text-transform:uppercase; letter-spacing:1px}.side-card p{margin:6px 0 0 0; color:rgba(239,248,255,.86); line-height:1.45; font-size:13px}.insight-card{margin-top:11px; padding:12px 13px; border-radius:17px; background:rgba(255,255,255,.052); border:1px solid rgba(210,238,255,.11); box-shadow: inset 0 0 22px rgba(78,163,241,.045)}.insight-card .k{font-size:11px; text-transform:uppercase; letter-spacing:.9px; color:#8ccfff; font-weight:800}.insight-card .v{margin-top:5px; color:rgba(239,248,255,.89); font-size:13px; line-height:1.42}.tool-grid{display:grid; grid-template-columns:1fr 1fr; gap:9px; margin-top:15px}.tool-mini{padding:9px 10px; border-radius:14px; background:rgba(255,255,255,.045); border:1px solid rgba(255,255,255,.10); font-size:12px; color:rgba(239,248,255,.76)}.tool-mini.layer-on{border-color:rgba(74,222,128,.42); background:rgba(34,197,94,.10); color:#eafff0}.tool-mini.active{border-color:rgba(130,220,255,.85); background:rgba(78,163,241,.22); color:#fff; box-shadow:0 0 18px rgba(78,163,241,.18)}.synthesis{margin-top:16px; padding:13px; border-radius:16px; background:rgba(34,197,94,.08); border:1px solid rgba(74,222,128,.18); color:rgba(235,255,242,.86); font-size:13px; line-height:1.45}.process-chain{margin-top:10px; padding:12px; border-radius:14px; background:rgba(255,255,255,.045); border:1px solid rgba(255,255,255,.10); color:#d8f1ff; font-size:12px; line-height:1.45}.visible-layers{position:absolute; left:32px; top:92px; z-index:7; display:flex; gap:7px; flex-wrap:wrap; max-width:62%}.layer-chip{padding:6px 9px; border-radius:999px; background:rgba(2,6,23,.50); border:1px solid rgba(210,238,255,.16); color:#d9f4ff; font-size:11px}
+        .side-card::-webkit-scrollbar{display:none}.badge{display:inline-flex; gap:7px; align-items:center; padding:7px 11px; border-radius:999px; color:#bfe6ff; background:rgba(78,163,241,.14); border:1px solid rgba(142,207,255,.25); font-size:12px; font-weight:700}.side-card h3{margin:15px 0 8px 0; font-size:24px}.meta{color:rgba(235,248,255,.70); font-size:13px; line-height:1.45}.label{margin-top:15px; color:#8ccfff; font-size:11px; text-transform:uppercase; letter-spacing:1px}.side-card p{margin:6px 0 0 0; color:rgba(239,248,255,.86); line-height:1.45; font-size:13px}.insight-card{margin-top:11px; padding:12px 13px; border-radius:17px; background:rgba(255,255,255,.058); border:1px solid rgba(210,238,255,.13); box-shadow: inset 0 1px 0 rgba(255,255,255,.06), inset 0 0 22px rgba(78,163,241,.045); transition:transform .18s ease, border-color .18s ease}.insight-card:hover{transform:translateY(-1px); border-color:rgba(126,220,255,.28)}.insight-card .k{font-size:11px; text-transform:uppercase; letter-spacing:.9px; color:#8ccfff; font-weight:800}.insight-card .v{margin-top:5px; color:rgba(239,248,255,.89); font-size:13px; line-height:1.42}.tool-grid{display:grid; grid-template-columns:1fr 1fr; gap:9px; margin-top:15px}.tool-mini{padding:9px 10px; border-radius:14px; background:rgba(255,255,255,.052); border:1px solid rgba(255,255,255,.12); font-size:12px; color:rgba(239,248,255,.76); transition:transform .18s ease, border-color .18s ease}.tool-mini:hover{transform:translateY(-1px); border-color:rgba(126,220,255,.28)}.tool-mini.layer-on{border-color:rgba(74,222,128,.42); background:rgba(34,197,94,.10); color:#eafff0}.tool-mini.active{border-color:rgba(130,220,255,.85); background:rgba(78,163,241,.22); color:#fff; box-shadow:0 0 18px rgba(78,163,241,.18)}.synthesis{margin-top:16px; padding:13px; border-radius:16px; background:rgba(34,197,94,.08); border:1px solid rgba(74,222,128,.18); color:rgba(235,255,242,.86); font-size:13px; line-height:1.45}.process-chain{margin-top:10px; padding:12px; border-radius:14px; background:rgba(255,255,255,.052); border:1px solid rgba(255,255,255,.12); color:#d8f1ff; font-size:12px; line-height:1.45}.visible-layers{position:absolute; left:32px; top:92px; z-index:7; display:flex; gap:7px; flex-wrap:wrap; max-width:62%}.layer-chip{padding:6px 9px; border-radius:999px; background:rgba(2,6,23,.52); border:1px solid rgba(210,238,255,.18); color:#d9f4ff; font-size:11px; backdrop-filter:blur(10px)}
       </style>
       <div class="sensor-title"><h2>Multi-Sensor Evidence Explorer</h2><p>Case study as the base satellite scene; each observation tool adds a different evidence layer on top.</p></div>
       <div class="sat-frame case-__CASE_CLASS__">
         <div class="sat-image"></div><div class="glacier-outline"></div><div class="orbit"></div>
-        <div class="case-label">📍 __CASE_NAME__ · __COORDS__</div><div class="ice-label">Ice / shelf surface</div><div class="ocean-label">Ocean cavity / shelf sea</div>
+        <div class="case-label">Location: __CASE_NAME__ · __COORDS__</div><div class="ice-label">Ice / shelf surface</div><div class="ocean-label">Ocean cavity / shelf sea</div>
         <div class="visible-layers">__VISIBLE_LAYER_CHIPS__</div>
         <div class="overlay __OVERLAY_CLASS__">__OVERLAY_HTML__</div>
-        <div class="legend-pill">Primary layer: __TOOL_ICON__ __TOOL_NAME__ · __MEASURES__</div>
+        <div class="legend-pill">Primary layer: __TOOL_ICON__ __TOOL_NAME__ - __MEASURES__</div>
       </div>
       <div class="side-card">
         <span class="badge">__TOOL_ICON__ Observation layer</span>
         <h3>__CASE_NAME__</h3>
         <div class="meta"><b>Region:</b> __REGION__<br><b>Type:</b> __TYPE__<br><b>Main theme:</b> __THEME__</div>
-        <div class="insight-card"><div class="k">🔍 Observation</div><div class="v">__OBSERVED__</div></div>
-        <div class="insight-card"><div class="k">📡 Measurement</div><div class="v">__MEASURES__</div></div>
-        <div class="insight-card"><div class="k">🖼️ Visual layer</div><div class="v">__VISUAL__</div></div>
-        <div class="insight-card"><div class="k">💡 Interpretation</div><div class="v">__INTERPRETATION__</div></div>
+        <div class="insight-card"><div class="k">Observation</div><div class="v">__OBSERVED__</div></div>
+        <div class="insight-card"><div class="k">Measurement</div><div class="v">__MEASURES__</div></div>
+        <div class="insight-card"><div class="k">Visual layer</div><div class="v">__VISUAL__</div></div>
+        <div class="insight-card"><div class="k">Interpretation</div><div class="v">__INTERPRETATION__</div></div>
         <div class="process-chain">__PROCESS__</div>
         <div class="tool-grid">__TOOL_GRID__</div>
         <div class="synthesis"><b>Evidence logic:</b><br>Different sensors do not duplicate each other. They measure elevation, velocity, gravity/mass, point motion, hidden bed geometry, and past archives. Together they turn one glacier from an image into a scientific system.</div>
@@ -2884,7 +3366,7 @@ elif module == "Antarctic System Explorer":
         "__VISUAL__": _safe_html(tool["visual"]),
         "__OBSERVED__": _safe_html(tool["observed"]),
         "__INTERPRETATION__": _safe_html(tool["interpretation"]),
-        "__PROCESS__": _safe_html(tool["process"]).replace(" → ", " &nbsp;→&nbsp; "),
+        "__PROCESS__": _safe_html(tool["process"]).replace(" ->", " &nbsp;&rarr;&nbsp; "),
         "__TOOL_GRID__": tool_grid,
         "__VISIBLE_LAYER_CHIPS__": visible_layer_chips
     }
@@ -2893,7 +3375,7 @@ elif module == "Antarctic System Explorer":
 
     components.html(explorer_html, height=675, scrolling=False)
 
-    st.caption("Note: the base scene and sensor layers are conceptual visualizations, not downloaded raw remote-sensing data. The text summarizes the observation logic from the review-paper case studies.")
+    st.caption("The text summarizes observation logic from the review-paper case studies.")
 
     r1, r2, r3 = st.columns(3)
     r1.metric("Case", selected_case)
@@ -3030,11 +3512,11 @@ elif module == "Antarctic System Explorer":
 elif module == "AI Visualizer":
     st.markdown('''
     <style>
-      .block-container { padding-top: .58rem !important; }
+      .block-container { padding-top: 1.42rem !important; }
 
       /* Compact one-line title row */
       .visualizer-intro {
-        margin: 0 0 .18rem 0;
+        margin: .32rem 0 .35rem 0;
         display: flex;
         align-items: center;
         gap: 18px;
@@ -3044,9 +3526,9 @@ elif module == "AI Visualizer":
         margin: 0;
         color: #f8fbff;
         font-size: 2.25rem;
-        line-height: 1.02;
+        line-height: 1.18;
         font-weight: 850;
-        letter-spacing: -0.035em;
+        letter-spacing: 0;
         white-space: nowrap;
       }
       .visualizer-intro p {
@@ -3093,9 +3575,10 @@ elif module == "AI Visualizer":
         padding-bottom: 0 !important;
       }
 
-      /* Pull the Scientific Story Engine iframe closer to the controls */
+      /* Keep the Scientific Story Engine close to controls without hiding it under Streamlit's top bar. */
       div[data-testid="stIFrame"] {
-        margin-top: -.85rem !important;
+        margin-top: .35rem !important;
+        scroll-margin-top: 96px !important;
       }
 
       /* Do not let the AI Visualizer radio compression affect the sidebar navigation. */
@@ -3116,7 +3599,7 @@ elif module == "AI Visualizer":
       }
     </style>
     <div class="visualizer-intro">
-      <h1>🎨 AI Visualizer</h1>
+      <h1>&#127912; AI Visualizer</h1>
       <p>Transform the review paper into an interactive scientific story: mechanisms grow step by step, evidence nodes light up, and each pathway becomes slide-ready.</p>
     </div>
     ''', unsafe_allow_html=True)
@@ -3127,23 +3610,23 @@ elif module == "AI Visualizer":
             "opening": "Antarctic stability is not controlled by one factor. It emerges from ocean forcing, ice-shelf buttressing, grounding-line geometry, and feedbacks across the Earth system.",
             "modes": {
                 "Past": [
-                    {"id": "Past Warm Periods", "type": "Paleo evidence", "x": 18, "y": 28, "note": "Pliocene and Last Interglacial evidence shows that the AIS can respond strongly to warmer climates.", "evidence": "Ice cores · marine sediments · sea-level constraints"},
-                    {"id": "Marine-based Ice", "type": "Boundary condition", "x": 39, "y": 42, "note": "Ice grounded below sea level is especially sensitive to ocean and grounding-line feedbacks.", "evidence": "Subglacial basins · continental shelf records"},
-                    {"id": "Retreat Episodes", "type": "Ice response", "x": 62, "y": 35, "note": "Past retreat helps test whether models can reproduce rapid ice-sheet change.", "evidence": "Grounding-zone wedges · iceberg plow marks"},
+                    {"id": "Past Warm Periods", "type": "Paleo evidence", "x": 18, "y": 28, "note": "Pliocene and Last Interglacial evidence shows that the AIS can respond strongly to warmer climates.", "evidence": "Ice cores - marine sediments - sea-level constraints"},
+                    {"id": "Marine-based Ice", "type": "Boundary condition", "x": 39, "y": 42, "note": "Ice grounded below sea level is especially sensitive to ocean and grounding-line feedbacks.", "evidence": "Subglacial basins - continental shelf records"},
+                    {"id": "Retreat Episodes", "type": "Ice response", "x": 62, "y": 35, "note": "Past retreat helps test whether models can reproduce rapid ice-sheet change.", "evidence": "Grounding-zone wedges - iceberg plow marks"},
                     {"id": "Model Constraints", "type": "Research use", "x": 80, "y": 55, "note": "Paleo records constrain future projections by showing what the ice sheet has done before.", "evidence": "Paleo-data model comparison"}
                 ],
                 "Present": [
-                    {"id": "Warm Ocean Access", "type": "Ocean", "x": 16, "y": 46, "note": "Warm Circumpolar Deep Water can reach vulnerable ice-shelf cavities.", "evidence": "Ocean observations · shelf-break bathymetry"},
-                    {"id": "Basal Melting", "type": "Ice shelf", "x": 34, "y": 32, "note": "Ocean heat melts the underside of floating ice shelves.", "evidence": "Altimetry · ocean moorings · melt-rate estimates"},
-                    {"id": "Reduced Buttressing", "type": "Ice dynamics", "x": 52, "y": 42, "note": "Thinner or damaged shelves provide less back stress to grounded ice.", "evidence": "Ice velocity · shelf-thickness change"},
-                    {"id": "Grounding Line Retreat", "type": "Ice dynamics", "x": 69, "y": 31, "note": "The grounding line controls how much grounded ice can discharge into the ocean.", "evidence": "InSAR · altimetry · tidal flexure"},
+                    {"id": "Warm Ocean Access", "type": "Ocean", "x": 16, "y": 46, "note": "Warm Circumpolar Deep Water can reach vulnerable ice-shelf cavities.", "evidence": "Ocean observations - shelf-break bathymetry"},
+                    {"id": "Basal Melting", "type": "Ice shelf", "x": 34, "y": 32, "note": "Ocean heat melts the underside of floating ice shelves.", "evidence": "Altimetry - ocean moorings - melt-rate estimates"},
+                    {"id": "Reduced Buttressing", "type": "Ice dynamics", "x": 52, "y": 42, "note": "Thinner or damaged shelves provide less back stress to grounded ice.", "evidence": "Ice velocity - shelf-thickness change"},
+                    {"id": "Grounding Line Retreat", "type": "Ice dynamics", "x": 69, "y": 31, "note": "The grounding line controls how much grounded ice can discharge into the ocean.", "evidence": "InSAR - altimetry - tidal flexure"},
                     {"id": "Faster Ice Flow", "type": "Observation", "x": 84, "y": 48, "note": "Velocity observations reveal acceleration of outlet glaciers in key sectors.", "evidence": "InSAR velocity fields"}
                 ],
                 "Future": [
                     {"id": "Continued Warming", "type": "Forcing", "x": 15, "y": 32, "note": "Future atmosphere and ocean forcing determine the pressure placed on the AIS.", "evidence": "Climate scenarios"},
-                    {"id": "Instability Thresholds", "type": "Uncertainty", "x": 35, "y": 48, "note": "MISI and possible MICI-like behavior could amplify retreat once thresholds are crossed.", "evidence": "Ice-sheet models · process studies"},
+                    {"id": "Instability Thresholds", "type": "Uncertainty", "x": 35, "y": 48, "note": "MISI and possible MICI-like behavior could amplify retreat once thresholds are crossed.", "evidence": "Ice-sheet models - process studies"},
                     {"id": "Coupled Feedbacks", "type": "Earth system", "x": 57, "y": 34, "note": "Ocean, ice, atmosphere, and solid Earth feedbacks interact across time scales.", "evidence": "Coupled ice-ocean-solid Earth models"},
-                    {"id": "Sea-level Risk", "type": "Impact", "x": 78, "y": 50, "note": "Antarctica remains a major uncertainty in future sea-level projections.", "evidence": "Projection ensembles · uncertainty quantification"}
+                    {"id": "Sea-level Risk", "type": "Impact", "x": 78, "y": 50, "note": "Antarctica remains a major uncertainty in future sea-level projections.", "evidence": "Projection ensembles - uncertainty quantification"}
                 ]
             }
         },
@@ -3152,17 +3635,17 @@ elif module == "AI Visualizer":
             "opening": "Warm water reaches the ice shelf cavity, melts ice from below, weakens buttressing, and allows grounded ice to accelerate.",
             "modes": {
                 "Past": [
-                    {"id": "Shelf Troughs", "type": "Landscape memory", "x": 18, "y": 50, "note": "Repeated glacial erosion carved troughs that can route warm water toward the margin.", "evidence": "Bathymetry · marine geomorphology"},
+                    {"id": "Shelf Troughs", "type": "Landscape memory", "x": 18, "y": 50, "note": "Repeated glacial erosion carved troughs that can route warm water toward the margin.", "evidence": "Bathymetry - marine geomorphology"},
                     {"id": "Past Ocean States", "type": "Paleo ocean", "x": 39, "y": 35, "note": "Marine records reconstruct past ocean warmth and ice-margin retreat.", "evidence": "Marine sediment cores"},
                     {"id": "Retreat History", "type": "Paleo ice", "x": 63, "y": 43, "note": "Past retreat episodes provide analogs for modern ocean-forced change.", "evidence": "Continental shelf archives"},
                     {"id": "Sensitivity Test", "type": "Model constraint", "x": 81, "y": 31, "note": "Models are tested against past retreat and sea-level evidence.", "evidence": "Paleo-calibrated simulations"}
                 ],
                 "Present": [
-                    {"id": "CDW Intrusion", "type": "Ocean", "x": 14, "y": 45, "note": "Circumpolar Deep Water brings heat onto the continental shelf.", "evidence": "Ocean profiles · shelf-break circulation"},
-                    {"id": "Ice-shelf Cavity", "type": "Hidden interface", "x": 33, "y": 31, "note": "The most important melting often occurs beneath floating ice shelves, out of direct view.", "evidence": "Radar · ocean access drilling · models"},
-                    {"id": "Basal Melt", "type": "Process", "x": 50, "y": 45, "note": "Heat and salt exchange at the ice-ocean boundary melts ice from below.", "evidence": "Melt-rate estimates · ocean modeling"},
+                    {"id": "CDW Intrusion", "type": "Ocean", "x": 14, "y": 45, "note": "Circumpolar Deep Water brings heat onto the continental shelf.", "evidence": "Ocean profiles - shelf-break circulation"},
+                    {"id": "Ice-shelf Cavity", "type": "Hidden interface", "x": 33, "y": 31, "note": "The most important melting often occurs beneath floating ice shelves, out of direct view.", "evidence": "Radar - ocean access drilling - models"},
+                    {"id": "Basal Melt", "type": "Process", "x": 50, "y": 45, "note": "Heat and salt exchange at the ice-ocean boundary melts ice from below.", "evidence": "Melt-rate estimates - ocean modeling"},
                     {"id": "Shelf Thinning", "type": "Observation", "x": 67, "y": 31, "note": "Altimetry detects surface lowering that indicates thinning.", "evidence": "Satellite altimetry"},
-                    {"id": "Ice Discharge", "type": "Impact", "x": 84, "y": 48, "note": "Once buttressing weakens, grounded ice can flow faster into the ocean.", "evidence": "InSAR velocity · mass balance"}
+                    {"id": "Ice Discharge", "type": "Impact", "x": 84, "y": 48, "note": "Once buttressing weakens, grounded ice can flow faster into the ocean.", "evidence": "InSAR velocity - mass balance"}
                 ],
                 "Future": [
                     {"id": "Stronger Heat Flux", "type": "Forcing", "x": 15, "y": 36, "note": "Changes in winds, eddies, tides, and circulation may alter heat delivery to shelves.", "evidence": "High-resolution ocean models"},
@@ -3177,14 +3660,14 @@ elif module == "AI Visualizer":
             "opening": "Surface meltwater can pond on ice shelves, deepen crevasses through hydrofracture, and reduce shelf integrity.",
             "modes": {
                 "Past": [
-                    {"id": "Warm Intervals", "type": "Climate context", "x": 18, "y": 34, "note": "Past warm periods help test whether surface-melt processes can explain high sea levels.", "evidence": "Last Interglacial · Pliocene"},
+                    {"id": "Warm Intervals", "type": "Climate context", "x": 18, "y": 34, "note": "Past warm periods help test whether surface-melt processes can explain high sea levels.", "evidence": "Last Interglacial - Pliocene"},
                     {"id": "Ice-shelf Absence", "type": "Paleo state", "x": 42, "y": 50, "note": "Some records imply reduced ice-shelf cover during warmer conditions.", "evidence": "Marine sediment evidence"},
                     {"id": "Rapid Retreat Clues", "type": "Paleo evidence", "x": 65, "y": 36, "note": "Geomorphic evidence can suggest rapid retreat or calving behavior.", "evidence": "Iceberg-keel plow marks"},
                     {"id": "Model Debate", "type": "Uncertainty", "x": 82, "y": 53, "note": "MICI is influential but still debated and requires more validation.", "evidence": "Ice-sheet model comparisons"}
                 ],
                 "Present": [
                     {"id": "Surface Melt", "type": "Atmosphere", "x": 16, "y": 35, "note": "Surface melt is most prominent around the Antarctic Peninsula and shelf margins.", "evidence": "Satellite melt detection"},
-                    {"id": "Melt Ponds", "type": "Hydrology", "x": 35, "y": 50, "note": "Ponded water adds weight and can fill crevasses.", "evidence": "Optical imagery · surface hydrology mapping"},
+                    {"id": "Melt Ponds", "type": "Hydrology", "x": 35, "y": 50, "note": "Ponded water adds weight and can fill crevasses.", "evidence": "Optical imagery - surface hydrology mapping"},
                     {"id": "Hydrofracturing", "type": "Fracture", "x": 54, "y": 34, "note": "Water pressure can drive cracks deeper into the shelf.", "evidence": "Larsen-style collapse interpretation"},
                     {"id": "Shelf Collapse", "type": "Instability", "x": 72, "y": 48, "note": "Shelf breakup reduces buttressing and can accelerate tributary glaciers.", "evidence": "Larsen B observations"},
                     {"id": "Flow Acceleration", "type": "Observation", "x": 86, "y": 32, "note": "Post-collapse velocity change shows the mechanical importance of ice shelves.", "evidence": "InSAR velocity"}
@@ -3192,7 +3675,7 @@ elif module == "AI Visualizer":
                 "Future": [
                     {"id": "More Surface Melt", "type": "Forcing", "x": 16, "y": 45, "note": "Atmospheric warming may expand meltwater systems on ice shelves.", "evidence": "Climate projections"},
                     {"id": "Shelf Vulnerability", "type": "Risk", "x": 37, "y": 31, "note": "Vulnerability depends on firn capacity, fracture fields, shelf geometry, and stress state.", "evidence": "Surface hydrology + fracture models"},
-                    {"id": "Possible MICI", "type": "Debated mechanism", "x": 60, "y": 49, "note": "Marine Ice Cliff Instability could raise high-end sea-level outcomes, but evidence remains limited.", "evidence": "Model parameterization · field analogs"},
+                    {"id": "Possible MICI", "type": "Debated mechanism", "x": 60, "y": 49, "note": "Marine Ice Cliff Instability could raise high-end sea-level outcomes, but evidence remains limited.", "evidence": "Model parameterization - field analogs"},
                     {"id": "High-end Sea Level", "type": "Impact", "x": 82, "y": 34, "note": "This pathway matters most for low-probability, high-impact projection tails.", "evidence": "Scenario ensembles"}
                 ]
             }
@@ -3202,21 +3685,21 @@ elif module == "AI Visualizer":
             "opening": "Bed topography, geothermal heat, basal water, and glacial isostatic adjustment shape how the ice sheet responds.",
             "modes": {
                 "Past": [
-                    {"id": "Tectonic Template", "type": "Deep control", "x": 16, "y": 42, "note": "Rifting, basins, and mountains created the bed geometry on which ice evolves.", "evidence": "Geophysics · bed maps"},
+                    {"id": "Tectonic Template", "type": "Deep control", "x": 16, "y": 42, "note": "Rifting, basins, and mountains created the bed geometry on which ice evolves.", "evidence": "Geophysics - bed maps"},
                     {"id": "Dynamic Topography", "type": "Long-term change", "x": 38, "y": 30, "note": "Mantle-driven uplift or subsidence can alter vulnerability over million-year scales.", "evidence": "Mantle circulation models"},
-                    {"id": "Past Loading", "type": "GIA memory", "x": 61, "y": 47, "note": "The solid Earth continues to respond to past ice loading changes.", "evidence": "Relative sea level · GPS"},
+                    {"id": "Past Loading", "type": "GIA memory", "x": 61, "y": 47, "note": "The solid Earth continues to respond to past ice loading changes.", "evidence": "Relative sea level - GPS"},
                     {"id": "Paleo Boundary", "type": "Model input", "x": 81, "y": 35, "note": "Past topography and sea level affect reconstructions of AIS history.", "evidence": "Ice-sheet + GIA models"}
                 ],
                 "Present": [
-                    {"id": "Bed Topography", "type": "Boundary", "x": 16, "y": 34, "note": "Retrograde beds and subglacial basins affect grounding-line stability.", "evidence": "Radar · BEDMAP-style products"},
+                    {"id": "Bed Topography", "type": "Boundary", "x": 16, "y": 34, "note": "Retrograde beds and subglacial basins affect grounding-line stability.", "evidence": "Radar - BEDMAP-style products"},
                     {"id": "Geothermal Heat", "type": "Basal energy", "x": 36, "y": 51, "note": "Heat from below can produce basal meltwater and influence sliding.", "evidence": "Magnetic/seismic heat-flux estimates"},
-                    {"id": "Subglacial Hydrology", "type": "Basal water", "x": 58, "y": 34, "note": "Water beneath the ice can lubricate the bed and connect interior ice to shelf cavities.", "evidence": "Radar · altimetry lake drainage"},
-                    {"id": "GIA Correction", "type": "Observation need", "x": 80, "y": 49, "note": "Gravity-based mass estimates require correction for solid-Earth motion.", "evidence": "GRACE · GPS/GNSS"}
+                    {"id": "Subglacial Hydrology", "type": "Basal water", "x": 58, "y": 34, "note": "Water beneath the ice can lubricate the bed and connect interior ice to shelf cavities.", "evidence": "Radar - altimetry lake drainage"},
+                    {"id": "GIA Correction", "type": "Observation need", "x": 80, "y": 49, "note": "Gravity-based mass estimates require correction for solid-Earth motion.", "evidence": "GRACE - GPS/GNSS"}
                 ],
                 "Future": [
-                    {"id": "Bedrock Uplift", "type": "Feedback", "x": 17, "y": 46, "note": "Ice loss can trigger bedrock uplift and local sea-level fall near grounding lines.", "evidence": "GIA theory · GPS"},
+                    {"id": "Bedrock Uplift", "type": "Feedback", "x": 17, "y": 46, "note": "Ice loss can trigger bedrock uplift and local sea-level fall near grounding lines.", "evidence": "GIA theory - GPS"},
                     {"id": "Relative Sea Level", "type": "Stabilizer", "x": 39, "y": 31, "note": "Local sea-level fall can slow retreat in some settings.", "evidence": "Coupled sea-level models"},
-                    {"id": "3D Earth Structure", "type": "Uncertainty", "x": 61, "y": 49, "note": "Viscosity varies strongly across Antarctica, affecting feedback timing.", "evidence": "Seismology · geodesy"},
+                    {"id": "3D Earth Structure", "type": "Uncertainty", "x": 61, "y": 49, "note": "Viscosity varies strongly across Antarctica, affecting feedback timing.", "evidence": "Seismology - geodesy"},
                     {"id": "Coupled Projection", "type": "Model frontier", "x": 82, "y": 35, "note": "Future projections need ice, ocean, atmosphere, and solid Earth coupling.", "evidence": "Coupled model development"}
                 ]
             }
@@ -3241,50 +3724,67 @@ elif module == "AI Visualizer":
     story_html = r'''
     <div id="ai-story-root">
       <style>
-        #ai-story-root { width: 100%; height: 690px; position: relative; overflow: hidden; border-radius: 30px; color: #eef8ff; font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: radial-gradient(circle at 18% 18%, rgba(78,163,241,.26), transparent 28%), radial-gradient(circle at 78% 72%, rgba(149,117,205,.22), transparent 30%), radial-gradient(circle at 50% 52%, rgba(185,242,255,.10), transparent 25%), linear-gradient(135deg, #030712 0%, #07111f 47%, #020617 100%); box-shadow: inset 0 0 95px rgba(78,163,241,.12), 0 24px 80px rgba(0,0,0,.32); }
+        #ai-story-root { width: 100%; height: 690px; position: relative; overflow: hidden; border-radius: 32px; isolation:isolate; color: #eef8ff; font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: radial-gradient(circle at 18% 18%, rgba(78,163,241,.26), transparent 28%), radial-gradient(circle at 78% 72%, rgba(149,117,205,.22), transparent 30%), radial-gradient(circle at 50% 52%, rgba(185,242,255,.10), transparent 25%), linear-gradient(135deg, #030712 0%, #07111f 47%, #020617 100%); background-size:135% 135%, 150% 150%, 120% 120%, 100% 100%; box-shadow: inset 0 0 105px rgba(78,163,241,.14), 0 26px 82px rgba(0,0,0,.34); animation:aiNebulaDrift 24s ease-in-out infinite; }
         #ai-story-root * { box-sizing: border-box; }
+        #ai-story-root::before,
+        #ai-story-root::after { content:""; position:absolute; inset:-18%; pointer-events:none; z-index:1; }
+        #ai-story-root::before { background:linear-gradient(115deg, transparent 8%, rgba(255,255,255,.055) 37%, rgba(126,220,255,.10) 48%, transparent 62%); mix-blend-mode:screen; opacity:.70; animation:aiGlassDrift 12s ease-in-out infinite; }
+        #ai-story-root::after { background:radial-gradient(ellipse at 52% 52%, transparent 34%, rgba(2,6,23,.34) 84%); z-index:1; }
         .ai-v-star { position:absolute; width:2px; height:2px; border-radius:50%; background:rgba(255,255,255,.72); box-shadow:0 0 10px rgba(255,255,255,.65); animation:aiTwinkle 3.8s infinite ease-in-out alternate; }
         @keyframes aiTwinkle { from { opacity:.22; transform:scale(.7); } to { opacity:.95; transform:scale(1.35); } }
-        .ai-story-title { position:absolute; left:24px; top:22px; width: 430px; z-index:10; padding:18px 20px; border-radius:22px; border:1px solid rgba(170,215,255,.18); background:linear-gradient(180deg, rgba(8,18,34,.70), rgba(7,15,29,.48)); backdrop-filter: blur(14px); }
+        @keyframes aiNebulaDrift { 0%,100% { background-position:0% 0%, 100% 92%, 50% 50%, 0 0; } 50% { background-position:8% 6%, 91% 80%, 44% 56%, 0 0; } }
+        @keyframes aiGlassDrift { 0%,100% { transform:translateX(-8%) rotate(-3deg); opacity:.52; } 50% { transform:translateX(8%) rotate(3deg); opacity:.86; } }
+        @keyframes aiPanelIn { from { opacity:0; transform:translateY(12px) scale(.985); } to { opacity:1; transform:translateY(0) scale(1); } }
+        @keyframes aiStageFloat { 0%,100% { transform:translate3d(0,0,0); } 50% { transform:translate3d(0,-5px,0); } }
+        .ai-story-title { position:absolute; left:24px; top:62px; width: 430px; z-index:10; overflow:hidden; padding:18px 20px; border-radius:24px; border:1px solid rgba(210,238,255,.22); background:radial-gradient(circle at 14% 0%, rgba(255,255,255,.12), transparent 34%), linear-gradient(180deg, rgba(14,27,49,.66), rgba(4,12,25,.42)); backdrop-filter: blur(22px) saturate(1.32); box-shadow:inset 0 1px 0 rgba(255,255,255,.13), 0 18px 48px rgba(0,0,0,.18); animation:aiPanelIn .38s cubic-bezier(.2,.8,.2,1) both; }
+        .ai-story-title::before { content:""; position:absolute; inset:-80% -35%; background:linear-gradient(120deg, transparent 0%, rgba(255,255,255,.11) 38%, rgba(126,220,255,.18) 48%, transparent 66%); transform:translateX(-28%) rotate(10deg); opacity:.62; pointer-events:none; }
         .ai-story-title .kicker { color:#8dd8ff; font-size:12px; letter-spacing:1.2px; text-transform:uppercase; font-weight:850; }
-        .ai-story-title h2 { margin:7px 0 5px 0; font-size:28px; letter-spacing:-.03em; color:#fff; }
+        .ai-story-title h2 { margin:7px 0 5px 0; font-size:28px; letter-spacing:0; color:#fff; }
         .ai-story-title p { margin:0; color:rgba(231,245,255,.75); font-size:13px; line-height:1.42; }
-        .ai-story-stage { position:absolute; left:24px; top:185px; width: calc(100% - 372px); height: 478px; border-radius:26px; border:1px solid rgba(170,215,255,.18); overflow:hidden; background: radial-gradient(ellipse at 46% 50%, rgba(223,249,255,.10), transparent 55%), linear-gradient(180deg, rgba(5,15,30,.44), rgba(2,6,23,.22)); }
-        .ai-stage-bg { position:absolute; inset:0; background: radial-gradient(ellipse at 30% 66%, rgba(248,252,255,.78), rgba(180,220,235,.34) 25%, transparent 52%), radial-gradient(ellipse at 75% 70%, rgba(55,160,190,.20), transparent 42%), linear-gradient(180deg, rgba(45,125,170,.06), rgba(0,0,0,.05)); opacity:.78; }
+        .ai-story-stage { position:absolute; left:24px; top:225px; width: calc(100% - 372px); height: 438px; z-index:5; border-radius:28px; border:1px solid rgba(210,238,255,.20); overflow:hidden; background: radial-gradient(ellipse at 46% 50%, rgba(223,249,255,.12), transparent 55%), linear-gradient(180deg, rgba(8,19,36,.52), rgba(2,6,23,.26)); box-shadow:inset 0 1px 0 rgba(255,255,255,.10), 0 20px 56px rgba(0,0,0,.22); animation:aiPanelIn .44s cubic-bezier(.2,.8,.2,1) both; }
+        .ai-story-stage::before { content:""; position:absolute; inset:-60% -30%; z-index:3; background:linear-gradient(120deg, transparent 0%, rgba(255,255,255,.08) 38%, rgba(126,220,255,.12) 48%, transparent 66%); opacity:.54; transform:translateX(-24%) rotate(10deg); pointer-events:none; }
+        .ai-stage-bg { position:absolute; inset:0; background: radial-gradient(ellipse at 30% 66%, rgba(248,252,255,.78), rgba(180,220,235,.34) 25%, transparent 52%), radial-gradient(ellipse at 75% 70%, rgba(55,160,190,.20), transparent 42%), linear-gradient(180deg, rgba(45,125,170,.06), rgba(0,0,0,.05)); opacity:.78; animation:aiStageFloat 7s ease-in-out infinite; }
         .ai-stage-bg::before { content:""; position:absolute; left:-8%; right:-8%; bottom:58px; height:128px; background:linear-gradient(180deg, rgba(255,255,255,.72), rgba(185,230,242,.44)); clip-path: polygon(0% 62%, 10% 47%, 21% 54%, 32% 30%, 45% 48%, 57% 28%, 70% 46%, 83% 25%, 100% 52%, 100% 100%, 0% 100%); filter: drop-shadow(0 0 20px rgba(170,240,255,.20)); }
         .ai-stage-bg::after { content:""; position:absolute; left:0; right:0; bottom:0; height:104px; background:linear-gradient(180deg, rgba(46,160,205,.35), rgba(4,30,55,.80)); }
         #ai-story-svg { position:absolute; inset:0; width:100%; height:100%; z-index:4; }
-        .ai-controls { position:absolute; left:44px; bottom:24px; z-index:12; display:flex; gap:10px; align-items:center; }
-        .ai-controls button { border:1px solid rgba(180,230,255,.32); border-radius:999px; padding:9px 14px; background:rgba(2,6,23,.58); color:#eaf8ff; font-weight:850; cursor:pointer; box-shadow:0 0 20px rgba(78,163,241,.12); backdrop-filter:blur(10px); }
-        .ai-controls button:hover { background:rgba(56,189,248,.20); border-color:rgba(186,230,253,.72); }
+        .ai-controls { position:absolute; left:22px; top:18px; z-index:12; display:flex; gap:10px; align-items:center; }
+        .ai-controls button { position:relative; overflow:hidden; border:1px solid rgba(180,230,255,.34); border-radius:999px; padding:9px 14px; background:linear-gradient(180deg, rgba(17,35,62,.72), rgba(2,6,23,.54)); color:#eaf8ff; font-weight:850; cursor:pointer; box-shadow:0 10px 24px rgba(0,0,0,.22), inset 0 1px 0 rgba(255,255,255,.12); backdrop-filter:blur(14px); transition:transform .16s ease, border-color .16s ease, background .16s ease; }
+        .ai-controls button::before { content:""; position:absolute; inset:-70% -35%; background:linear-gradient(120deg, transparent 0%, rgba(255,255,255,.14) 38%, rgba(126,220,255,.22) 48%, transparent 66%); transform:translateX(-130%) rotate(10deg); opacity:0; pointer-events:none; }
+        .ai-controls button:hover { transform:translateY(-1px); background:rgba(56,189,248,.20); border-color:rgba(186,230,253,.72); }
+        .ai-controls button:hover::before { animation:aiButtonSheen .75s cubic-bezier(.2,.8,.2,1); }
+        @keyframes aiButtonSheen { from { transform:translateX(-130%) rotate(10deg); opacity:0; } 28% { opacity:1; } to { transform:translateX(130%) rotate(10deg); opacity:0; } }
         .ai-progress { width:160px; height:7px; border-radius:999px; background:rgba(255,255,255,.12); overflow:hidden; border:1px solid rgba(255,255,255,.12); }
         .ai-progress span { display:block; height:100%; width:0%; background:linear-gradient(90deg, #6edcff, #d8f7ff); border-radius:999px; transition:width .3s ease; }
-        .ai-side-panel { position:absolute; right:24px; top:22px; width:320px; height:641px; z-index:10; overflow:hidden; padding:20px; border-radius:26px; border:1px solid rgba(170,215,255,.25); background:linear-gradient(180deg, rgba(8,18,34,.91), rgba(7,15,29,.76)); backdrop-filter: blur(16px); box-shadow:0 22px 70px rgba(0,0,0,.38), inset 0 0 28px rgba(78,163,241,.08); }
+        .ai-side-panel { position:absolute; right:24px; top:62px; width:320px; height:601px; z-index:10; overflow:hidden; padding:20px; border-radius:28px; border:1px solid rgba(210,238,255,.30); background:radial-gradient(circle at 12% 0%, rgba(255,255,255,.12), transparent 34%), linear-gradient(180deg, rgba(12,25,46,.90), rgba(5,13,27,.70)); backdrop-filter: blur(24px) saturate(1.38); box-shadow:0 24px 74px rgba(0,0,0,.40), inset 0 1px 0 rgba(255,255,255,.14), inset 0 -1px 0 rgba(126,220,255,.08); animation:aiPanelIn .46s cubic-bezier(.2,.8,.2,1) both; }
+        .ai-side-panel::before { content:""; position:absolute; inset:-70% -35%; background:linear-gradient(120deg, transparent 0%, rgba(255,255,255,.11) 38%, rgba(126,220,255,.18) 48%, transparent 66%); transform:translateX(-30%) rotate(10deg); opacity:.40; pointer-events:none; }
         .ai-panel-badge { display:inline-flex; padding:7px 11px; border-radius:999px; color:#bfe6ff; background:rgba(78,163,241,.14); border:1px solid rgba(142,207,255,.25); font-size:12px; font-weight:850; }
         .ai-side-panel h3 { margin:15px 0 9px 0; font-size:24px; line-height:1.15; color:#fff; }
         .ai-side-panel .muted { color:rgba(235,248,255,.72); font-size:13px; line-height:1.45; }
         .ai-label { margin-top:16px; color:#8ccfff; font-size:11px; text-transform:uppercase; letter-spacing:1px; font-weight:850; }
         .ai-value { margin-top:6px; color:rgba(239,248,255,.88); line-height:1.45; font-size:13px; }
         .ai-mini-grid { display:grid; grid-template-columns:1fr 1fr; gap:9px; margin-top:16px; }
-        .ai-mini-card { padding:10px; min-height:70px; border-radius:15px; border:1px solid rgba(255,255,255,.10); background:rgba(255,255,255,.045); }
+        .ai-mini-card { padding:10px; min-height:70px; border-radius:15px; border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.055); box-shadow:inset 0 1px 0 rgba(255,255,255,.06); }
         .ai-mini-card b { color:#fff; font-size:13px; }
         .ai-mini-card div { margin-top:5px; color:rgba(230,245,255,.70); font-size:12px; line-height:1.3; }
         .ai-slide-box { margin-top:16px; padding:13px; border-radius:17px; background:rgba(34,197,94,.09); border:1px solid rgba(74,222,128,.22); color:rgba(235,255,242,.88); font-size:13px; line-height:1.45; }
-        .ai-node { cursor:pointer; opacity:0; transform-box:fill-box; transform-origin:center; transition:opacity .45s ease; }
+        .ai-node { cursor:pointer; opacity:0; transition:opacity .45s ease; }
+        .ai-node .halo, .ai-node .core { transform-box:fill-box; transform-origin:center; }
         .ai-node .halo { fill:rgba(150,225,255,.12); stroke:rgba(160,230,255,.35); stroke-width:1.2; animation:aiBreath 2.8s ease-in-out infinite; }
         .ai-node .core { stroke:rgba(255,255,255,.82); stroke-width:1.6; filter:drop-shadow(0 0 18px rgba(126,220,255,.58)); }
         .ai-node text { pointer-events:none; text-anchor:middle; font-weight:850; fill:#f8fdff; paint-order:stroke; stroke:rgba(2,6,23,.92); stroke-width:4px; stroke-linejoin:round; }
         .ai-node.visible { opacity:1; }
+        .ai-node.visible .core { animation:aiCorePop .38s cubic-bezier(.2,.8,.2,1) both; }
         .ai-node.active .halo { fill:rgba(255,255,255,.18); stroke:rgba(255,255,255,.82); stroke-width:2.4; }
         .ai-node.active .core { filter:drop-shadow(0 0 32px rgba(255,255,255,.95)); }
         .ai-link { opacity:0; stroke:rgba(160,225,255,.65); stroke-width:2.6; stroke-linecap:round; stroke-dasharray:8 9; filter:drop-shadow(0 0 8px rgba(120,220,255,.35)); transition:opacity .45s ease; }
         .ai-link.visible { opacity:.95; animation:dashMove 1.4s linear infinite; }
         @keyframes dashMove { to { stroke-dashoffset:-34; } }
         @keyframes aiBreath { 0%,100% { transform:scale(1); opacity:.70; } 50% { transform:scale(1.18); opacity:1; } }
-        .ai-caption { position:absolute; left:50%; transform:translateX(-50%); bottom:88px; z-index:8; width:min(640px, 72%); padding:12px 15px; border-radius:18px; border:1px solid rgba(255,255,255,.13); background:rgba(2,6,23,.48); color:rgba(239,248,255,.84); font-size:13px; line-height:1.45; text-align:center; backdrop-filter:blur(10px); }
+        @keyframes aiCorePop { from { transform:scale(.72); opacity:.55; } to { transform:scale(1); opacity:1; } }
+        .ai-caption { position:absolute; left:50%; transform:translateX(-50%); bottom:88px; z-index:8; width:min(640px, 72%); padding:12px 15px; border-radius:18px; border:1px solid rgba(255,255,255,.16); background:rgba(2,6,23,.52); box-shadow:0 14px 34px rgba(0,0,0,.18), inset 0 1px 0 rgba(255,255,255,.08); color:rgba(239,248,255,.84); font-size:13px; line-height:1.45; text-align:center; backdrop-filter:blur(14px) saturate(1.25); }
       </style>
-      <div class="ai-story-title"><div class="kicker">Scientific Story Engine · __MODE__ lens</div><h2>__TOPIC__</h2><p><b>__SUBTITLE__</b><br>__OPENING__</p></div>
-      <div class="ai-story-stage"><div class="ai-stage-bg"></div><svg id="ai-story-svg" viewBox="0 0 900 470" preserveAspectRatio="xMidYMid meet"></svg><div class="ai-caption" id="ai-caption">Click Begin Story to reveal the mechanism step by step, or click any glowing node to inspect its evidence card.</div><div class="ai-controls"><button id="ai-play">▶ Begin Story</button><button id="ai-reset">↺ Reset</button><div class="ai-progress"><span id="ai-progress-bar"></span></div></div></div>
+      <div class="ai-story-title"><div class="kicker">Scientific Story Engine - __MODE__ lens</div><h2>__TOPIC__</h2><p><b>__SUBTITLE__</b><br>__OPENING__</p></div>
+      <div class="ai-story-stage"><div class="ai-stage-bg"></div><svg id="ai-story-svg" viewBox="0 0 900 470" preserveAspectRatio="xMidYMid meet"></svg><div class="ai-caption" id="ai-caption">Click Begin Story to reveal the mechanism step by step, or click any glowing node to inspect its evidence card.</div><div class="ai-controls"><button id="ai-play">Begin Story</button><button id="ai-reset">Reset</button><div class="ai-progress"><span id="ai-progress-bar"></span></div></div></div>
       <div class="ai-side-panel" id="ai-side-panel"></div>
     </div>
     <script>
@@ -3300,10 +3800,10 @@ elif module == "AI Visualizer":
       const linkLayer = el('g'); const nodeLayer = el('g'); svg.appendChild(linkLayer); svg.appendChild(nodeLayer); const links = [];
       for(let i=0; i<payload.nodes.length-1; i++) { const a=nodeXY(payload.nodes[i]), b=nodeXY(payload.nodes[i+1]); const path = el('path', {class:'ai-link', d:`M ${a.x} ${a.y} C ${(a.x+b.x)/2} ${a.y-70}, ${(a.x+b.x)/2} ${b.y+70}, ${b.x} ${b.y}`, markerEnd:'url(#arrow)'}); path.dataset.index=i; linkLayer.appendChild(path); links.push(path); }
       const nodeEls = payload.nodes.map((n,i)=>{ const p=nodeXY(n), color=typeColors[n.type] || '#9EDBFF'; const g=el('g', {class:'ai-node', transform:`translate(${p.x},${p.y})`}); g.dataset.index=i; g.appendChild(el('circle', {class:'halo', r:50})); g.appendChild(el('circle', {class:'core', r:28, fill:color, 'fill-opacity':.88})); wrapText(g, n.id, 0, 5, 18, 13); g.addEventListener('click', ()=>revealTo(i)); nodeLayer.appendChild(g); return g; });
-      function panelHtml(n, idx){ const chain = payload.nodes.map(x=>x.id).join(' → '); return `<span class="ai-panel-badge">${esc(payload.mode)} · ${esc(n.type)}</span><h3>${esc(n.id)}</h3><div class="muted">Node ${idx+1} of ${payload.nodes.length} in <b>${esc(payload.topic)}</b>.</div><div class="ai-label">Scientific meaning</div><div class="ai-value">${esc(n.note)}</div><div class="ai-label">Evidence layer</div><div class="ai-value">${esc(n.evidence)}</div><div class="ai-mini-grid"><div class="ai-mini-card"><b>Use in slides</b><div>Turn this node into one visual beat in a talk.</div></div><div class="ai-mini-card"><b>Reading logic</b><div>Connect mechanism, observation, and uncertainty.</div></div></div><div class="ai-slide-box"><b>Slide-ready chain</b><br>${esc(chain)}</div>`; }
-      function revealTo(idx){ step = idx; nodeEls.forEach((g,i)=>{ g.classList.toggle('visible', i<=idx); g.classList.toggle('active', i===idx); }); links.forEach((l,i)=>l.classList.toggle('visible', i<idx)); const n=payload.nodes[idx]; panel.innerHTML = panelHtml(n, idx); caption.innerHTML = `<b>${esc(n.id)}</b> — ${esc(n.note)}`; bar.style.width = `${((idx+1)/payload.nodes.length)*100}%`; }
-      function reset(){ step=-1; if(timer) clearInterval(timer); timer=null; nodeEls.forEach(g=>{g.classList.remove('visible','active');}); links.forEach(l=>l.classList.remove('visible')); bar.style.width='0%'; caption.innerHTML='Click Begin Story to reveal the mechanism step by step, or click any glowing node to inspect its evidence card.'; panel.innerHTML = `<span class="ai-panel-badge">Scientific Story Engine</span><h3>${esc(payload.topic)}</h3><div class="muted">${esc(payload.opening)}</div><div class="ai-label">Current lens</div><div class="ai-value">${esc(payload.mode)} · ${payload.nodes.length} story beats</div><div class="ai-slide-box"><b>How to use this module</b><br>Press Begin Story, then use each glowing node as one step of a scientific explanation. The right card gives the short interpretation and evidence layer.</div>`; }
-      document.getElementById('ai-play').onclick = function(){ if(timer) clearInterval(timer); revealTo(0); timer=setInterval(()=>{ if(step >= payload.nodes.length-1){ clearInterval(timer); timer=null; return; } revealTo(step+1); }, 1150); };
+      function panelHtml(n, idx){ const chain = payload.nodes.map(x=>x.id).join(' \u2192 '); return `<span class="ai-panel-badge">${esc(payload.mode)} - ${esc(n.type)}</span><h3>${esc(n.id)}</h3><div class="muted">Node ${idx+1} of ${payload.nodes.length} in <b>${esc(payload.topic)}</b>.</div><div class="ai-label">Scientific meaning</div><div class="ai-value">${esc(n.note)}</div><div class="ai-label">Evidence layer</div><div class="ai-value">${esc(n.evidence)}</div><div class="ai-mini-grid"><div class="ai-mini-card"><b>Use in slides</b><div>Turn this node into one visual beat in a talk.</div></div><div class="ai-mini-card"><b>Reading logic</b><div>Connect mechanism, observation, and uncertainty.</div></div></div><div class="ai-slide-box"><b>Slide-ready chain</b><br>${esc(chain)}</div>`; }
+      function revealTo(idx){ const safeIdx = Math.max(0, Math.min(idx, payload.nodes.length - 1)); step = safeIdx; nodeEls.forEach((g,i)=>{ g.classList.toggle('visible', i<=safeIdx); g.classList.toggle('active', i===safeIdx); }); links.forEach((l,i)=>l.classList.toggle('visible', i<safeIdx)); const n=payload.nodes[safeIdx]; panel.innerHTML = panelHtml(n, safeIdx); caption.innerHTML = `<b>${esc(n.id)}</b>  - ${esc(n.note)}`; bar.style.width = `${((safeIdx+1)/payload.nodes.length)*100}%`; }
+      function reset(){ step=-1; if(timer) clearInterval(timer); timer=null; document.getElementById('ai-play').textContent='Begin Story'; nodeEls.forEach(g=>{g.classList.remove('visible','active');}); links.forEach(l=>l.classList.remove('visible')); bar.style.width='0%'; caption.innerHTML='Click Begin Story to reveal the mechanism step by step, or click any glowing node to inspect its evidence card.'; panel.innerHTML = `<span class="ai-panel-badge">Scientific Story Engine</span><h3>${esc(payload.topic)}</h3><div class="muted">${esc(payload.opening)}</div><div class="ai-label">Current lens</div><div class="ai-value">${esc(payload.mode)} - ${payload.nodes.length} story beats</div><div class="ai-slide-box"><b>How to use this module</b><br>Press Begin Story, then use each glowing node as one step of a scientific explanation. The right card gives the short interpretation and evidence layer.</div>`; }
+      document.getElementById('ai-play').onclick = function(){ if(timer) clearInterval(timer); this.textContent='Playing'; revealTo(0); timer=setInterval(()=>{ if(step >= payload.nodes.length-1){ clearInterval(timer); timer=null; revealTo(payload.nodes.length-1); document.getElementById('ai-play').textContent='Replay Story'; return; } revealTo(step+1); }, 1150); };
       document.getElementById('ai-reset').onclick = reset; reset();
     })();
     </script>
@@ -3327,7 +3827,7 @@ elif module == "AI Visualizer":
     st.divider()
     st.subheader("Slide-ready export text")
     chain_text = " → ".join([n["id"] for n in story_payload["nodes"]])
-    slide_note = f"""Slide title: {story_topic} — {time_mode}
+    slide_note = f"""Slide title: {story_topic}  - {time_mode}
 
 Main message: {current_story['opening']}
 
@@ -3345,7 +3845,7 @@ Speaker note: Use the animation as a step-by-step explanation. Each node represe
 
 
 elif module == "Mini Research Lab":
-    st.header("🧪 Mini Research Lab")
+    st.markdown("<div class='atlas-module-title'><h1>&#129514; Mini Research Lab</h1></div>", unsafe_allow_html=True)
     lab_choice = st.radio(
         "Choose an experiment",
         ["Glacier Flow Simulator", "Ice Shelf Buttressing Lab", "Hydrofracture & Ice Shelf Collapse Lab"],
@@ -3353,20 +3853,20 @@ elif module == "Mini Research Lab":
     )
 
     if lab_choice == "Glacier Flow Simulator":
-        st.header("🧪 Mini Research Lab: Interactive Antarctic Ice Sheet Simulator")
+        st.header("Interactive Antarctic Ice Sheet Simulator")
 
-        st.markdown("""
-        ### Legend
+        with st.expander("Legend and visual guide", expanded=False):
+            st.markdown("""
+            - **White-blue surface:** Grounded ice sheet. Darker blue means thicker ice.
+            - **Light blue floating surface:** Floating ice shelf extending over the ocean.
+            - **Brown surface:** Bedrock beneath the ice.
+            - **Transparent blue plane:** Ocean surface.
+            - **Red line:** Grounding line, where grounded ice begins to float.
+            - **Orange line arrows:** Ice flow direction.
+            - **Cyan moving particles:** Ice parcels moving downstream.
+            - **Orange/red subsurface patch:** Warm Circumpolar Deep Water intrusion.
+            """)
 
-        - **White–blue surface:** Grounded ice sheet. Darker blue means thicker ice.
-        - **Light blue floating surface:** Floating ice shelf extending over the ocean.
-        - **Brown surface:** Bedrock beneath the ice.
-        - **Transparent blue plane:** Ocean surface.
-        - **Red line:** Grounding line, where grounded ice begins to float.
-        - **Orange line arrows:** Ice flow direction.
-        - **Cyan moving particles:** Ice parcels moving downstream.
-        - **Orange/red subsurface patch:** Warm Circumpolar Deep Water intrusion.
-        """)
 
         preset = st.selectbox(
             "Preset glacier mode",
@@ -3724,7 +4224,7 @@ elif module == "Mini Research Lab":
                 y=0.95,
                 buttons=[
                     dict(
-                        label="▶ Play ice flow",
+                        label="Play ice flow",
                         method="animate",
                         args=[None, {
                             "frame": {"duration": 85, "redraw": True},
@@ -3735,7 +4235,7 @@ elif module == "Mini Research Lab":
                         }]
                     ),
                     dict(
-                        label="⏸ Pause",
+                        label="Pause",
                         method="animate",
                         args=[[None], {
                             "frame": {"duration": 0, "redraw": False},
@@ -3773,19 +4273,19 @@ elif module == "Mini Research Lab":
 
 
     elif lab_choice == "Ice Shelf Buttressing Lab":
-        st.header("🧪 Mini Research Lab: Ice Shelf Buttressing Lab")
+        st.header("Ice Shelf Buttressing Lab")
 
-        st.markdown("""
-        ### Legend
+        with st.expander("Legend and mechanism guide", expanded=False):
+            st.markdown("""
+            - **Dark blue block:** Grounded ice sheet flowing toward the ocean.
+            - **Light blue block:** Floating ice shelf.
+            - **Orange arrows:** Relative ice-flow speed.
+            - **Brown bump:** Pinning point / local topographic resistance.
+            - **Red dashed line:** Grounding line.
+            - **Gray removed zone:** Calved or collapsed ice-shelf area.
+            - **Blue back-stress arrows:** Buttressing force pushing back against grounded ice.
+            """)
 
-        - **Dark blue block:** Grounded ice sheet flowing toward the ocean.
-        - **Light blue block:** Floating ice shelf.
-        - **Orange arrows:** Relative ice-flow speed.
-        - **Brown bump:** Pinning point / local topographic resistance.
-        - **Red dashed line:** Grounding line.
-        - **Gray removed zone:** Calved or collapsed ice-shelf area.
-        - **Blue back-stress arrows:** Buttressing force pushing back against grounded ice.
-        """)
 
         st.caption(
             "This conceptual lab focuses on one mechanism: a floating ice shelf can provide back stress "
@@ -4010,18 +4510,18 @@ elif module == "Mini Research Lab":
 
 
     elif lab_choice == "Hydrofracture & Ice Shelf Collapse Lab":
-        st.header("🧪 Mini Research Lab: Hydrofracture & Ice Shelf Collapse Lab")
+        st.header("Hydrofracture & Ice Shelf Collapse Lab")
 
-        st.markdown("""
-        ### Legend
+        with st.expander("Legend and collapse sequence", expanded=False):
+            st.markdown("""
+            - **Ice-blue slab:** Floating ice shelf.
+            - **Deep blue ponds:** Surface meltwater ponds.
+            - **Red cracks:** Hydrofracture pathways driven by water-filled crevasses.
+            - **Gray separated blocks:** Collapsed / fragmented ice shelf pieces.
+            - **Orange arrows:** Post-collapse acceleration of inland ice.
+            - **Dark ocean background:** Open ocean beneath and around the floating shelf.
+            """)
 
-        - **Ice-blue slab:** Floating ice shelf.
-        - **Deep blue ponds:** Surface meltwater ponds.
-        - **Red cracks:** Hydrofracture pathways driven by water-filled crevasses.
-        - **Gray separated blocks:** Collapsed / fragmented ice shelf pieces.
-        - **Orange arrows:** Post-collapse acceleration of inland ice.
-        - **Dark ocean background:** Open ocean beneath and around the floating shelf.
-        """)
 
         st.caption(
             "This conceptual lab visualizes how atmospheric warming can create surface meltwater, "
@@ -4050,7 +4550,7 @@ elif module == "Mini Research Lab":
             st.caption("Ocean swell and flexure can help existing fractures widen and connect.")
 
             play_stage = st.slider("Collapse Stage", 0, 4, 2, 1, key="hydro_stage")
-            st.caption("Manually move through the collapse sequence: intact shelf → ponds → cracks → fragmentation → post-collapse acceleration.")
+            st.caption("Manually move through the collapse sequence: intact shelf ->ponds ->cracks ->fragmentation ->post-collapse acceleration.")
 
         ponding_index = np.clip((surface_melt * 0.75 - firn_capacity * 0.45 + 20) / 100, 0, 1)
         fracture_index = np.clip(
@@ -4294,6 +4794,29 @@ elif module == "Mini Research Lab":
 
 
 elif module == "Read Raw Paper":
-    st.header("📄 Read Raw Paper")
-    selected_page = st.slider("Select page", 1, total_pages, 1)
+    st.markdown("<div class='atlas-module-title'><h1>&#128196; Read Raw Paper</h1></div>", unsafe_allow_html=True)
+    search_query = st.text_input("Search within extracted paper text", placeholder="Example: grounding line, basal melt, Thwaites")
+    search_keywords = extract_keywords(search_query) if search_query.strip() else []
+    if search_query.strip():
+        matches = search_pages(pages, search_keywords, max_results=8)
+        if matches:
+            page_options = [r["page"] for r in matches]
+            selected_page = st.selectbox("Matching pages", page_options, format_func=lambda p: f"Page {p}")
+            st.markdown("#### Search matches")
+            for match in matches[:4]:
+                excerpt = build_search_excerpt(match["text"], search_keywords)
+                st.markdown(
+                    f"""
+                    <div class="ios-result-card">
+                      <div class="ios-kicker">Page {match['page']} · score {match['score']}</div>
+                      <div class="ios-muted">{excerpt}</div>
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
+                )
+        else:
+            st.warning("No matching pages found. Showing page 1.")
+            selected_page = 1
+    else:
+        selected_page = st.slider("Select page", 1, total_pages, 1)
     st.text_area(f"Page {selected_page}", pages[selected_page - 1]["text"], height=600)
