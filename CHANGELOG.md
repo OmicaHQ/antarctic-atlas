@@ -2,6 +2,13 @@
 
 All notable changes to Antarctic Research Atlas are documented here.
 
+## v2.0.4 - Bug Fix
+
+### Fixed
+
+- Replaced the desktop window icon with the Antarctic Atlas logo.
+- Removed the remaining hard diagonal background artifact from the Research Universe map.
+
 ## v2.0.3 - Bug Fix
 
 ### Fixed

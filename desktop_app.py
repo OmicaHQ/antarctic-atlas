@@ -12,6 +12,7 @@ import webview
 
 
 APP_TITLE = "Antarctic Ice Sheet Research Atlas"
+APP_ICON = "antarctic_atlas.ico"
 
 
 def app_dir() -> Path:
@@ -38,6 +39,11 @@ def bundled_path(name: str) -> Path:
     if candidate.exists():
         return candidate
     return app_dir() / name
+
+
+def app_icon_path():
+    icon_path = bundled_path(APP_ICON)
+    return str(icon_path) if icon_path.exists() else None
 
 
 def find_free_port() -> int:
@@ -141,7 +147,7 @@ def main():
         url = desktop.start_streamlit()
     except Exception as exc:
         webview.create_window(APP_TITLE, html=f"<h2>Startup failed</h2><pre>{exc}</pre>", width=760, height=420)
-        webview.start()
+        webview.start(icon=app_icon_path())
         return
 
     window = webview.create_window(
@@ -157,7 +163,7 @@ def main():
         desktop.stop_streamlit()
 
     window.events.closed += on_closed
-    webview.start(debug=False)
+    webview.start(debug=False, icon=app_icon_path())
 
 
 def run_streamlit_child():

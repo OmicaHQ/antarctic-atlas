@@ -1355,34 +1355,25 @@ Return JSON in this exact format:
         #research-universe-root {
           height: 700px; width: 100%; overflow: hidden; position: relative; border-radius: 30px; isolation:isolate;
           background:
-            radial-gradient(circle at 22% 20%, rgba(78,163,241,0.22), transparent 28%),
-            radial-gradient(circle at 70% 70%, rgba(149,117,205,0.24), transparent 30%),
-            radial-gradient(circle at 45% 45%, rgba(221,238,255,0.10), transparent 22%),
-            linear-gradient(135deg, #030712 0%, #07111f 45%, #020617 100%);
-          background-size: 135% 135%, 150% 150%, 125% 125%, 100% 100%;
+            radial-gradient(circle at 24% 24%, rgba(78,163,241,0.20), rgba(78,163,241,0.08) 24%, transparent 48%),
+            radial-gradient(circle at 74% 68%, rgba(149,117,205,0.20), rgba(149,117,205,0.07) 26%, transparent 50%),
+            radial-gradient(circle at 48% 45%, rgba(221,238,255,0.08), rgba(221,238,255,0.035) 24%, transparent 48%),
+            #050d1b;
+          background-size: 100% 100%;
           font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
           color: #eef6ff; box-shadow: inset 0 0 90px rgba(78,163,241,0.13), 0 26px 80px rgba(0,0,0,.34);
-          animation: ruNebulaDrift 22s ease-in-out infinite;
         }
         #research-universe-root::before,
         #research-universe-root::after { content:""; position:absolute; inset:-18%; pointer-events:none; z-index:1; }
         #research-universe-root::before {
           background:
-            radial-gradient(circle at 30% 22%, rgba(190,240,255,.12), transparent 25%),
-            radial-gradient(circle at 70% 64%, rgba(126,220,255,.07), transparent 30%);
-          mix-blend-mode:screen; opacity:.48;
+            radial-gradient(circle at 30% 24%, rgba(190,240,255,.08), transparent 34%),
+            radial-gradient(circle at 70% 64%, rgba(126,220,255,.05), transparent 38%);
+          mix-blend-mode:screen; opacity:.36;
         }
         #research-universe-root::after {
           background: radial-gradient(ellipse at 50% 50%, transparent 35%, rgba(2,6,23,.38) 82%);
           z-index:1;
-        }
-        @keyframes ruNebulaDrift {
-          0%,100% { background-position:0% 0%, 100% 90%, 52% 48%, 0 0; }
-          50% { background-position:9% 8%, 90% 78%, 45% 54%, 0 0; }
-        }
-        @keyframes ruGlassSweep {
-          0%,100% { transform:translateX(-7%) rotate(-3deg); opacity:.52; }
-          50% { transform:translateX(7%) rotate(3deg); opacity:.86; }
         }
         @keyframes ruCardIn {
           from { opacity:0; transform:translateY(12px) scale(.985); }
@@ -1400,8 +1391,8 @@ Return JSON in this exact format:
         #research-universe-svg { position:absolute; inset:0; width:100%; height:100%; z-index:2; }
         #research-universe-root .star { position:absolute; width:2px; height:2px; border-radius:50%; background:rgba(255,255,255,.75); box-shadow:0 0 9px rgba(255,255,255,.55); animation:twinkle 3.5s infinite ease-in-out alternate; }
         @keyframes twinkle { from { opacity:.25; transform:scale(.8); } to { opacity:.95; transform:scale(1.25); } }
-        #research-universe-root .card { position:absolute; right:22px; top:28px; width:35%; max-width:275px; min-width:235px; overflow:visible; z-index:6; border:1px solid rgba(210,238,255,.30); border-radius:24px; padding:19px; background:radial-gradient(circle at 12% 0%, rgba(255,255,255,.12), transparent 34%), linear-gradient(180deg,rgba(12,25,46,.88),rgba(5,13,27,.68)); backdrop-filter:blur(22px) saturate(1.38); box-shadow:0 24px 70px rgba(0,0,0,.38), inset 0 1px 0 rgba(255,255,255,.14), inset 0 -1px 0 rgba(126,220,255,.08); opacity:1; transform:translateY(0); transition:opacity .24s ease, transform .24s ease, border-color .24s ease, box-shadow .24s ease; animation:ruCardIn .42s cubic-bezier(.2,.8,.2,1) both; }
-        #research-universe-root .card::before { content:""; position:absolute; inset:-70% -35%; background:linear-gradient(120deg, transparent 0%, rgba(255,255,255,.12) 36%, rgba(126,220,255,.18) 47%, transparent 65%); transform:translateX(-35%) rotate(10deg); opacity:.42; pointer-events:none; }
+        #research-universe-root .card { position:absolute; right:22px; top:28px; width:35%; max-width:275px; min-width:235px; overflow:hidden; z-index:6; border:1px solid rgba(210,238,255,.30); border-radius:24px; padding:19px; background:radial-gradient(circle at 12% 0%, rgba(255,255,255,.10), transparent 34%), linear-gradient(180deg,rgba(12,25,46,.88),rgba(5,13,27,.68)); backdrop-filter:blur(22px) saturate(1.38); box-shadow:0 24px 70px rgba(0,0,0,.38), inset 0 1px 0 rgba(255,255,255,.14), inset 0 -1px 0 rgba(126,220,255,.08); opacity:1; transform:translateY(0); transition:opacity .24s ease, transform .24s ease, border-color .24s ease, box-shadow .24s ease; animation:ruCardIn .42s cubic-bezier(.2,.8,.2,1) both; }
+        #research-universe-root .card::before { content:""; position:absolute; inset:0; background:radial-gradient(circle at 18% 0%, rgba(255,255,255,.10), transparent 44%); opacity:.45; pointer-events:none; }
         #research-universe-root .card::-webkit-scrollbar { display:none; }
         #research-universe-root .card.is-fading { opacity:0; transform:translateY(10px) scale(.985); }
         #research-universe-root .badge { display:inline-block; padding:6px 10px; border-radius:999px; background:rgba(78,163,241,.14); border:1px solid rgba(142,207,255,.25); color:#bfe6ff; font-size:12px; letter-spacing:.25px; margin-bottom:14px; }

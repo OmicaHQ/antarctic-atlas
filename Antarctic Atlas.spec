@@ -4,6 +4,7 @@ from PyInstaller.utils.hooks import collect_all
 datas = []
 binaries = []
 hiddenimports = ['pdfplumber', 'pandas', 'numpy', 'jieba', 'requests', 'PIL', 'pypdfium2', 'pdfminer.high_level']
+datas += [('installer/antarctic_atlas.ico', '.')]
 tmp_ret = collect_all('streamlit')
 datas += tmp_ret[0]; binaries += tmp_ret[1]; hiddenimports += tmp_ret[2]
 tmp_ret = collect_all('plotly')
@@ -41,6 +42,7 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
+    icon='installer/antarctic_atlas.ico',
 )
 coll = COLLECT(
     exe,
