@@ -2,7 +2,7 @@
 
 All notable changes to Antarctic Research Atlas are documented here.
 
-## Unreleased
+## v2.0.2 - Bug Fix
 
 ### Changed
 

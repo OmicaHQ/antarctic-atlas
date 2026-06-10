@@ -2,7 +2,7 @@
 
 **An interactive educational and research platform for exploring the Antarctic Ice Sheet**
 
-Current release: **v2.0.1**
+Current release: **v2.0.2**
 
 🌐 **Live Demo**
 
@@ -149,6 +149,7 @@ See `CHANGELOG.md` for version notes.
 - `v1.0`: Preserved GitHub version before the local desktop and visual polish update.
 - `v2.0`: Current local version with iOS-style visual polish, desktop packaging support, improved module layouts, local Ollama model update, and UI bug fixes.
 - `v2.0.1`: Documentation update for the desktop app side and changelog.
+- `v2.0.2`: Bug fix for the Research Universe map knowledge card.
 
 ## Credits
 
