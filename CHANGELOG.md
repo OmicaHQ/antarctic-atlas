@@ -2,6 +2,12 @@
 
 All notable changes to Antarctic Research Atlas are documented here.
 
+## v2.0.5 - Installer Metadata
+
+### Changed
+
+- Updated Windows installer publisher metadata to `Omica Chow`.
+
 ## v2.0.4 - Bug Fix
 
 ### Fixed

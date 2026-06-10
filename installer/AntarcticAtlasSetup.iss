@@ -1,6 +1,6 @@
 #define MyAppName "Antarctic Atlas"
-#define MyAppVersion "2.0.4"
-#define MyAppPublisher "Omica"
+#define MyAppVersion "2.0.5"
+#define MyAppPublisher "Omica Chow"
 #define MyAppExeName "Antarctic Atlas.exe"
 #define SourceAppDir "C:\Users\Omica\Desktop\Antarctic Atlas App"
 #define OutputDir "C:\Users\Omica\Desktop"

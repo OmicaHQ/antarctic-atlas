@@ -2,7 +2,7 @@
 
 **An interactive educational and research platform for exploring the Antarctic Ice Sheet**
 
-Current release: **v2.0.4**
+Current release: **v2.0.5**
 
 🌐 **Live Demo**
 
@@ -144,8 +144,8 @@ Build outputs are ignored by Git and should be distributed through release asset
 
 Windows installer:
 
-- `release-assets/Antarctic-Atlas-v2.0.4-Setup.exe`
-- SHA256: `DF605C1D6AC94F8F2BC8399B40AB7259CC86B09A1069941B7332D62EEB433A04`
+- `release-assets/Antarctic-Atlas-v2.0.5-Setup.exe`
+- SHA256: `C1F8734F7BBB56CFD7CBF6C3922479B9FCBDE9B34C78EDAB69C02FAA42B4AD11`
 
 The installer creates Start Menu and optional Desktop shortcuts for one-click launch.
 
@@ -159,6 +159,7 @@ See `CHANGELOG.md` for version notes.
 - `v2.0.2`: Bug fix for the Research Universe map knowledge card.
 - `v2.0.3`: Bug fix for the Research Universe diagonal glass highlight artifact and Windows installer refresh.
 - `v2.0.4`: Bug fix for the desktop window icon and remaining Research Universe diagonal background artifact.
+- `v2.0.5`: Installer metadata update with `Omica Chow` as publisher.
 
 ## Credits
 

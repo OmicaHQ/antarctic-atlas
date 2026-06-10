@@ -2,6 +2,13 @@
 
 This folder contains the Windows installer for direct download.
 
+## Antarctic Atlas v2.0.5
+
+- File: `Antarctic-Atlas-v2.0.5-Setup.exe`
+- SHA256: `C1F8734F7BBB56CFD7CBF6C3922479B9FCBDE9B34C78EDAB69C02FAA42B4AD11`
+
+Double-click the installer, then launch Antarctic Atlas from the Desktop shortcut or Start Menu.
+
 ## Antarctic Atlas v2.0.4
 
 - File: `Antarctic-Atlas-v2.0.4-Setup.exe`
