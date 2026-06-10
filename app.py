@@ -1368,9 +1368,9 @@ Return JSON in this exact format:
         #research-universe-root::after { content:""; position:absolute; inset:-18%; pointer-events:none; z-index:1; }
         #research-universe-root::before {
           background:
-            linear-gradient(115deg, transparent 8%, rgba(255,255,255,.055) 38%, transparent 58%),
-            radial-gradient(circle at 32% 20%, rgba(190,240,255,.12), transparent 24%);
-          mix-blend-mode:screen; opacity:.72; animation:ruGlassSweep 13s ease-in-out infinite;
+            radial-gradient(circle at 30% 22%, rgba(190,240,255,.12), transparent 25%),
+            radial-gradient(circle at 70% 64%, rgba(126,220,255,.07), transparent 30%);
+          mix-blend-mode:screen; opacity:.48;
         }
         #research-universe-root::after {
           background: radial-gradient(ellipse at 50% 50%, transparent 35%, rgba(2,6,23,.38) 82%);

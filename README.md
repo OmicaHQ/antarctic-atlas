@@ -2,7 +2,7 @@
 
 **An interactive educational and research platform for exploring the Antarctic Ice Sheet**
 
-Current release: **v2.0.2**
+Current release: **v2.0.3**
 
 🌐 **Live Demo**
 
@@ -142,6 +142,13 @@ pyinstaller "Antarctic Atlas.spec"
 
 Build outputs are ignored by Git and should be distributed through release assets rather than committed to the repository.
 
+Windows installer:
+
+- `release-assets/Antarctic-Atlas-v2.0.3-Setup.exe`
+- SHA256: `156A41037A5DCEB4C2188F55907B5F2196DF5B4E35A17236297C03736BA5AD31`
+
+The installer creates Start Menu and optional Desktop shortcuts for one-click launch.
+
 See `CHANGELOG.md` for version notes.
 
 ## Version History
@@ -150,6 +157,7 @@ See `CHANGELOG.md` for version notes.
 - `v2.0`: Current local version with iOS-style visual polish, desktop packaging support, improved module layouts, local Ollama model update, and UI bug fixes.
 - `v2.0.1`: Documentation update for the desktop app side and changelog.
 - `v2.0.2`: Bug fix for the Research Universe map knowledge card.
+- `v2.0.3`: Bug fix for the Research Universe diagonal glass highlight artifact and Windows installer refresh.
 
 ## Credits
 

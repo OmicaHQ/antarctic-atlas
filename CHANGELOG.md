@@ -2,6 +2,13 @@
 
 All notable changes to Antarctic Research Atlas are documented here.
 
+## v2.0.3 - Bug Fix
+
+### Fixed
+
+- Removed the diagonal glass highlight artifact from the Research Universe map background.
+- Rebuilt the Windows installer after the Research Universe visual fix.
+
 ## v2.0.2 - Bug Fix
 
 ### Changed
