@@ -2,6 +2,12 @@
 
 All notable changes to Antarctic Research Atlas are documented here.
 
+## Unreleased
+
+### Changed
+
+- Removed internal scrolling from the Research Universe map knowledge card so the card displays as a fixed glass panel inside the map.
+
 ## v2.0.1 - Documentation Update
 
 ### Added

@@ -1400,7 +1400,7 @@ Return JSON in this exact format:
         #research-universe-svg { position:absolute; inset:0; width:100%; height:100%; z-index:2; }
         #research-universe-root .star { position:absolute; width:2px; height:2px; border-radius:50%; background:rgba(255,255,255,.75); box-shadow:0 0 9px rgba(255,255,255,.55); animation:twinkle 3.5s infinite ease-in-out alternate; }
         @keyframes twinkle { from { opacity:.25; transform:scale(.8); } to { opacity:.95; transform:scale(1.25); } }
-        #research-universe-root .card { position:absolute; right:22px; top:28px; width:35%; max-width:275px; min-width:235px; max-height:460px; overflow-y:auto; overscroll-behavior:contain; scrollbar-width:none; z-index:6; border:1px solid rgba(210,238,255,.30); border-radius:24px; padding:19px; background:radial-gradient(circle at 12% 0%, rgba(255,255,255,.12), transparent 34%), linear-gradient(180deg,rgba(12,25,46,.88),rgba(5,13,27,.68)); backdrop-filter:blur(22px) saturate(1.38); box-shadow:0 24px 70px rgba(0,0,0,.38), inset 0 1px 0 rgba(255,255,255,.14), inset 0 -1px 0 rgba(126,220,255,.08); opacity:1; transform:translateY(0); transition:opacity .24s ease, transform .24s ease, border-color .24s ease, box-shadow .24s ease; animation:ruCardIn .42s cubic-bezier(.2,.8,.2,1) both; }
+        #research-universe-root .card { position:absolute; right:22px; top:28px; width:35%; max-width:275px; min-width:235px; overflow:visible; z-index:6; border:1px solid rgba(210,238,255,.30); border-radius:24px; padding:19px; background:radial-gradient(circle at 12% 0%, rgba(255,255,255,.12), transparent 34%), linear-gradient(180deg,rgba(12,25,46,.88),rgba(5,13,27,.68)); backdrop-filter:blur(22px) saturate(1.38); box-shadow:0 24px 70px rgba(0,0,0,.38), inset 0 1px 0 rgba(255,255,255,.14), inset 0 -1px 0 rgba(126,220,255,.08); opacity:1; transform:translateY(0); transition:opacity .24s ease, transform .24s ease, border-color .24s ease, box-shadow .24s ease; animation:ruCardIn .42s cubic-bezier(.2,.8,.2,1) both; }
         #research-universe-root .card::before { content:""; position:absolute; inset:-70% -35%; background:linear-gradient(120deg, transparent 0%, rgba(255,255,255,.12) 36%, rgba(126,220,255,.18) 47%, transparent 65%); transform:translateX(-35%) rotate(10deg); opacity:.42; pointer-events:none; }
         #research-universe-root .card::-webkit-scrollbar { display:none; }
         #research-universe-root .card.is-fading { opacity:0; transform:translateY(10px) scale(.985); }
@@ -1411,7 +1411,7 @@ Return JSON in this exact format:
         #research-universe-root .hint { position:absolute; left:32px; bottom:24px; max-width:calc(100% - 64px); color:rgba(231,245,255,.64); font-size:13px; z-index:5; padding:8px 11px; border-radius:999px; background:rgba(2,6,23,.30); border:1px solid rgba(210,238,255,.10); backdrop-filter:blur(10px); }
         @media (max-width: 640px) {
           #research-universe-root .title { display:none; }
-          #research-universe-root .card { left:26px; right:auto; top:24px; width:300px; max-width:calc(100% - 52px); min-width:0; max-height:330px; }
+          #research-universe-root .card { left:26px; right:auto; top:24px; width:300px; max-width:calc(100% - 52px); min-width:0; }
         }
         .ru-link { stroke:rgba(118,200,255,.30); stroke-linecap:round; transition:all .55s ease; }
         .ru-link.active { stroke-dasharray:9 10; animation:ruLinkFlow 1.55s linear infinite; filter:drop-shadow(0 0 9px rgba(126,220,255,.55)); }
@@ -1677,13 +1677,11 @@ Return JSON in this exact format:
           <div class="label">Key regions / linked topics</div><p>${safe(d.regions)}</p>`;
         if (!animated) {
           card.innerHTML = html;
-          card.scrollTop = 0;
           return;
         }
         card.classList.add("is-fading");
         window.setTimeout(() => {
           card.innerHTML = html;
-          card.scrollTop = 0;
           card.classList.remove("is-fading");
         }, 180);
       }
