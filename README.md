@@ -4,7 +4,7 @@
   <img src="assets/antarctic-atlas-social-preview.png" alt="Antarctic Atlas logo" width="820">
 </p>
 
-**An interactive educational and research platform for exploring the Antarctic Ice Sheet**
+**Antarctic Atlas is an interactive educational and research platform for exploring the Antarctic Ice Sheet.**
 
 Current release: **v2.0.5**
 
@@ -16,13 +16,15 @@ Current release: **v2.0.5**
 
 ## Project Overview
 
-Antarctic Research Atlas transforms an 89-page review paper:
+Antarctic Atlas is the desktop and web implementation of the Antarctic Research Atlas project.
+
+The project transforms an 89-page review paper:
 
 **Noble, T. L. et al. (2020). _The Sensitivity of the Antarctic Ice Sheet to a Changing Climate: Past, Present, and Future._ Reviews of Geophysics, 58, e2019RG000663.**
 
 into a visual, AI-assisted platform where users can explore Antarctic research interactively.
 
-The platform combines scientific visualization, interactive exploration, AI-assisted storytelling, educational tools, and a Windows desktop wrapper for local use.
+The platform combines scientific visualization, interactive exploration, AI-assisted storytelling, educational tools, and a Windows desktop app for local use.
 
 ---
 
@@ -125,27 +127,11 @@ OPENAI_API_KEY = ""
 
 Do not commit real API keys. Evidence-only mode works without an API key.
 
-## Desktop Build Notes
+You can also enter and test API keys inside the app's AI Backend settings. The local Ollama backend targets `gemma4:e4b`, so local AI features require Ollama with that model available.
 
-The repository includes the desktop app entry point and PyInstaller build configuration:
+## Distribution Notes
 
-- `desktop_app.py`: launches the Streamlit project inside a desktop window.
-- `Antarctic Atlas.spec`: PyInstaller configuration for building the Windows app package.
-- `app.py`: shared app source used by both Streamlit and the desktop wrapper.
-
-Run the desktop app from source:
-
-```bash
-python desktop_app.py
-```
-
-Build the Windows desktop app:
-
-```bash
-pyinstaller "Antarctic Atlas.spec"
-```
-
-Release installers should be distributed through GitHub Releases. The `release-assets/` folder is kept for historical package references.
+Windows installers are distributed through GitHub Releases. The `release-assets/` folder is kept only for historical and direct installer references.
 
 See `CHANGELOG.md` for version notes.
 
@@ -157,7 +143,7 @@ See `CHANGELOG.md` for version notes.
 - `v2.0.2`: Bug fix for the Research Universe map knowledge card.
 - `v2.0.3`: Windows installer release and Research Universe diagonal glass highlight fix.
 - `v2.0.4`: Bug fix for the desktop window icon and remaining Research Universe diagonal background artifact.
-- `v2.0.5`: Current Windows desktop release with installer publisher metadata updated to `Omica Chow`.
+- `v2.0.5`: Current Windows desktop release with updated branding, GitHub Release distribution, and installer publisher metadata set to `Omica Chow`.
 
 ## Credits
 
