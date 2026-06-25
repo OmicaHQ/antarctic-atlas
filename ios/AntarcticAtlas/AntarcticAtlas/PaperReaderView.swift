@@ -10,45 +10,9 @@ struct PaperReaderView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            PaperSearchBar(
-                query: $query,
-                pageText: pageText,
-                canGoBack: selectedPageIndex > 0,
-                canGoForward: selectedPageIndex < max(document.pageCount - 1, 0),
-                previousPage: { selectedPageIndex = max(selectedPageIndex - 1, 0) },
-                nextPage: { selectedPageIndex = min(selectedPageIndex + 1, max(document.pageCount - 1, 0)) },
-                runSearch: runSearch
-            )
-
-            if !searchResults.isEmpty {
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 8) {
-                        ForEach(searchResults) { result in
-                            Button {
-                                selectedPageIndex = result.pageIndex
-                                selectedResult = result
-                            } label: {
-                                VStack(alignment: .leading, spacing: 4) {
-                                    Text("Page \(result.pageIndex + 1)")
-                                        .font(.caption.weight(.bold))
-                                    Text(result.excerpt)
-                                        .font(.caption2)
-                                        .lineLimit(2)
-                                        .multilineTextAlignment(.leading)
-                                }
-                                .frame(width: 190, alignment: .leading)
-                            }
-                            .buttonStyle(.bordered)
-                        }
-                    }
-                    .padding(.horizontal)
-                    .padding(.vertical, 8)
-                }
-                .background(.thinMaterial)
-            }
-
-            PDFKitView(document: document, selectedPageIndex: $selectedPageIndex)
-                .ignoresSafeArea(.container, edges: .bottom)
+            searchBar
+            searchResultStrip
+            pdfBody
         }
         .navigationTitle("Raw Paper")
         .navigationBarTitleDisplayMode(.inline)
@@ -59,9 +23,44 @@ struct PaperReaderView: View {
         }
     }
 
+    private var searchBar: some View {
+        PaperSearchBar(
+            query: $query,
+            pageText: pageText,
+            canGoBack: selectedPageIndex > 0,
+            canGoForward: selectedPageIndex < max(document.pageCount - 1, 0),
+            previousPage: previousPage,
+            nextPage: nextPage,
+            runSearch: runSearch
+        )
+    }
+
+    @ViewBuilder
+    private var searchResultStrip: some View {
+        if !searchResults.isEmpty {
+            PaperSearchResultsStrip(results: searchResults) { result in
+                selectedPageIndex = result.pageIndex
+                selectedResult = result
+            }
+        }
+    }
+
+    private var pdfBody: some View {
+        PDFKitView(document: document, selectedPageIndex: $selectedPageIndex)
+            .ignoresSafeArea(.container, edges: .bottom)
+    }
+
     private var pageText: String {
         guard document.pageCount > 0 else { return "No PDF" }
         return "Page \(selectedPageIndex + 1) / \(document.pageCount)"
+    }
+
+    private func previousPage() {
+        selectedPageIndex = max(selectedPageIndex - 1, 0)
+    }
+
+    private func nextPage() {
+        selectedPageIndex = min(selectedPageIndex + 1, max(document.pageCount - 1, 0))
     }
 
     private func runSearch() {
@@ -76,6 +75,45 @@ struct PaperReaderView: View {
             selectedPageIndex = first.pageIndex
             selectedResult = first
         }
+    }
+}
+
+struct PaperSearchResultsStrip: View {
+    let results: [PaperSearchResult]
+    let select: (PaperSearchResult) -> Void
+
+    var body: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 8) {
+                ForEach(results) { result in
+                    Button {
+                        select(result)
+                    } label: {
+                        PaperSearchResultCard(result: result)
+                    }
+                    .buttonStyle(.bordered)
+                }
+            }
+            .padding(.horizontal)
+            .padding(.vertical, 8)
+        }
+        .background(.thinMaterial)
+    }
+}
+
+struct PaperSearchResultCard: View {
+    let result: PaperSearchResult
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text("Page \(result.pageIndex + 1)")
+                .font(.caption.weight(.bold))
+            Text(result.excerpt)
+                .font(.caption2)
+                .lineLimit(2)
+                .multilineTextAlignment(.leading)
+        }
+        .frame(width: 190, alignment: .leading)
     }
 }
 
