@@ -12,6 +12,7 @@
         100000000000000000000103 /* AtlasData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000203 /* AtlasData.swift */; };
         100000000000000000000104 /* ModuleViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000204 /* ModuleViews.swift */; };
         100000000000000000000105 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000205 /* Assets.xcassets */; };
+        100000000000000000000106 /* AtlasWebView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000207 /* AtlasWebView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -22,6 +23,7 @@
         100000000000000000000204 /* ModuleViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModuleViews.swift; sourceTree = "<group>"; };
         100000000000000000000205 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
         100000000000000000000206 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+        100000000000000000000207 /* AtlasWebView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AtlasWebView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -48,6 +50,7 @@
             children = (
                 100000000000000000000201 /* AntarcticAtlasApp.swift */,
                 100000000000000000000202 /* ContentView.swift */,
+                100000000000000000000207 /* AtlasWebView.swift */,
                 100000000000000000000203 /* AtlasData.swift */,
                 100000000000000000000204 /* ModuleViews.swift */,
                 100000000000000000000205 /* Assets.xcassets */,
@@ -135,6 +138,7 @@
             files = (
                 100000000000000000000101 /* AntarcticAtlasApp.swift in Sources */,
                 100000000000000000000102 /* ContentView.swift in Sources */,
+                100000000000000000000106 /* AtlasWebView.swift in Sources */,
                 100000000000000000000103 /* AtlasData.swift in Sources */,
                 100000000000000000000104 /* ModuleViews.swift in Sources */,
             );

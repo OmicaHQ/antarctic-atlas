@@ -26,6 +26,8 @@ Use this first. It is the most direct route from the current repository to your 
 18. Trust the developer profile for your Apple ID.
 19. Open **AntarcticAtlas** from the Home Screen.
 
+The first tab, **Full Atlas**, loads the existing Streamlit app so the original modules are available. The native preview tabs are early iOS experiments and do not yet replace the full web app.
+
 Notes:
 
 - With a free Apple ID, sideloaded apps normally expire after several days and must be reinstalled.

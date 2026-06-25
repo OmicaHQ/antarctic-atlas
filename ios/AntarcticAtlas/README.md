@@ -1,6 +1,6 @@
 # Antarctic Atlas iOS
 
-Native SwiftUI iOS version of Antarctic Research Atlas.
+SwiftUI iOS wrapper for Antarctic Research Atlas.
 
 Open `AntarcticAtlas.xcodeproj` in Xcode 16 or newer, select the `AntarcticAtlas` scheme, and run on an iOS 17+ simulator or device.
 
@@ -12,7 +12,17 @@ GitHub Actions also builds the app on hosted macOS runners:
 
 See `INSTALL_IPHONE.md` for the iPhone installation path.
 
-This first native build ports the main product structure from the Streamlit app:
+The app opens the full Streamlit Atlas in an embedded iOS WebView first, so the existing web product remains available on iPhone:
+
+- Research Universe Explorer
+- Antarctic System Explorer
+- AI Visualizer
+- Mini Research Lab
+- Research Compass
+- Read Raw Paper
+- Existing Streamlit controls, PDF text, and AI backend settings
+
+The secondary native preview tabs are only an early SwiftUI direction, not a complete replacement for the Streamlit app yet:
 
 - Research Universe with keyword matching and topic sheets
 - Antarctic System Explorer with case and observation tool switching
@@ -20,4 +30,4 @@ This first native build ports the main product structure from the Streamlit app:
 - Mini Research Lab with conceptual vulnerability controls
 - Research Compass with frontier directions, metrics, regions, and methods
 
-The Python/Streamlit app remains unchanged. Future iOS work can add PDFKit paper reading, API-backed RAG answers, richer canvas animations, and persistent saved research notes.
+The Python/Streamlit app remains unchanged. Future iOS work can progressively replace selected WebView screens with native SwiftUI, PDFKit paper reading, API-backed RAG answers, richer canvas animations, and persistent saved research notes.
