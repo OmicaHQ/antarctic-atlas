@@ -6,7 +6,7 @@ The goal is a complete native iOS Antarctic Atlas, not a WebView wrapper. The We
 
 | Streamlit module | Native iOS status | Notes |
 | --- | --- | --- |
-| Research Universe Explorer | Partial | Native topic index, keyword matching, topic sheets. Still needs the full interactive graph and AI classifier. |
+| Research Universe Explorer | In progress | Native interactive graph with center, research-area nodes, topic nodes, search focus, and detail panel. Still needs animation parity and AI classifier. |
 | Antarctic System Explorer | Partial | Native case/tool switching. Still needs visual sensor layers and synthesis builder. |
 | AI Visualizer | Partial | Native story beats and reveal controls. Still needs animated mechanism canvas and export text parity. |
 | Mini Research Lab | Partial | Native conceptual vulnerability model. Still needs the three full labs: glacier flow, buttressing, hydrofracture. |
@@ -17,7 +17,7 @@ The goal is a complete native iOS Antarctic Atlas, not a WebView wrapper. The We
 
 ## Next Native Milestones
 
-1. Replace the simplified Research Universe with a real interactive graph using SwiftUI Canvas.
+1. Expand the Research Universe graph with richer animations, labels, and AI-backed node classification.
 2. Port the three Mini Research Lab simulations with native charts/canvas.
 3. Add AI backend settings using Keychain storage and source-grounded retrieval over bundled paper text.
 4. Port Research Compass timeline, region map, proposal builder, and export actions.

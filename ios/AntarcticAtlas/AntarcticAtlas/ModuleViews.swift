@@ -2,84 +2,33 @@ import SwiftUI
 
 struct UniverseView: View {
     @State private var query = ""
-    @State private var selectedArea = AtlasData.researchAreas[0]
-    @State private var selectedTopic: ResearchTopic?
-
-    private var matchedTopic: ResearchTopic? {
-        let terms = query.lowercased().split(separator: " ").map(String.init)
-        guard !terms.isEmpty else { return nil }
-        return AtlasData.researchAreas
-            .flatMap(\.topics)
-            .max { lhs, rhs in score(lhs, terms: terms) < score(rhs, terms: terms) }
-    }
+    @State private var selectedNode = UniverseGraphLayout.nodes(for: AtlasData.researchAreas)[0]
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 18) {
-                HeroHeader(title: "Antarctic Research Universe", subtitle: "Explore the review paper as a native iOS knowledge map.", symbol: "sparkles")
+                HeroHeader(title: "Antarctic Research Universe", subtitle: "Tap, search, and focus the native knowledge graph.", symbol: "sparkles")
 
                 TextField("Ask about grounding lines, CDW, GRACE, paleo records...", text: $query)
                     .textFieldStyle(.roundedBorder)
                     .autocorrectionDisabled()
 
-                if let match = matchedTopic, !query.isEmpty {
-                    Button {
-                        selectedTopic = match
-                    } label: {
-                        Label("Best match: \(match.name)", systemImage: "scope")
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                    }
-                    .buttonStyle(.borderedProminent)
-                }
+                UniverseGraphView(
+                    areas: AtlasData.researchAreas,
+                    query: query,
+                    selectedNode: $selectedNode
+                )
 
-                LazyVGrid(columns: [GridItem(.adaptive(minimum: 150), spacing: 12)], spacing: 12) {
-                    ForEach(AtlasData.researchAreas) { area in
-                        Button {
-                            selectedArea = area
-                            selectedTopic = area.topics.first
-                        } label: {
-                            VStack(alignment: .leading, spacing: 8) {
-                                Text(area.name)
-                                    .font(.headline)
-                                Text(area.question)
-                                    .font(.caption)
-                                    .foregroundStyle(.white.opacity(0.72))
-                                    .lineLimit(3)
-                            }
-                            .frame(maxWidth: .infinity, minHeight: 104, alignment: .topLeading)
-                            .padding(12)
-                            .background(area.id == selectedArea.id ? .cyan.opacity(0.28) : .white.opacity(0.08), in: RoundedRectangle(cornerRadius: 8))
-                            .overlay(RoundedRectangle(cornerRadius: 8).stroke(.white.opacity(0.12)))
-                        }
-                        .buttonStyle(.plain)
-                    }
-                }
+                UniverseNodeDetailPanel(node: selectedNode)
 
-                VStack(alignment: .leading, spacing: 12) {
-                    Text(selectedArea.importance)
-                        .foregroundStyle(.white.opacity(0.78))
-                    ForEach(selectedArea.topics) { topic in
-                        Button {
-                            selectedTopic = topic
-                        } label: {
-                            TopicRow(topic: topic, isSelected: selectedTopic?.id == topic.id)
-                        }
-                        .buttonStyle(.plain)
-                    }
-                }
+                Text("Search focuses the strongest matching node. Tap any sphere to inspect its question, status, and region.")
+                    .font(.caption)
+                    .foregroundStyle(.white.opacity(0.62))
             }
             .padding()
         }
         .atlasBackground()
         .navigationTitle("Universe")
-        .sheet(item: $selectedTopic) { topic in
-            TopicDetailView(topic: topic)
-        }
-    }
-
-    private func score(_ topic: ResearchTopic, terms: [String]) -> Int {
-        let haystack = "\(topic.name) \(topic.question) \(topic.why) \(topic.status) \(topic.region)".lowercased()
-        return terms.reduce(0) { $0 + (haystack.contains($1) ? 1 : 0) }
     }
 }
 

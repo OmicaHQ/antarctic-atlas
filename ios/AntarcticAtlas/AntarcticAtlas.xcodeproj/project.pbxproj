@@ -15,6 +15,7 @@
         100000000000000000000106 /* AtlasWebView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000207 /* AtlasWebView.swift */; };
         100000000000000000000107 /* PaperReaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000208 /* PaperReaderView.swift */; };
         100000000000000000000108 /* Noble2020.pdf in Resources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000209 /* Noble2020.pdf */; };
+        100000000000000000000109 /* UniverseGraphView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000210 /* UniverseGraphView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -28,6 +29,7 @@
         100000000000000000000207 /* AtlasWebView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AtlasWebView.swift; sourceTree = "<group>"; };
         100000000000000000000208 /* PaperReaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaperReaderView.swift; sourceTree = "<group>"; };
         100000000000000000000209 /* Noble2020.pdf */ = {isa = PBXFileReference; lastKnownFileType = image.pdf; path = Noble2020.pdf; sourceTree = "<group>"; };
+        100000000000000000000210 /* UniverseGraphView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UniverseGraphView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -56,6 +58,7 @@
                 100000000000000000000202 /* ContentView.swift */,
                 100000000000000000000207 /* AtlasWebView.swift */,
                 100000000000000000000208 /* PaperReaderView.swift */,
+                100000000000000000000210 /* UniverseGraphView.swift */,
                 100000000000000000000203 /* AtlasData.swift */,
                 100000000000000000000204 /* ModuleViews.swift */,
                 100000000000000000000404 /* Resources */,
@@ -155,6 +158,7 @@
                 100000000000000000000102 /* ContentView.swift in Sources */,
                 100000000000000000000106 /* AtlasWebView.swift in Sources */,
                 100000000000000000000107 /* PaperReaderView.swift in Sources */,
+                100000000000000000000109 /* UniverseGraphView.swift in Sources */,
                 100000000000000000000103 /* AtlasData.swift in Sources */,
                 100000000000000000000104 /* ModuleViews.swift in Sources */,
             );
