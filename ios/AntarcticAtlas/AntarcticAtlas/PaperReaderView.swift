@@ -6,7 +6,6 @@ struct PaperReaderView: View {
     @State private var query = ""
     @State private var selectedPageIndex = 0
     @State private var searchResults: [PaperSearchResult] = []
-    @State private var selectedResult: PaperSearchResult?
 
     var body: some View {
         VStack(spacing: 0) {
@@ -16,11 +15,6 @@ struct PaperReaderView: View {
         }
         .navigationTitle("Raw Paper")
         .navigationBarTitleDisplayMode(.inline)
-        .alert("Search match", item: $selectedResult) { _ in
-            Button("OK", role: .cancel) {}
-        } message: { result in
-            Text("Page \(result.pageIndex + 1)\n\n\(result.excerpt)")
-        }
     }
 
     private var searchBar: some View {
@@ -40,7 +34,6 @@ struct PaperReaderView: View {
         if !searchResults.isEmpty {
             PaperSearchResultsStrip(results: searchResults) { result in
                 selectedPageIndex = result.pageIndex
-                selectedResult = result
             }
         }
     }
@@ -73,7 +66,6 @@ struct PaperReaderView: View {
         searchResults = document.search(trimmed, maxResults: 20)
         if let first = searchResults.first {
             selectedPageIndex = first.pageIndex
-            selectedResult = first
         }
     }
 }
