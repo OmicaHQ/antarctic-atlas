@@ -3,33 +3,38 @@ import SwiftUI
 struct ContentView: View {
     var body: some View {
         TabView {
-            AtlasWebAppView()
-                .tabItem { Label("Full Atlas", systemImage: "globe") }
-
             NavigationStack {
                 UniverseView()
             }
-            .tabItem { Label("Native Preview", systemImage: "sparkles") }
+            .tabItem { Label("Universe", systemImage: "sparkles") }
 
             NavigationStack {
                 SystemExplorerView()
             }
-            .tabItem { Label("System Preview", systemImage: "map") }
+            .tabItem { Label("System", systemImage: "map") }
 
             NavigationStack {
                 StoryVisualizerView()
             }
-            .tabItem { Label("Story Preview", systemImage: "play.rectangle") }
+            .tabItem { Label("Stories", systemImage: "play.rectangle") }
 
             NavigationStack {
                 MiniLabView()
             }
-            .tabItem { Label("Lab Preview", systemImage: "slider.horizontal.3") }
+            .tabItem { Label("Lab", systemImage: "slider.horizontal.3") }
 
             NavigationStack {
                 CompassView()
             }
-            .tabItem { Label("Compass Preview", systemImage: "safari") }
+            .tabItem { Label("Compass", systemImage: "safari") }
+
+            NavigationStack {
+                PaperReaderView()
+            }
+            .tabItem { Label("Paper", systemImage: "doc.text.magnifyingglass") }
+
+            AtlasWebAppView()
+                .tabItem { Label("Web", systemImage: "globe") }
         }
         .tint(.cyan)
     }

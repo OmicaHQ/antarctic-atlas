@@ -12,7 +12,7 @@ GitHub Actions also builds the app on hosted macOS runners:
 
 See `INSTALL_IPHONE.md` for the iPhone installation path.
 
-The app opens the full Streamlit Atlas in an embedded iOS WebView first, so the existing web product remains available on iPhone:
+The app is being migrated toward native SwiftUI. A Web tab remains as a temporary fallback so the existing web product stays reachable while native modules catch up:
 
 - Research Universe Explorer
 - Antarctic System Explorer
@@ -22,12 +22,13 @@ The app opens the full Streamlit Atlas in an embedded iOS WebView first, so the 
 - Read Raw Paper
 - Existing Streamlit controls, PDF text, and AI backend settings
 
-The secondary native preview tabs are only an early SwiftUI direction, not a complete replacement for the Streamlit app yet:
+Native SwiftUI modules currently include:
 
 - Research Universe with keyword matching and topic sheets
 - Antarctic System Explorer with case and observation tool switching
 - Scientific Story Engine with step-by-step story beats
 - Mini Research Lab with conceptual vulnerability controls
 - Research Compass with frontier directions, metrics, regions, and methods
+- Raw Paper reader using bundled PDFKit and keyword search
 
-The Python/Streamlit app remains unchanged. Future iOS work can progressively replace selected WebView screens with native SwiftUI, PDFKit paper reading, API-backed RAG answers, richer canvas animations, and persistent saved research notes.
+The Python/Streamlit app remains unchanged. Future iOS work can progressively replace remaining WebView-only behavior with native SwiftUI, API-backed RAG answers, richer canvas animations, and persistent saved research notes.

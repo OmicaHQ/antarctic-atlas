@@ -95,7 +95,7 @@ A native SwiftUI iOS project now lives in:
 ios/AntarcticAtlas/AntarcticAtlas.xcodeproj
 ```
 
-Open it in Xcode 16 or newer and run the `AntarcticAtlas` scheme on an iOS 17+ simulator or device. The iOS app opens the full Streamlit Atlas in a WebView first, so the existing modules remain available on iPhone. Native SwiftUI preview tabs are included as an early direction for future gradual migration.
+Open it in Xcode 16 or newer and run the `AntarcticAtlas` scheme on an iOS 17+ simulator or device. The iOS app is being migrated toward native SwiftUI. It now includes native module previews plus a bundled PDFKit paper reader/search screen, while a Web tab remains as a temporary fallback for Streamlit-only behavior.
 
 If you do not have a Mac, use GitHub Actions to build an unsigned iPhone `.ipa`, then install it from Windows with Sideloadly. See:
 
