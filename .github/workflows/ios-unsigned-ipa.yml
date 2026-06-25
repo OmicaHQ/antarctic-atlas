@@ -1,0 +1,60 @@
+name: iOS Unsigned IPA
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "ios/**"
+      - ".github/workflows/ios-unsigned-ipa.yml"
+
+jobs:
+  build-unsigned-ipa:
+    name: Build Unsigned Device IPA
+    runs-on: macos-15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Show Xcode version
+        run: xcodebuild -version
+
+      - name: Build unsigned app for iPhone
+        run: |
+          set -euo pipefail
+          xcodebuild \
+            -project ios/AntarcticAtlas/AntarcticAtlas.xcodeproj \
+            -scheme AntarcticAtlas \
+            -configuration Release \
+            -sdk iphoneos \
+            -destination "generic/platform=iOS" \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            BUILD_DIR="$PWD/build" \
+            BUILD_ROOT="$PWD/build" \
+            clean build
+
+      - name: Package unsigned IPA
+        run: |
+          set -euo pipefail
+          APP_PATH="$(find build -type d -name 'AntarcticAtlas.app' | head -n 1)"
+          if [ -z "$APP_PATH" ]; then
+            echo "AntarcticAtlas.app was not produced"
+            find build -maxdepth 4 -type d | sort
+            exit 1
+          fi
+
+          rm -rf Payload AntarcticAtlas-unsigned.ipa
+          mkdir -p Payload
+          cp -R "$APP_PATH" Payload/
+          zip -qry AntarcticAtlas-unsigned.ipa Payload
+          ls -lh AntarcticAtlas-unsigned.ipa
+
+      - name: Upload unsigned IPA artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: AntarcticAtlas-unsigned-ipa
+          path: AntarcticAtlas-unsigned.ipa
+          if-no-files-found: error
+          retention-days: 14

@@ -87,6 +87,22 @@ The installer creates Start Menu and optional Desktop shortcuts for one-click la
 
 Note: the installer metadata shows `Omica Chow`, but the installer is not code-signed yet. Windows may still show an unknown-publisher warning until a code-signing certificate is applied.
 
+## iOS App
+
+A native SwiftUI iOS project now lives in:
+
+```text
+ios/AntarcticAtlas/AntarcticAtlas.xcodeproj
+```
+
+Open it in Xcode 16 or newer and run the `AntarcticAtlas` scheme on an iOS 17+ simulator or device. The first iOS build ports the main Atlas structure into native tabs: Research Universe, Antarctic System Explorer, Scientific Story Engine, Mini Research Lab, and Research Compass.
+
+If you do not have a Mac, use GitHub Actions to build an unsigned iPhone `.ipa`, then install it from Windows with Sideloadly. See:
+
+```text
+ios/AntarcticAtlas/INSTALL_IPHONE.md
+```
+
 ---
 
 ## Run From Source
