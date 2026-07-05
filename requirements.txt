@@ -7,3 +7,4 @@ jieba
 numpy
 pywebview
 pyinstaller
+PySide6

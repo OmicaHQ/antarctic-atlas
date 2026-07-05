@@ -14,3 +14,8 @@ dist/
 backups/
 *.tmp
 *.bak
+qt_compare/
+qt_native_preview*.png
+desktop_qt_app_zh.py
+Antarctic Atlas ZH.spec
+installer/AntarcticAtlasSetup.zh.iss

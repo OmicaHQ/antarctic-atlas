@@ -1,9 +1,9 @@
 #define MyAppName "Antarctic Atlas"
-#define MyAppVersion "2.0.5"
+#define MyAppVersion "3.1.2"
 #define MyAppPublisher "Omica Chow"
 #define MyAppExeName "Antarctic Atlas.exe"
-#define SourceAppDir "C:\Users\Omica\Desktop\Antarctic Atlas App"
-#define OutputDir "C:\Users\Omica\Desktop"
+#define SourceAppDir "..\dist\Antarctic Atlas"
+#define OutputDir "..\..\Installers"
 
 [Setup]
 AppId={{9C7E95BA-2B59-44E1-A40A-95B62A3C9978}
@@ -39,6 +39,11 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 
 [Tasks]
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: checkedonce
+
+[InstallDelete]
+Type: filesandordirs; Name: "{app}\_internal\streamlit"
+Type: filesandordirs; Name: "{app}\_internal\atlas_app"
+Type: filesandordirs; Name: "{app}\app.py"
 
 [Files]
 Source: "{#SourceAppDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs; Excludes: "__pycache__\*,*.pyc,atlas_desktop.log,.streamlit\secrets.toml"

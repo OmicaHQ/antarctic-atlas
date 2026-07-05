@@ -1,0 +1,23 @@
+{
+  "app.title": "Antarctic Research Atlas",
+  "landing.title": "🌎 Antarctic Ice Sheet Research Atlas",
+  "landing.subtitle": "An interactive research universe for exploring the Antarctic Ice Sheet review paper.",
+  "landing.status.initial": "Loading atlas workspace...",
+  "landing.status.loading_modules": "Loading paper evidence and visual modules...",
+  "landing.status.preparing_workspace": "Preparing interactive workspace...",
+  "landing.status.loaded": "PDF loaded successfully, {pages} pages",
+  "landing.status.failed": "Atlas preparation failed: {message}",
+  "landing.status.still_preparing": "Still preparing the atlas workspace...",
+  "landing.button.enter": "Enter Project",
+  "landing.button.retry": "Retry",
+  "nav.brand": "Navigation",
+  "nav.section": "Select",
+  "nav.research_universe": "Research Universe",
+  "nav.antarctic_system": "Antarctic System",
+  "nav.ai_visualizer": "AI Visualizer",
+  "nav.mini_research_lab": "Mini Research Lab",
+  "nav.research_directions": "Research Directions",
+  "nav.raw_paper": "Read Raw Paper",
+  "nav.language": "Language",
+  "placeholder.preparing": "Preparing {label}..."
+}

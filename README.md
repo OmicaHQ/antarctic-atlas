@@ -6,7 +6,7 @@
 
 **Antarctic Atlas is an interactive educational and research platform for exploring the Antarctic Ice Sheet.**
 
-Current release: **v2.0.5**
+Current release: **v3.1.2**
 
 [Live Demo](https://antarctic-research-atlas.streamlit.app/)
 
@@ -76,14 +76,14 @@ Access the full review paper PDF and navigate it directly within the platform.
 
 The recommended Windows download is the latest installer on the GitHub Releases page:
 
-[Antarctic Atlas v2.0.5 - Windows Desktop Installer](https://github.com/OmicaHQ/antarctic-atlas/releases/tag/v2.0.5)
+[Antarctic Atlas v3.1.2 - Windows Desktop Installer](https://github.com/OmicaHQ/antarctic-atlas/releases/tag/v3.1.2)
 
 Installer file:
 
-- `Antarctic-Atlas-v2.0.5-Setup.exe`
-- SHA256: `C1F8734F7BBB56CFD7CBF6C3922479B9FCBDE9B34C78EDAB69C02FAA42B4AD11`
+- `Antarctic-Atlas-v3.1.2-Setup.exe`
+- SHA256: `394BC66DE8A417BA3B4BC94D1212F9CA2E1A8AC51E0E868CBD893FC451E166FC`
 
-The installer creates Start Menu and optional Desktop shortcuts for one-click launch. No Python, Streamlit, or manual dependency setup is required for the installer version.
+The installer creates Start Menu and optional Desktop shortcuts for one-click launch. No Python, Streamlit server, or manual dependency setup is required for the installer version.
 
 Note: the installer metadata shows `Omica Chow`, but the installer is not code-signed yet. Windows may still show an unknown-publisher warning until a code-signing certificate is applied.
 
@@ -104,7 +104,7 @@ Install dependencies:
 pip install -r requirements.txt
 ```
 
-Run the Streamlit app locally:
+Run the legacy Streamlit web demo locally:
 
 ```bash
 streamlit run app.py
@@ -137,13 +137,28 @@ See `CHANGELOG.md` for version notes.
 
 ## Version History
 
-- `v1.0`: Preserved GitHub version before the local desktop and visual polish update.
-- `v2.0`: Local version with iOS-style visual polish, desktop packaging support, improved module layouts, local Ollama model update, and UI bug fixes.
-- `v2.0.1`: Documentation update for the desktop app side and changelog.
-- `v2.0.2`: Bug fix for the Research Universe map knowledge card.
-- `v2.0.3`: Windows installer release and Research Universe diagonal glass highlight fix.
-- `v2.0.4`: Bug fix for the desktop window icon and remaining Research Universe diagonal background artifact.
-- `v2.0.5`: Current Windows desktop release with updated branding, GitHub Release distribution, and installer publisher metadata set to `Omica Chow`.
+Antarctic Atlas is now documented as three major product phases:
+
+- `v1`: Original Streamlit research atlas. This established the paper-centered exploration flow, Research Universe concept, Antarctic System views, AI Visualizer, Mini Research Lab, Research Compass, and raw-paper access.
+- `v2`: Streamlit desktop/productization phase. This added iOS-style visual polish, Windows installer packaging, Streamlit module splitting, improved layouts, local AI options, and maintenance fixes while keeping the original Streamlit experience.
+- `v3.0`: Native Qt desktop reconstruction phase. This is the 1:1 desktop recreation line that moved the product from Streamlit-in-a-window toward a native Qt shell with animated System and Visualizer scenes, WebEngine Research Universe, real AI/RAG calls, smoother startup, and packaged desktop delivery.
+- `v3.1`: Unified bilingual desktop phase. This consolidates the app back into one installer with in-app English / Chinese switching, broader i18n coverage for Qt widgets, painter-drawn scenes, HTML cards, Universe labels, and storytelling/export text.
+
+### Current Release
+
+- `v3.1.2`: Fixed Chinese-locale Research Universe AI answers getting stuck after backend connectivity succeeded. Streaming answers are correctly bound to the Qt page, and answer language now follows the active app language.
+- `v3.1.1`: Qt-only desktop installer packaging. The formal Windows installer no longer bundles the legacy Streamlit app, `atlas_app` page tree, pywebview shell, or Streamlit runtime; Qt now owns its configuration and packaged Universe template directly. The legacy Streamlit source remains in the repository for web-demo/history use.
+- `v3.1.0`: Unified bilingual Qt desktop app with improved Chinese localization, fixed Universe template labels, cleaned AI Visualizer story/export translation, and persisted in-app language preference.
+
+### Qt Reconstruction Line
+
+The former Qt reconstruction installers have been renumbered from the old local `v2.0.x` sequence:
+
+- `v3.0.0`: First Qt desktop preview, corresponding to the former `v2.0.8`.
+- `v3.0.1` - `v3.0.15`: Iterative Qt fixes and polish from installer resource repair through dual-language desktop packaging, corresponding to former `v2.0.9` - `v2.0.23`.
+- `v3.0.13`: DeepSeek V4 Pro streaming answers, improved paper retrieval, adaptive AI answer layout, automatic Ollama checks, API-key usability improvements, smoother Enter Project behavior, and explicit title-bar branding icon.
+- `v3.0.14`: Fresh loading pass with the desktop PDF text cache removed and simplified loading-page behavior restored.
+- `v3.0.15`: Qt page module splitting plus separate English and Chinese installer builds.
 
 ## Credits
 
@@ -153,7 +168,7 @@ Based on:
 
 Noble et al. (2020), Reviews of Geophysics
 
-Built with Streamlit and Python.
+Built with Python, Qt/PySide6, and scientific Python tooling. The original Streamlit implementation remains in the source tree as the legacy web demo.
 
 ## License
 
