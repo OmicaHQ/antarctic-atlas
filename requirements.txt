@@ -1,10 +1,20 @@
-streamlit
-pdfplumber
-requests
-pandas
-plotly
-jieba
-numpy
-pywebview
-pyinstaller
-PySide6
+# Desktop app runtime
+PySide6==6.10.3
+pdfplumber==0.11.8
+pypdfium2==5.9.0
+pdfminer.six==20251107
+jieba==0.42.1
+requests==2.32.5
+
+# Packaging
+pyinstaller==6.20.0
+pyinstaller-hooks-contrib==2026.6
+
+# Development / tests
+pytest==8.4.2
+
+# Legacy Streamlit web demo (app.py) — not part of the desktop build
+streamlit==1.50.0
+pandas==2.3.3
+plotly==6.8.0
+numpy==2.0.2

@@ -1,0 +1,127 @@
+{
+  "CDW Intrusion": {
+    "key_question": "When and where can Circumpolar Deep Water access the continental shelf?",
+    "status": "Active frontier",
+    "regions": "Amundsen Sea, Bellingshausen Sea, Totten Glacier"
+  },
+  "Cross-shelf Heat Transport": {
+    "key_question": "How do winds, eddies, tides, and bathymetry move heat toward the coast?",
+    "status": "High uncertainty",
+    "regions": "Antarctic continental shelf"
+  },
+  "Ice-shelf Basal Melt": {
+    "key_question": "How fast do ice shelves melt from below?",
+    "status": "Observed but hard to model",
+    "regions": "Pine Island, Thwaites, Totten"
+  },
+  "Freshwater Feedback": {
+    "key_question": "Can meltwater freshening trap subsurface heat?",
+    "status": "Emerging feedback",
+    "regions": "Southern Ocean"
+  },
+  "Buttressing": {
+    "key_question": "How much resistance do ice shelves provide to inland ice?",
+    "status": "Core mechanism",
+    "regions": "Antarctic Peninsula, Amundsen Sea"
+  },
+  "Grounding Line Retreat": {
+    "key_question": "What controls the retreat of the grounded-to-floating transition?",
+    "status": "Central research target",
+    "regions": "Thwaites, Pine Island, Totten"
+  },
+  "MISI": {
+    "key_question": "Can retreat become self-sustaining on a retrograde bed?",
+    "status": "High-impact uncertainty",
+    "regions": "WAIS, Wilkes Subglacial Basin"
+  },
+  "MICI": {
+    "key_question": "Can tall marine ice cliffs fail rapidly after ice-shelf collapse?",
+    "status": "Debated mechanism",
+    "regions": "Potentially marine-based Antarctic margins"
+  },
+  "Basal Sliding": {
+    "key_question": "How do basal water and sediment affect ice velocity?",
+    "status": "Difficult to observe",
+    "regions": "Fast-flowing outlet glaciers"
+  },
+  "GIA": {
+    "key_question": "How does bedrock rebound after ice loss?",
+    "status": "Important feedback",
+    "regions": "West Antarctica"
+  },
+  "Bed Topography": {
+    "key_question": "Where do retrograde beds and subglacial basins create vulnerability?",
+    "status": "Critical boundary data",
+    "regions": "Thwaites, Wilkes, Aurora, Sabrina"
+  },
+  "Geothermal Heat Flux": {
+    "key_question": "How much heat enters the ice base from below?",
+    "status": "Sparse observations",
+    "regions": "West Antarctica, South Pole region"
+  },
+  "Subglacial Hydrology": {
+    "key_question": "How does water move beneath the ice sheet?",
+    "status": "Hard-to-access frontier",
+    "regions": "Subglacial lakes and drainage systems"
+  },
+  "Satellite Altimetry": {
+    "key_question": "Where is the ice surface thinning or thickening?",
+    "status": "Mature remote sensing tool",
+    "regions": "Continent-wide"
+  },
+  "InSAR Velocity": {
+    "key_question": "How fast is the ice moving?",
+    "status": "Highly relevant to Bryan's field",
+    "regions": "Fast outlet glaciers"
+  },
+  "GRACE / GRACE-FO": {
+    "key_question": "How is total ice mass changing?",
+    "status": "Powerful but needs GIA correction",
+    "regions": "Continent-wide"
+  },
+  "Radar & Field Data": {
+    "key_question": "What lies beneath the ice?",
+    "status": "Essential but incomplete",
+    "regions": "Ice streams, grounding zones, subglacial basins"
+  },
+  "Pliocene": {
+    "key_question": "How much smaller was the AIS in a warmer-than-present world?",
+    "status": "Important but uncertain",
+    "regions": "WAIS and marine-based EAIS"
+  },
+  "Last Interglacial": {
+    "key_question": "How did Antarctica contribute to high sea level?",
+    "status": "Useful constraint",
+    "regions": "Antarctic margins"
+  },
+  "Ice Cores": {
+    "key_question": "What do past temperature and accumulation records show?",
+    "status": "Foundational evidence",
+    "regions": "Interior Antarctica"
+  },
+  "Marine Sediments": {
+    "key_question": "Where and when did the ice margin retreat?",
+    "status": "Key paleo archive",
+    "regions": "Continental shelf and deep ocean"
+  },
+  "Sea-level Contribution": {
+    "key_question": "How large and how fast could Antarctic sea-level rise be?",
+    "status": "Uncertain but crucial",
+    "regions": "Global coastlines"
+  },
+  "Coupled Models": {
+    "key_question": "How can ice, ocean, atmosphere, and solid Earth be simulated together?",
+    "status": "Major modeling frontier",
+    "regions": "Antarctica and global climate system"
+  },
+  "Uncertainty Quantification": {
+    "key_question": "Which processes dominate projection uncertainty?",
+    "status": "High priority",
+    "regions": "Model ensembles"
+  },
+  "AI for Earth Observation": {
+    "key_question": "Can AI organize observations and detect patterns in ice-sheet change?",
+    "status": "Emerging opportunity",
+    "regions": "Remote sensing and research synthesis"
+  }
+}

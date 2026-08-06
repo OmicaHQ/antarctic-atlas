@@ -336,6 +336,8 @@ def set_locale(locale_name):
         current["locale"] = locale
         _CONFIG_PATH.write_text(json.dumps(current, ensure_ascii=False, indent=2), encoding="utf-8")
     except Exception:
+        import sys
+        print(f"[Antarctic Atlas] Could not persist language setting to {_CONFIG_PATH}", file=sys.stderr)
         pass
     return locale
 
@@ -407,6 +409,8 @@ def translate_text(text):
     if " -> " in masked_text:
         translated = " -> ".join(translate_text(part) for part in masked_text.split(" -> "))
         return _restore_protected_terms(_clean_translation(translated), masks)
+    if "Synthesis: For " in masked_text:
+        return _restore_protected_terms(_clean_translation(masked_text), masks)
     if ": " in masked_text:
         head, tail = masked_text.split(": ", 1)
         translated_head = _MANUAL_ZH.get(head, exact.get(head, head))
@@ -427,15 +431,9 @@ def _clean_translation(text):
         return text
     for bad, good in _TERM_FIXES.items():
         text = text.replace(bad, good)
-    for bad, good in _MANUAL_ZH.items():
-        if bad.isupper() or bad in {"Key gap", "Beginner-researcher angle", "Compass", "Timeline", "Region map", "Proposal builder"}:
-            text = text.replace(bad, good)
     text = text.replace("Synthesis: For ", "综合判断：对于 ")
     text = text.replace("Synthesis:", "综合判断：")
     text = text.replace("综合判断:", "综合判断：")
-    text = text.replace(" For ", " 对于 ")
-    text = text.replace("> For <", "> 对于 <")
-    text = text.replace("> For ", "> 对于 ")
     text = text.replace(" these layers support the theme: ", "，这些图层共同支撑这一主题：")
     text = text.replace(", these layers support the theme: ", "，这些图层共同支撑这一主题：")
     text = text.replace("Measures:", "测量内容：")

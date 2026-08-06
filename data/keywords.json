@@ -1,0 +1,240 @@
+{
+  "Ocean": [
+    "ocean",
+    "southern ocean",
+    "cdw",
+    "basal melt",
+    "heat transport",
+    "warm water",
+    "ocean forcing"
+  ],
+  "CDW Intrusion": [
+    "cdw",
+    "circumpolar deep water",
+    "intrusion",
+    "warm deep water",
+    "amundsen",
+    "bellingshausen",
+    "totten"
+  ],
+  "Cross-shelf Heat Transport": [
+    "cross shelf",
+    "cross-shelf",
+    "heat transport",
+    "eddy",
+    "eddies",
+    "tide",
+    "winds",
+    "bathymetry",
+    "shelf break"
+  ],
+  "Ice-shelf Basal Melt": [
+    "basal melt",
+    "ice shelf melt",
+    "melting from below",
+    "sub ice shelf",
+    "sub-ice-shelf",
+    "cavity",
+    "ocean heat"
+  ],
+  "Freshwater Feedback": [
+    "freshwater",
+    "meltwater",
+    "freshening",
+    "stratification",
+    "feedback"
+  ],
+  "Ice Dynamics": [
+    "ice dynamics",
+    "ice flow",
+    "grounding line",
+    "buttressing",
+    "misi",
+    "mici",
+    "basal sliding"
+  ],
+  "Buttressing": [
+    "buttressing",
+    "back stress",
+    "backstress",
+    "ice shelf support",
+    "pinning point"
+  ],
+  "Grounding Line Retreat": [
+    "grounding line",
+    "grounding zone",
+    "retreat",
+    "migration",
+    "grounded-to-floating"
+  ],
+  "MISI": [
+    "misi",
+    "marine ice sheet instability",
+    "retrograde bed",
+    "self sustaining",
+    "self-sustaining"
+  ],
+  "MICI": [
+    "mici",
+    "marine ice cliff instability",
+    "ice cliff",
+    "hydrofracture",
+    "cliff failure"
+  ],
+  "Basal Sliding": [
+    "basal sliding",
+    "basal slip",
+    "sliding",
+    "friction",
+    "till",
+    "water pressure",
+    "basal water",
+    "sediment"
+  ],
+  "Solid Earth": [
+    "solid earth",
+    "bedrock",
+    "gia",
+    "topography",
+    "geothermal",
+    "subglacial hydrology"
+  ],
+  "GIA": [
+    "gia",
+    "glacial isostatic adjustment",
+    "isostatic",
+    "bedrock uplift",
+    "rebound",
+    "viscosity"
+  ],
+  "Bed Topography": [
+    "bed topography",
+    "bedmap",
+    "subglacial basin",
+    "trough",
+    "bathymetry",
+    "retrograde bed"
+  ],
+  "Geothermal Heat Flux": [
+    "geothermal",
+    "heat flux",
+    "basal temperature",
+    "volcanism"
+  ],
+  "Subglacial Hydrology": [
+    "subglacial hydrology",
+    "subglacial lake",
+    "basal water",
+    "drainage",
+    "hydrology"
+  ],
+  "Observations": [
+    "observation",
+    "satellite",
+    "remote sensing",
+    "insar",
+    "grace",
+    "altimetry",
+    "radar"
+  ],
+  "Satellite Altimetry": [
+    "altimetry",
+    "icesat",
+    "cryosat",
+    "elevation",
+    "surface height",
+    "surface lowering"
+  ],
+  "InSAR Velocity": [
+    "insar",
+    "sar",
+    "velocity",
+    "ice velocity",
+    "interferometry",
+    "speed"
+  ],
+  "GRACE / GRACE-FO": [
+    "grace",
+    "grace-fo",
+    "gravity",
+    "mass balance",
+    "gravimetry",
+    "correction",
+    "gia correction"
+  ],
+  "Radar & Field Data": [
+    "radar",
+    "field data",
+    "ice penetrating radar",
+    "apres",
+    "gnss",
+    "gps"
+  ],
+  "Paleoclimate": [
+    "paleoclimate",
+    "pliocene",
+    "last interglacial",
+    "ice core",
+    "marine sediment",
+    "past climate"
+  ],
+  "Pliocene": [
+    "pliocene",
+    "mid pliocene",
+    "warm period"
+  ],
+  "Last Interglacial": [
+    "last interglacial",
+    "lig",
+    "eemian"
+  ],
+  "Ice Cores": [
+    "ice core",
+    "accumulation",
+    "temperature record",
+    "isotope"
+  ],
+  "Marine Sediments": [
+    "marine sediment",
+    "sediment core",
+    "paleo record",
+    "foraminifera"
+  ],
+  "Future Projections": [
+    "future",
+    "projection",
+    "sea level",
+    "uncertainty",
+    "model",
+    "2100",
+    "2300"
+  ],
+  "Sea-level Contribution": [
+    "sea level",
+    "gmsl",
+    "sea-level rise",
+    "coast",
+    "contribution"
+  ],
+  "Coupled Models": [
+    "coupled model",
+    "ice ocean model",
+    "earth system model",
+    "ismip",
+    "misomip"
+  ],
+  "Uncertainty Quantification": [
+    "uncertainty",
+    "ensemble",
+    "probability",
+    "risk",
+    "projection uncertainty"
+  ],
+  "AI for Earth Observation": [
+    "ai",
+    "machine learning",
+    "deep learning",
+    "earth observation",
+    "knowledge graph"
+  ]
+}

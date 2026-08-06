@@ -1,0 +1,69 @@
+{
+  "Ocean": {
+    "color": "#4EA3F1",
+    "question": "How does Southern Ocean heat reach ice-shelf cavities?",
+    "why": "Controls basal melting and ice-shelf thinning.",
+    "topics": {
+      "CDW Intrusion": "Warm Circumpolar Deep Water can access vulnerable continental shelf sectors.",
+      "Cross-shelf Heat Transport": "Winds, eddies, tides, and bathymetry move heat toward ice shelves.",
+      "Ice-shelf Basal Melt": "Basal melt thins shelves and weakens buttressing.",
+      "Freshwater Feedback": "Meltwater freshening can alter stratification and future ocean heat access."
+    }
+  },
+  "Ice Dynamics": {
+    "color": "#FF8A65",
+    "question": "How does ice flow accelerate after ice shelves weaken?",
+    "why": "Connects local forcing to large-scale ice discharge.",
+    "topics": {
+      "Buttressing": "Ice shelves resist inland ice flow; loss of support accelerates discharge.",
+      "Grounding Line Retreat": "The grounded-to-floating transition strongly controls ice loss.",
+      "MISI": "Marine Ice Sheet Instability may make retreat self-sustaining on retrograde beds.",
+      "MICI": "Marine Ice Cliff Instability is a debated high-end sea-level mechanism.",
+      "Basal Sliding": "Basal water and sediment conditions regulate fast ice streams."
+    }
+  },
+  "Solid Earth": {
+    "color": "#9CCC65",
+    "question": "How do bedrock, heat flow, and rebound affect ice stability?",
+    "why": "Sets boundary conditions and feedbacks for ice-sheet retreat.",
+    "topics": {
+      "GIA": "Glacial Isostatic Adjustment can alter relative sea level near grounding lines.",
+      "Bed Topography": "Bed geometry controls MISI-like retreat potential.",
+      "Geothermal Heat Flux": "Sparse heat-flow observations affect basal meltwater and sliding estimates.",
+      "Subglacial Hydrology": "Subglacial water can lubricate the bed and modify fast ice flow."
+    }
+  },
+  "Observations": {
+    "color": "#9575CD",
+    "question": "How do we measure change in such a remote environment?",
+    "why": "Provides constraints for mechanisms and models.",
+    "topics": {
+      "Satellite Altimetry": "Tracks surface elevation change across Antarctica.",
+      "InSAR Velocity": "Maps glacier speed and acceleration.",
+      "GRACE / GRACE-FO": "Measures gravity change related to total ice mass.",
+      "Radar & Field Data": "Reveals bed topography, internal layers, and basal conditions."
+    }
+  },
+  "Paleoclimate": {
+    "color": "#F6C85F",
+    "question": "What did the AIS do in past warm periods?",
+    "why": "Extends evidence beyond the short satellite record.",
+    "topics": {
+      "Pliocene": "Warm-period evidence tests long-term ice-sheet sensitivity.",
+      "Last Interglacial": "Past high sea levels constrain Antarctic contribution.",
+      "Ice Cores": "Core records preserve atmosphere, temperature, and accumulation history.",
+      "Marine Sediments": "Shelf and ocean archives reconstruct former ice-margin retreat."
+    }
+  },
+  "Future Projections": {
+    "color": "#2F5597",
+    "question": "How much will Antarctica contribute to future sea-level rise?",
+    "why": "Connects science to coastal risk.",
+    "topics": {
+      "Sea-level Contribution": "The central societal impact of Antarctic ice-sheet change.",
+      "Coupled Models": "Feedbacks require ice, ocean, atmosphere, and solid Earth coupling.",
+      "Uncertainty Quantification": "Identifies which processes dominate projection spread.",
+      "AI for Earth Observation": "AI can organize observations and detect patterns in ice-sheet change."
+    }
+  }
+}

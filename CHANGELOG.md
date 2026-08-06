@@ -9,6 +9,26 @@ All notable changes to Antarctic Research Atlas are documented here.
 - `v3.0`: Qt desktop reconstruction phase. Rebuilt the experience as a native Qt desktop shell while preserving the original function and UI intent.
 - `v3.1`: Unified bilingual desktop phase. Consolidates English and Chinese into one app with in-app switching and broader i18n coverage.
 
+## v3.1.3 - Technical Optimization
+
+### Fixed
+
+- Fixed nested-highlight corruption in search excerpts: keywords that are substrings of the `<span>` highlight markup (e.g. "color", "span") no longer nest into broken HTML.
+- Fixed Chinese-mode corruption of raw paper text: the bare `" For "` → `" 对于 "` translation rule no longer mangles English sentences mid-text.
+- Fixed Chinese search: queries are now jieba-segmented and expanded via `CHINESE_PAPER_KEYWORDS`, so e.g. "接地线后退" matches the English grounding-line pages.
+- Fixed cross-thread Qt widget access in the Research Universe AI flows: backend/model/API-key are now snapshotted on the GUI thread before workers start.
+- Fixed the OpenAI non-streaming fall-through divergence in the Research Universe answer path.
+
+### Changed
+
+- Extracted a single dependency-free AI client (`core/ai.py`) shared by the desktop app and the legacy Streamlit web app, removing ~1000 lines of triplicated Ollama/DeepSeek/OpenAI payload, streaming, and parsing logic.
+- Consolidated paper search/PDF into `core/paper.py`; the legacy `atlas_app/paper.py` is now a thin shim (keeps the web app's `<mark>` highlight).
+- Added a persistent PDF text cache (keyed by file identity, stored under `%APPDATA%/AntarcticAtlas/pages.pkl`): the ~30s startup PDF parse is now ~0.02s on subsequent launches.
+- Added `core/data.py` with shared JSON loaders; the desktop app now loads `data/*.json` from the bundle-aware shared loader.
+- Pinned `requirements.txt`, removed retired `pywebview`, split the legacy Streamlit demo deps from the desktop runtime deps.
+- Synced both PyInstaller specs: the ZH spec no longer bundles the retired Streamlit/`atlas_app` tree, and both now bundle `data/`.
+- Aligned installer versions: EN and ZH Inno Setup scripts now both declare v3.1.2 (matching the CHANGELOG), and the ZH installer cleans up legacy Streamlit leftovers.
+
 ## v3.1.2 - Chinese AI Answer Streaming Fix
 
 ### Fixed

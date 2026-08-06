@@ -1,5 +1,7 @@
 from desktop_qt_app import *
 
+from core.ai import chat as ai_chat, classify as ai_classify, extract_backend_text
+
 def _u_zh():
     return current_locale().startswith("zh")
 
@@ -150,7 +152,6 @@ def _research_universe_page(self):
     self._ollama_auto_test_started = False
     self._universe_type_timer = QTimer(self)
     self._universe_type_timer.setInterval(18)
-    self._universe_type_timer.timeout.connect(self._tick_universe_answer_typewriter)
     self._universe_type_token = 0
     self._universe_type_prefix = ""
     self._universe_type_answer = ""
@@ -423,27 +424,6 @@ def _test_universe_backend_connection_sync(self, backend, model, api_key=""):
     )}
 
 
-def _extract_universe_test_text(self, backend, response):
-    try:
-        data = response.json()
-    except ValueError:
-        return ""
-    if backend == "Local Ollama":
-        return str(data.get("response", "")).strip()
-    if backend == "DeepSeek API":
-        return str(data.get("choices", [{}])[0].get("message", {}).get("content", "")).strip()
-    if backend == "OpenAI API":
-        if data.get("output_text"):
-            return str(data.get("output_text", "")).strip()
-        chunks = []
-        for item in data.get("output", []) or []:
-            for content in item.get("content", []) or []:
-                if content.get("type") in ["output_text", "text"] and content.get("text"):
-                    chunks.append(str(content.get("text")))
-        return "".join(chunks).strip()
-    return ""
-
-
 def _finish_universe_backend_test(self, result):
     if isinstance(result, str):
         backend = combo_current_key(self.universe_backend)
@@ -504,146 +484,9 @@ def _universe_model(self, backend):
 
 
 def _call_universe_backend_text(self, backend, prompt, system="", max_tokens=1200, temperature=0.2, timeout=120, model=None, api_key=None):
-    model = model or self._universe_model(backend)
-    if backend == "Local Ollama":
-        payload = {
-            "model": model or OLLAMA_MODEL,
-            "prompt": f"{system}\n\n{prompt}" if system else prompt,
-            "stream": False,
-            "options": {"temperature": temperature, "num_ctx": 4096, "num_gpu": -1},
-        }
-        response = requests.post(f"{OLLAMA_URL}/api/generate", json=payload, timeout=timeout)
-        if response.status_code != 200:
-            raise RuntimeError(f"HTTP {response.status_code}: {response.text[:320]}")
-        return response.json().get("response", "").strip()
-    if backend == "DeepSeek API":
-        key = (api_key or self._universe_api_key(backend)).strip()
-        if not key:
-            raise RuntimeError("DeepSeek API key is missing.")
-        payload = {
-            "model": model or DEEPSEEK_MODEL,
-            "messages": [
-                {"role": "system", "content": system or "You are a careful scientific reading assistant."},
-                {"role": "user", "content": prompt},
-            ],
-            "temperature": temperature,
-            "max_tokens": max_tokens,
-            "stream": False,
-        }
-        if str(model or "").startswith("deepseek-v4-"):
-            payload["thinking"] = {"type": "disabled"}
-        response = requests.post(
-            f"{DEEPSEEK_BASE_URL}/chat/completions",
-            headers={"Authorization": f"Bearer {key}", "Content-Type": "application/json"},
-            json=payload,
-            timeout=timeout,
-        )
-        if response.status_code != 200:
-            raise RuntimeError(f"HTTP {response.status_code}: {response.text[:320]}")
-        return response.json().get("choices", [{}])[0].get("message", {}).get("content", "").strip()
-    if backend == "OpenAI API":
-        key = (api_key or self._universe_api_key(backend)).strip()
-        if not key:
-            raise RuntimeError("OpenAI API key is missing.")
-        payload = {
-            "model": model or OPENAI_MODEL,
-            "input": [
-                {"role": "system", "content": system or "You are a careful scientific reading assistant."},
-                {"role": "user", "content": prompt},
-            ],
-            "max_output_tokens": max_tokens,
-        }
-        response = requests.post(
-            f"{OPENAI_BASE_URL}/responses",
-            headers={"Authorization": f"Bearer {key}", "Content-Type": "application/json"},
-            json=payload,
-            timeout=timeout,
-        )
-        if response.status_code != 200:
-            raise RuntimeError(f"HTTP {response.status_code}: {response.text[:320]}")
-        data = response.json()
-        if data.get("output_text"):
-            return str(data.get("output_text", "")).strip()
-        chunks = []
-        for item in data.get("output", []) or []:
-            for content in item.get("content", []) or []:
-                if content.get("type") in ["output_text", "text"] and content.get("text"):
-                    chunks.append(str(content.get("text")))
-        return "".join(chunks).strip()
-    raise RuntimeError("AI backend is not enabled.")
-
-
-def _stream_universe_backend_text(self, on_chunk, backend, prompt, system="", max_tokens=1200, temperature=0.2, timeout=120, model=None, api_key=None):
-    model = model or self._universe_model(backend)
-    answer = ""
-    if backend == "DeepSeek API":
-        key = (api_key or self._universe_api_key(backend)).strip()
-        if not key:
-            raise RuntimeError("DeepSeek API key is missing.")
-        payload = {
-            "model": model or DEEPSEEK_MODEL,
-            "messages": [
-                {"role": "system", "content": system or "You are a careful scientific reading assistant."},
-                {"role": "user", "content": prompt},
-            ],
-            "temperature": temperature,
-            "max_tokens": max_tokens,
-            "stream": True,
-        }
-        if str(model or "").startswith("deepseek-v4-"):
-            payload["thinking"] = {"type": "disabled"}
-        with requests.post(
-            f"{DEEPSEEK_BASE_URL}/chat/completions",
-            headers={"Authorization": f"Bearer {key}", "Content-Type": "application/json"},
-            json=payload,
-            stream=True,
-            timeout=timeout,
-        ) as response:
-            if response.status_code != 200:
-                raise RuntimeError(f"HTTP {response.status_code}: {response.text[:500]}")
-            for raw_line in response.iter_lines(decode_unicode=True):
-                if not raw_line:
-                    continue
-                line = raw_line.strip()
-                if not line.startswith("data:"):
-                    continue
-                data_str = line[5:].strip()
-                if data_str == "[DONE]":
-                    break
-                try:
-                    data = json.loads(data_str)
-                except Exception:
-                    continue
-                piece = data.get("choices", [{}])[0].get("delta", {}).get("content", "") or ""
-                if piece:
-                    answer += piece
-                    on_chunk(piece)
-        return answer.strip()
-    if backend == "Local Ollama":
-        payload = {
-            "model": model or OLLAMA_MODEL,
-            "prompt": f"{system}\n\n{prompt}" if system else prompt,
-            "stream": True,
-            "options": {"temperature": temperature, "num_ctx": 4096, "num_gpu": -1},
-        }
-        with requests.post(f"{OLLAMA_URL}/api/generate", json=payload, stream=True, timeout=timeout) as response:
-            if response.status_code != 200:
-                raise RuntimeError(f"HTTP {response.status_code}: {response.text[:500]}")
-            for raw_line in response.iter_lines(decode_unicode=True):
-                if not raw_line:
-                    continue
-                try:
-                    data = json.loads(raw_line)
-                except Exception:
-                    continue
-                piece = data.get("response", "") or ""
-                if piece:
-                    answer += piece
-                    on_chunk(piece)
-                if data.get("done"):
-                    break
-        return answer.strip()
-    answer = self._call_universe_backend_text(
+    """Thin wrapper over core.ai.chat. model/api_key must be snapshot on the GUI
+    thread before this runs on a worker thread (never read widgets here)."""
+    return ai_chat(
         backend,
         prompt,
         system=system,
@@ -651,84 +494,38 @@ def _stream_universe_backend_text(self, on_chunk, backend, prompt, system="", ma
         temperature=temperature,
         timeout=timeout,
         model=model,
-        api_key=api_key,
+        api_key=api_key or "",
     )
-    if answer:
-        on_chunk(answer)
-    return answer
 
 
-def _classify_universe_topic_with_backend(self, question, backend):
+def _stream_universe_backend_text(self, on_chunk, backend, prompt, system="", max_tokens=1200, temperature=0.2, timeout=120, model=None, api_key=None):
+    return ai_chat(
+        backend,
+        prompt,
+        system=system,
+        max_tokens=max_tokens,
+        temperature=temperature,
+        timeout=timeout,
+        model=model,
+        api_key=api_key or "",
+        on_chunk=on_chunk,
+    )
+
+
+def _classify_universe_topic_with_backend(self, question, backend, api_key="", model=""):
     if backend == "Evidence only":
         return None
-    topic_lines = []
+    allowed = []
     for topic in self.topic_names:
         parent = next(
             (area for area, meta in RESEARCH_AREAS.items() if topic in meta["topics"]),
             "Core system" if topic == "Antarctic Ice Sheet" else "Research area",
         )
-        topic_lines.append(f"- {topic} | parent: {parent}")
-    prompt = (
-        "Choose exactly ONE best matching node from the allowed Antarctic Ice Sheet research graph. "
-        "Return only JSON in this form: {\"topic\":\"one allowed node name\", \"confidence\":0.0}.\n\n"
-        f"Allowed nodes:\n{chr(10).join(topic_lines)}\n\nQuestion:\n{question}"
-    )
-    raw = self._call_universe_backend_text(
-        backend,
-        prompt,
-        system="Return only valid JSON. Do not explain.",
-        max_tokens=220,
-        temperature=0.0,
-    )
-    match = re.search(r"\{.*\}", raw, re.S)
-    data = json.loads(match.group(0) if match else raw)
-    topic = str(data.get("topic", "")).strip()
-    if topic not in self.topic_names:
-        lowered = {name.lower(): name for name in self.topic_names}
-        topic = lowered.get(topic.lower(), "")
-    if topic in self.topic_names:
-        try:
-            confidence = float(data.get("confidence", 0) or 0)
-        except (TypeError, ValueError):
-            confidence = 0.0
-        return topic, confidence
-    return None
+        allowed.append((topic, parent))
+    return ai_classify(question, allowed, backend, model=model or None, api_key=api_key)
 
 
-def _build_universe_answer(self, backend, topic, query, scored_pages, display):
-    passages = []
-    for score, page in scored_pages[:4]:
-        passages.append({"page": page.page, "text": clean_text(page.text)[:1200], "score": score})
-    context = "\n\n".join([f"Excerpt {index + 1}:\n{item['text']}" for index, item in enumerate(passages)])
-    if not context:
-        context = f"No retrieved page excerpt was available. Topic summary: {display}."
-    answer_language = "Chinese, but keep important scientific terms in English" if _u_zh() else "English"
-    prompt = f"""
-You are helping a student understand a review paper about the Antarctic Ice Sheet.
-Use ONLY the excerpts below when making scientific claims.
-Answer in {answer_language}.
-Use clean Markdown formatting with short paragraphs and bullet lists only when useful.
-Do not output page numbers, Page citations, bracketed source markers, or citation-style symbols.
-
-Question:
-{query or topic}
-
-Matched knowledge-graph node:
-{display}
-
-Paper excerpts:
-{context}
-"""
-    return self._call_universe_backend_text(
-        backend,
-        prompt,
-        system="You are a careful scientific reading assistant. Stay grounded in the provided excerpts.",
-        max_tokens=1600,
-        temperature=0.2,
-    )
-
-
-def _stream_universe_answer(self, on_chunk, backend, topic, query, scored_pages, display):
+def _stream_universe_answer(self, on_chunk, backend, topic, query, scored_pages, display, api_key="", model=""):
     passages = []
     for score, page in scored_pages[:4]:
         passages.append({"page": page.page, "text": clean_text(page.text)[:1200], "score": score})
@@ -765,6 +562,8 @@ Paper excerpts:
         system=f"You are a careful scientific reading assistant. {system_language} and stay grounded in the provided excerpts.",
         max_tokens=1600,
         temperature=0.2,
+        model=model,
+        api_key=api_key,
     )
 
 
@@ -878,6 +677,7 @@ def _start_universe_ai_classification(self, raw_query, backend, fallback_name, f
     self._universe_classifier_token += 1
     token = self._universe_classifier_token
     model = self._universe_model(backend)
+    api_key = self._universe_api_key(backend) if backend in ("DeepSeek API", "OpenAI API") else ""
     self.universe_focus_button.setEnabled(False)
     self.universe_match_label.setText(_u_text(
         f"{backend} / {model} is identifying the best knowledge module...",
@@ -895,7 +695,7 @@ def _start_universe_ai_classification(self, raw_query, backend, fallback_name, f
     )
     self.universe_answer_progress.setVisible(True)
     self.universe_answer_progress.setRange(0, 0)
-    worker = FunctionWorker(self._classify_universe_topic_with_backend, raw_query, backend)
+    worker = FunctionWorker(self._classify_universe_topic_with_backend, raw_query, backend, api_key, model)
     self._universe_classifier_worker = worker
     worker.resultReady.connect(
         lambda result, token=token, backend=backend, query=raw_query, fallback_name=fallback_name, fallback_score=fallback_score:
@@ -1051,6 +851,7 @@ def _render_universe_context(self, topic, query="", best_score=0, classifier_sou
             )
             self._universe_stream_answer = ""
             self._set_universe_answer_markdown(self._universe_stream_prefix)
+            answer_api_key = self._universe_api_key(backend) if backend in ("DeepSeek API", "OpenAI API") else ""
             worker = StreamWorker(
                 self._stream_universe_answer,
                 backend,
@@ -1058,6 +859,8 @@ def _render_universe_context(self, topic, query="", best_score=0, classifier_sou
                 query or topic_text or topic,
                 scored_pages,
                 display,
+                answer_api_key,
+                model,
             )
             self._universe_answer_worker = worker
             worker.chunkReady.connect(lambda piece, token=token: self._append_universe_answer_chunk(token, piece))
@@ -1105,58 +908,6 @@ def _finish_universe_stream_answer(self, token, backend, answer):
     ), True)
     if hasattr(self, "universe_answer"):
         self._set_universe_answer_markdown(f"{self._universe_stream_prefix}{visible}")
-        self.universe_answer.verticalScrollBar().setValue(self.universe_answer.verticalScrollBar().maximum())
-
-
-def _finish_universe_answer(self, token, backend, display, answer):
-    if token != self._universe_answer_token:
-        return
-    self.universe_answer_progress.setRange(0, 100)
-    self.universe_answer_progress.setValue(100)
-    self.universe_answer_progress.setVisible(False)
-    self._set_universe_work_status(_u_text(
-        f"{backend}: answer received. Writing response...",
-        f"{backend}：已收到回答，正在写入响应...",
-    ), True)
-    prefix = (
-        f"{_u_text('AI ANSWER', 'AI 答案')}\n\n"
-        f"### {display}\n\n"
-        f"**{_u_text('Backend:', '后端：')}** {backend} / {self._universe_model(backend)}\n\n"
-    )
-    self._start_universe_answer_typewriter(token, prefix, answer or _u_text("The backend returned an empty answer.", "后端返回了空回答。"), backend)
-
-
-def _start_universe_answer_typewriter(self, token, prefix, answer, backend):
-    self._stop_universe_answer_typewriter()
-    self._universe_type_token = token
-    self._universe_type_prefix = prefix
-    self._universe_type_answer = str(answer)
-    self._universe_type_index = 0
-    if hasattr(self, "universe_answer"):
-        self.universe_answer.setVisible(True)
-        self._set_universe_answer_markdown(prefix)
-    if hasattr(self, "_universe_type_timer"):
-        self._universe_type_timer.start()
-
-
-def _tick_universe_answer_typewriter(self):
-    if self._universe_type_token != self._universe_answer_token:
-        self._stop_universe_answer_typewriter()
-        return
-    answer = self._universe_type_answer
-    if self._universe_type_index >= len(answer):
-        self._stop_universe_answer_typewriter(clear=False)
-        self._set_universe_work_status(_u_text("AI answer complete.", "AI 回答已完成。"), True)
-        return
-    chunk = 1
-    while self._universe_type_index + chunk < len(answer) and chunk < 4:
-        char = answer[self._universe_type_index + chunk - 1]
-        if char in ".。!！?？\n":
-            break
-        chunk += 1
-    self._universe_type_index = min(len(answer), self._universe_type_index + chunk)
-    if hasattr(self, "universe_answer"):
-        self._set_universe_answer_markdown(f"{self._universe_type_prefix}{answer[: self._universe_type_index]}")
         self.universe_answer.verticalScrollBar().setValue(self.universe_answer.verticalScrollBar().maximum())
 
 

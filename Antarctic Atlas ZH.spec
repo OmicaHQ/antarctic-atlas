@@ -1,5 +1,4 @@
 # -*- mode: python ; coding: utf-8 -*-
-from PyInstaller.utils.hooks import collect_all
 
 datas = []
 binaries = []
@@ -24,7 +23,7 @@ datas += [('Reviews of Geophysics - 2020 - Noble - The Sensitivity of the Antarc
 
 
 a = Analysis(
-    ['desktop_qt_app.py'],
+    ['desktop_qt_app_zh.py'],
     pathex=[],
     binaries=binaries,
     datas=datas,
@@ -43,7 +42,7 @@ exe = EXE(
     a.scripts,
     [],
     exclude_binaries=True,
-    name='Antarctic Atlas',
+    name='Antarctic Atlas ZH',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
@@ -63,5 +62,5 @@ coll = COLLECT(
     strip=False,
     upx=True,
     upx_exclude=[],
-    name='Antarctic Atlas',
+    name='Antarctic Atlas ZH',
 )
