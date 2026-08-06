@@ -1,175 +1,161 @@
 # Antarctic Research Atlas
 
 <p align="center">
-  <img src="assets/antarctic-atlas-social-preview.png" alt="Antarctic Atlas logo" width="820">
+  <img src="assets/antarctic-atlas-social-preview.png" alt="Antarctic Atlas preview" width="820">
 </p>
 
 **Antarctic Atlas is an interactive educational and research platform for exploring the Antarctic Ice Sheet.**
 
-Current release: **v3.1.2**
+The project transforms the 89-page review paper:
 
-[Live Demo](https://antarctic-research-atlas.streamlit.app/)
+> Noble, T. L. et al. (2020). *The Sensitivity of the Antarctic Ice Sheet to a Changing Climate: Past, Present, and Future.* Reviews of Geophysics, 58, e2019RG000663.
 
-[Download the latest Windows installer](https://github.com/OmicaHQ/antarctic-atlas/releases/latest)
+into a visual, AI-assisted environment for exploring scientific concepts, observations, system processes, research questions, and evidence from the paper.
 
----
+- [Online demo](https://antarctic-research-atlas.streamlit.app/)
+- [Windows releases](https://github.com/OmicaHQ/antarctic-atlas/releases/latest)
+- [Source repository](https://github.com/OmicaHQ/antarctic-atlas)
 
-## Project Overview
+## Product surfaces
 
-Antarctic Atlas is the desktop and web implementation of the Antarctic Research Atlas project.
+The repository contains three related surfaces:
 
-The project transforms an 89-page review paper:
+| Surface | Role | Entry point |
+| --- | --- | --- |
+| PySide6 desktop app | Main, full-featured Windows application | `desktop_qt_app.py` |
+| Streamlit app | Legacy web demo and historical implementation | `app.py` |
+| vinext site | Public project and launch page | `app/page.tsx` |
 
-**Noble, T. L. et al. (2020). _The Sensitivity of the Antarctic Ice Sheet to a Changing Climate: Past, Present, and Future._ Reviews of Geophysics, 58, e2019RG000663.**
+The desktop application is the primary product. The Streamlit source remains available for the online demo and project history. The vinext site introduces the project and links to the interactive demo.
 
-into a visual, AI-assisted platform where users can explore Antarctic research interactively.
+## Existing modules
 
-The platform combines scientific visualization, interactive exploration, AI-assisted storytelling, educational tools, and a Windows desktop app for local use.
+- **Research Universe Explorer** — explores concepts, evidence, and relationships as an interactive knowledge universe.
+- **Antarctic System Explorer** — compares glaciers, ice shelves, processes, and observation layers.
+- **AI Visualizer** — creates scientific narratives and storyboards from the review.
+- **Mini Research Lab** — explores existing interactive Antarctic system scenarios.
+- **Research Directions** — examines research questions, methods, regions, and proposal outlines.
+- **Read Raw Paper** — searches and reads the bundled review paper.
 
----
+AI features are optional. Evidence-only retrieval and the non-AI modules remain usable without an API key.
 
-## Features
+## Repository structure
 
-### Research Universe Explorer
-
-![Research Universe Explorer](research_universe_explorer.png)
-
-Explore key concepts and relationships in Antarctic Ice Sheet research through an interactive knowledge universe.
-
-### Antarctic System Explorer
-
-![Antarctic System Explorer](antarctic_system_explorer.png)
-
-Visualize satellite observations and compare different glaciers and ice shelves using multiple observation layers.
-
-### AI Visualizer
-
-![AI Visualizer](ai_visualizer.png)
-
-Generate scientific stories and animations based on the review paper.
-
-### Mini Research Lab
-
-![Mini Research Lab](mini_research_lab1.png)
-
-![Mini Research Lab](mini_research_lab2.png)
-
-![Mini Research Lab](mini_research_lab3.png)
-
-![Mini Research Lab](mini_research_lab4.png)
-
-Conduct interactive experiments and explore Antarctic system responses under different scenarios.
-
-### Research Compass
-
-![Research Compass](research_compass.png)
-
-Explore future research questions, open scientific challenges, and emerging directions in Antarctic science.
-
-### Read Raw Paper
-
-Access the full review paper PDF and navigate it directly within the platform.
-
----
-
-## Windows Desktop App
-
-The recommended Windows download is the latest installer on the GitHub Releases page:
-
-[Antarctic Atlas v3.1.2 - Windows Desktop Installer](https://github.com/OmicaHQ/antarctic-atlas/releases/tag/v3.1.2)
-
-Installer file:
-
-- `Antarctic-Atlas-v3.1.2-Setup.exe`
-- SHA256: `394BC66DE8A417BA3B4BC94D1212F9CA2E1A8AC51E0E868CBD893FC451E166FC`
-
-The installer creates Start Menu and optional Desktop shortcuts for one-click launch. No Python, Streamlit server, or manual dependency setup is required for the installer version.
-
-Note: the installer metadata shows `Omica Chow`, but the installer is not code-signed yet. Windows may still show an unknown-publisher warning until a code-signing certificate is applied.
-
----
-
-## Run From Source
-
-Clone the repository:
-
-```bash
-git clone https://github.com/OmicaHQ/antarctic-atlas.git
-cd antarctic-atlas
+```text
+app/                  vinext project website
+atlas_app/            legacy Streamlit application
+core/                 shared paper-search models and text processing
+data/                 shared research topics, areas, and keyword mappings
+qt_app/               PySide6 desktop pages, configuration, and localization
+tests/                Python core tests and website rendering tests
+installer/            Windows installer definitions and artwork
+desktop_qt_app.py     main desktop application
+app.py                Streamlit entry point
 ```
 
-Install dependencies:
+The source review PDF is expected in the project root using the filename configured in `config.py`.
+
+## Run the desktop app from source
+
+Python 3.9 or later is recommended.
 
 ```bash
-pip install -r requirements.txt
+python -m venv .venv
 ```
 
-Run the legacy Streamlit web demo locally:
+Activate the environment, install dependencies, and run:
 
 ```bash
+python -m pip install -r requirements.txt
+python desktop_qt_app.py
+```
+
+Start directly in Chinese:
+
+```bash
+python desktop_qt_app_zh.py
+```
+
+The unified desktop app also supports changing language from inside the application.
+
+## Run the Streamlit demo
+
+```bash
+python -m pip install -r requirements.txt
 streamlit run app.py
 ```
 
-Then open:
+Then open `http://localhost:8501`.
 
-```text
-http://localhost:8501
+## Run the project website
+
+The website requires Node.js 22.13 or later.
+
+```bash
+npm install
+npm run dev
 ```
 
-## API Keys
+Production verification:
 
-AI features are optional. For local development, copy `.streamlit/secrets.example.toml` to `.streamlit/secrets.toml` and add your own keys:
+```bash
+npm test
+```
+
+The npm scripts are cross-platform and set the Wrangler log path through a small Node launcher.
+
+## AI backends and keys
+
+Supported existing backends are:
+
+- Evidence only
+- Local Ollama
+- DeepSeek API
+- OpenAI API
+
+For Streamlit development, copy `.streamlit/secrets.example.toml` to `.streamlit/secrets.toml` and enter your own keys:
 
 ```toml
 DEEPSEEK_API_KEY = ""
 OPENAI_API_KEY = ""
 ```
 
-Do not commit real API keys. Evidence-only mode works without an API key.
+Keys may also be supplied through environment variables or entered in the existing application settings. Do not commit real credentials.
 
-You can also enter and test API keys inside the app's AI Backend settings. The local Ollama backend targets `gemma4:e4b`, so local AI features require Ollama with that model available.
+The configured local Ollama endpoint and model are defined in `config.py`.
 
-## Distribution Notes
+## Tests
 
-Windows installers are distributed through GitHub Releases. The `release-assets/` folder is kept only for historical and direct installer references.
+Run the shared Python search and text-processing tests:
 
-See `CHANGELOG.md` for version notes.
+```bash
+python -m pytest tests/test_core.py -q
+```
 
-## Version History
+Run the website build and rendered-page tests:
 
-Antarctic Atlas is now documented as three major product phases:
+```bash
+npm test
+```
 
-- `v1`: Original Streamlit research atlas. This established the paper-centered exploration flow, Research Universe concept, Antarctic System views, AI Visualizer, Mini Research Lab, Research Compass, and raw-paper access.
-- `v2`: Streamlit desktop/productization phase. This added iOS-style visual polish, Windows installer packaging, Streamlit module splitting, improved layouts, local AI options, and maintenance fixes while keeping the original Streamlit experience.
-- `v3.0`: Native Qt desktop reconstruction phase. This is the 1:1 desktop recreation line that moved the product from Streamlit-in-a-window toward a native Qt shell with animated System and Visualizer scenes, WebEngine Research Universe, real AI/RAG calls, smoother startup, and packaged desktop delivery.
-- `v3.1`: Unified bilingual desktop phase. This consolidates the app back into one installer with in-app English / Chinese switching, broader i18n coverage for Qt widgets, painter-drawn scenes, HTML cards, Universe labels, and storytelling/export text.
+Run a Python syntax check across the application:
 
-### Current Release
+```bash
+python -m compileall -q app.py desktop_qt_app.py atlas_app qt_app core
+```
 
-- `v3.1.2`: Fixed Chinese-locale Research Universe AI answers getting stuck after backend connectivity succeeded. Streaming answers are correctly bound to the Qt page, and answer language now follows the active app language.
-- `v3.1.1`: Qt-only desktop installer packaging. The formal Windows installer no longer bundles the legacy Streamlit app, `atlas_app` page tree, pywebview shell, or Streamlit runtime; Qt now owns its configuration and packaged Universe template directly. The legacy Streamlit source remains in the repository for web-demo/history use.
-- `v3.1.0`: Unified bilingual Qt desktop app with improved Chinese localization, fixed Universe template labels, cleaned AI Visualizer story/export translation, and persisted in-app language preference.
+## Windows packaging
 
-### Qt Reconstruction Line
+`Antarctic Atlas.spec` defines the current PyInstaller desktop package. It includes the Qt page modules, localization files, shared research data, source PDF, and installer icon.
 
-The former Qt reconstruction installers have been renumbered from the old local `v2.0.x` sequence:
+The Inno Setup definition is located at `installer/AntarcticAtlasSetup.iss`. Release installers are distributed through GitHub Releases.
 
-- `v3.0.0`: First Qt desktop preview, corresponding to the former `v2.0.8`.
-- `v3.0.1` - `v3.0.15`: Iterative Qt fixes and polish from installer resource repair through dual-language desktop packaging, corresponding to former `v2.0.9` - `v2.0.23`.
-- `v3.0.13`: DeepSeek V4 Pro streaming answers, improved paper retrieval, adaptive AI answer layout, automatic Ollama checks, API-key usability improvements, smoother Enter Project behavior, and explicit title-bar branding icon.
-- `v3.0.14`: Fresh loading pass with the desktop PDF text cache removed and simplified loading-page behavior restored.
-- `v3.0.15`: Qt page module splitting plus separate English and Chinese installer builds.
+See [CHANGELOG.md](CHANGELOG.md) for the version history.
 
-## Credits
+## License and credits
 
-Developed by Omica Chow
+Developed by Omica Chow.
 
-Based on:
-
-Noble et al. (2020), Reviews of Geophysics
-
-Built with Python, Qt/PySide6, and scientific Python tooling. The original Streamlit implementation remains in the source tree as the legacy web demo.
-
-## License
+Scientific source: Noble et al. (2020), *Reviews of Geophysics*.
 
 This project is licensed under the MIT License.
