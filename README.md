@@ -151,6 +151,22 @@ Delete only the Antarctic Atlas folder or named file at each location. Removing
 `pages.json` is safe; the included paper will be parsed again on the next
 launch.
 
+## iOS App
+
+A native SwiftUI iOS project now lives in:
+
+```text
+ios/AntarcticAtlas/AntarcticAtlas.xcodeproj
+```
+
+Open it in Xcode 16 or newer and run the `AntarcticAtlas` scheme on an iOS 17+ simulator or device. The iOS app is being migrated toward native SwiftUI. It now includes native module previews plus a bundled PDFKit paper reader/search screen, while a Web tab remains as a temporary fallback for Streamlit-only behavior.
+
+If you do not have a Mac, use GitHub Actions to build an unsigned iPhone `.ipa`, then install it from Windows with Sideloadly. See:
+
+```text
+ios/AntarcticAtlas/INSTALL_IPHONE.md
+```
+
 ---
 
 ## Windows Desktop App — v3.1.2
