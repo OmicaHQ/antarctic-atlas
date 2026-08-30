@@ -1,8 +1,7 @@
 """Dependency-free AI backend client for Ollama / DeepSeek / OpenAI.
 
-No Qt or Streamlit imports — presentation (Streamlit widgets, Qt signals) is
-handled by the calling surface. All functions take plain values and return
-plain values, so they can run on any thread.
+The Qt presentation layer is handled by the caller. All functions take plain
+values and return plain values, so they can run on any thread.
 """
 import json
 import os

@@ -1,17 +1,19 @@
 import json
 import os
 import re
-from pathlib import Path
 from copy import deepcopy
+
+from core.data import resource_path
+from core.paths import settings_path
 
 
 _DEFAULT_LOCALE = "en"
-_LOCALE_DIR = Path(__file__).resolve().parents[1] / "locales"
+_LOCALE_DIR = resource_path("locales")
 _CACHE = {}
 _EXACT_CACHE = None
 _LOCALIZED_MARKER = "_ATLAS_I18N_LOCALIZED"
 _ORIGINALS_MARKER = "_ATLAS_I18N_ORIGINALS"
-_CONFIG_PATH = Path(os.environ.get("APPDATA", Path.home())) / "AntarcticAtlas" / "settings.json"
+_CONFIG_PATH = settings_path()
 _HOOKS_INSTALLED = False
 _PROTECTED_TERMS = (
     "OpenAI",
@@ -32,7 +34,6 @@ _PROTECTED_TERMS = (
     "CTD",
     "PDF",
     "Qt",
-    "Streamlit",
 )
 _TERM_FIXES = {
     "打开AI": "OpenAI",

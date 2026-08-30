@@ -1,15 +1,14 @@
-"""Core paper search and text processing — zero Qt/Streamlit dependencies."""
+"""Core paper search and text processing with no interface dependencies."""
 import html
-import os
 import pickle
 import re
-import sys
 from pathlib import Path
 
 import jieba
 import pdfplumber
 
 from .models import PaperPage
+from .paths import paper_cache_path
 
 CHINESE_PAPER_KEYWORDS = {
     "接地线": ["grounding line", "grounding zone"],
@@ -186,8 +185,7 @@ def scored_search_pages_by_keywords(
 
 def _cache_path():
     """Per-user cache file for extracted paper text, keyed by PDF identity."""
-    base = os.environ.get("APPDATA") or str(Path.home())
-    return Path(base) / "AntarcticAtlas" / "pages.pkl"
+    return paper_cache_path()
 
 
 def _pdf_fingerprint(pdf_path):

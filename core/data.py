@@ -1,7 +1,7 @@
-"""Dependency-free loaders for the data/*.json files (and direction data).
+"""Dependency-free loaders for the app's data/*.json files.
 
-Both the desktop app and the legacy Streamlit app read the same JSON files, so
-the loaders live here. resource_path covers PyInstaller bundle paths.
+The loaders live in core so every native module shares one bundle-aware
+resource path implementation.
 """
 import json
 import sys

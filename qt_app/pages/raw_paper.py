@@ -1,4 +1,5 @@
 from desktop_qt_app import *
+from PySide6.QtGui import QFontDatabase
 
 def _raw_paper_page(self):
     page, layout = self._page_shell(
@@ -58,7 +59,7 @@ def _raw_paper_page(self):
     layout.addWidget(self.paper_text_label)
     self.paper_text = QTextBrowser()
     self.paper_text.setObjectName("KnowledgeCard")
-    self.paper_text.setFontFamily("Consolas")
+    self.paper_text.setFont(QFontDatabase.systemFont(QFontDatabase.FixedFont))
     self.paper_text.setFontPointSize(10)
     self.paper_text.setMinimumHeight(600)
     self.paper_results.currentRowChanged.connect(self._show_selected_paper_page)

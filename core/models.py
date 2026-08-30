@@ -1,4 +1,4 @@
-"""Shared data models — zero Qt/Streamlit dependencies."""
+"""Shared data models with no interface-framework dependencies."""
 from dataclasses import dataclass
 
 

@@ -1,161 +1,102 @@
-# Antarctic Research Atlas
+# Antarctic Research Atlas for macOS
 
-<p align="center">
-  <img src="assets/antarctic-atlas-social-preview.png" alt="Antarctic Atlas preview" width="820">
-</p>
+Antarctic Atlas is a native Apple Silicon desktop application for exploring the
+Antarctic Ice Sheet through the 89-page review paper:
 
-**Antarctic Atlas is an interactive educational and research platform for exploring the Antarctic Ice Sheet.**
+> Noble, T. L. et al. (2020). *The Sensitivity of the Antarctic Ice Sheet to a
+> Changing Climate: Past, Present, and Future.* Reviews of Geophysics, 58,
+> e2019RG000663.
 
-The project transforms the 89-page review paper:
+The app combines paper search, interactive scientific modules, and optional AI
+assistance. Evidence-only search and every non-AI module work without an API
+key.
 
-> Noble, T. L. et al. (2020). *The Sensitivity of the Antarctic Ice Sheet to a Changing Climate: Past, Present, and Future.* Reviews of Geophysics, 58, e2019RG000663.
+## Included modules
 
-into a visual, AI-assisted environment for exploring scientific concepts, observations, system processes, research questions, and evidence from the paper.
+- Research Universe Explorer
+- Antarctic System Explorer
+- AI Visualizer
+- Mini Research Lab
+- Research Directions
+- Read Raw Paper
 
-- [Online demo](https://antarctic-research-atlas.streamlit.app/)
-- [Windows releases](https://github.com/OmicaHQ/antarctic-atlas/releases/latest)
-- [Source repository](https://github.com/OmicaHQ/antarctic-atlas)
+## Install the Apple Silicon release
 
-## Product surfaces
+1. Download `Antarctic-Atlas-v3.2.0-macOS-arm64.zip` and its `.sha256` file from
+   [GitHub Releases](https://github.com/OmicaChow/antarctic-atlas/releases).
+2. Verify the checksum, extract the archive, and move `Antarctic Atlas.app` to
+   your Applications folder.
+3. Open the app. The packaged application does not require Python or `uv`.
 
-The repository contains three related surfaces:
+The current build is ad-hoc signed and has not been notarized by Apple. macOS
+Gatekeeper may require Control-clicking the app and choosing **Open** on the
+first launch. Only download the app from the official repository release.
 
-| Surface | Role | Entry point |
-| --- | --- | --- |
-| PySide6 desktop app | Main, full-featured Windows application | `desktop_qt_app.py` |
-| Streamlit app | Legacy web demo and historical implementation | `app.py` |
-| vinext site | Public project and launch page | `app/page.tsx` |
+## Development requirements
 
-The desktop application is the primary product. The Streamlit source remains available for the online demo and project history. The vinext site introduces the project and links to the interactive demo.
+- Apple Silicon Mac
+- macOS 13 or later
+- [`uv`](https://docs.astral.sh/uv/)
 
-## Existing modules
+## Set up and run
 
-- **Research Universe Explorer** — explores concepts, evidence, and relationships as an interactive knowledge universe.
-- **Antarctic System Explorer** — compares glaciers, ice shelves, processes, and observation layers.
-- **AI Visualizer** — creates scientific narratives and storyboards from the review.
-- **Mini Research Lab** — explores existing interactive Antarctic system scenarios.
-- **Research Directions** — examines research questions, methods, regions, and proposal outlines.
-- **Read Raw Paper** — searches and reads the bundled review paper.
+```zsh
+scripts/setup-macos.sh
+.venv/bin/python desktop_qt_app.py
+```
 
-AI features are optional. Evidence-only retrieval and the non-AI modules remain usable without an API key.
+The app can switch between English and Chinese from inside the interface.
 
-## Repository structure
+## Validate
+
+```zsh
+.venv/bin/python -m pytest tests -q
+.venv/bin/python scripts/macos-smoke.py
+```
+
+The smoke test parses the bundled paper and constructs all six modules without
+making an external AI request.
+
+## Build the Mac app
+
+```zsh
+scripts/build-macos.sh
+```
+
+The build produces `dist/Antarctic-Atlas-v3.2.0-macOS-arm64.zip` plus a SHA-256
+file, verifies the app's architecture and ad-hoc signature, then runs a packaged
+cold-start smoke test. Developer ID signing, notarization, stapling, and DMG
+distribution remain separate release-hardening steps.
+
+## Repository layout
 
 ```text
-app/                  vinext project website
-atlas_app/            legacy Streamlit application
-core/                 shared paper-search models and text processing
-data/                 shared research topics, areas, and keyword mappings
-qt_app/               PySide6 desktop pages, configuration, and localization
-tests/                Python core tests and website rendering tests
-installer/            Windows installer definitions and artwork
-desktop_qt_app.py     main desktop application
-app.py                Streamlit entry point
+core/                  paper search, models, data loading, and macOS paths
+data/                  research topics, areas, and keyword mappings
+docs/                  migration and architecture notes
+installer/             native macOS icon
+locales/               English and Chinese translations
+qt_app/                PySide6 pages and interface support
+scripts/               setup, validation, and packaging scripts
+tests/                 Python tests
+desktop_qt_app.py      application entry point
+VERSION                application and release version
 ```
 
-The source review PDF is expected in the project root using the filename configured in `config.py`.
+Mutable files stay outside the repository:
 
-## Run the desktop app from source
+- Settings: `~/Library/Application Support/Antarctic Atlas/settings.json`
+- Paper cache: `~/Library/Caches/Antarctic Atlas/pages.pkl`
+- Development environment: the macOS user cache, linked as `.venv`
 
-Python 3.9 or later is recommended.
+See [the macOS migration guide](docs/MACOS_MIGRATION.md) for release gates and
+[the architecture handover](docs/architecture/handover.md) for internal design
+constraints.
 
-```bash
-python -m venv .venv
-```
-
-Activate the environment, install dependencies, and run:
-
-```bash
-python -m pip install -r requirements.txt
-python desktop_qt_app.py
-```
-
-Start directly in Chinese:
-
-```bash
-python desktop_qt_app_zh.py
-```
-
-The unified desktop app also supports changing language from inside the application.
-
-## Run the Streamlit demo
-
-```bash
-python -m pip install -r requirements.txt
-streamlit run app.py
-```
-
-Then open `http://localhost:8501`.
-
-## Run the project website
-
-The website requires Node.js 22.13 or later.
-
-```bash
-npm install
-npm run dev
-```
-
-Production verification:
-
-```bash
-npm test
-```
-
-The npm scripts are cross-platform and set the Wrangler log path through a small Node launcher.
-
-## AI backends and keys
-
-Supported existing backends are:
-
-- Evidence only
-- Local Ollama
-- DeepSeek API
-- OpenAI API
-
-For Streamlit development, copy `.streamlit/secrets.example.toml` to `.streamlit/secrets.toml` and enter your own keys:
-
-```toml
-DEEPSEEK_API_KEY = ""
-OPENAI_API_KEY = ""
-```
-
-Keys may also be supplied through environment variables or entered in the existing application settings. Do not commit real credentials.
-
-The configured local Ollama endpoint and model are defined in `config.py`.
-
-## Tests
-
-Run the shared Python search and text-processing tests:
-
-```bash
-python -m pytest tests/test_core.py -q
-```
-
-Run the website build and rendered-page tests:
-
-```bash
-npm test
-```
-
-Run a Python syntax check across the application:
-
-```bash
-python -m compileall -q app.py desktop_qt_app.py atlas_app qt_app core
-```
-
-## Windows packaging
-
-`Antarctic Atlas.spec` defines the current PyInstaller desktop package. It includes the Qt page modules, localization files, shared research data, source PDF, and installer icon.
-
-The Inno Setup definition is located at `installer/AntarcticAtlasSetup.iss`. Release installers are distributed through GitHub Releases.
-
-See [CHANGELOG.md](CHANGELOG.md) for the version history.
+Source repository: <https://github.com/OmicaChow/antarctic-atlas>
 
 ## License and credits
 
-Developed by Omica Chow.
+Developed by Omica Chow. Licensed under the MIT License.
 
 Scientific source: Noble et al. (2020), *Reviews of Geophysics*.
-
-This project is licensed under the MIT License.

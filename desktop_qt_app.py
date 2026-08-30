@@ -64,6 +64,20 @@ APP_TITLE = "Antarctic Research Atlas"
 TARGET_FRAME_RATE = 120
 FRAME_INTERVAL_MS = max(1, round(1000 / TARGET_FRAME_RATE))
 SLOW_ANIMATION_INTERVAL_MS = 33
+PACKAGED_SMOKE_ENV = "ANTARCTIC_ATLAS_SMOKE_TEST"
+
+
+def _application_icon_path():
+    return resource_path("antarctic_atlas.png")
+
+
+def ui_font(point_size, weight=QFont.Normal):
+    """Return the active platform UI font with the requested size and weight."""
+
+    font = QFont(QApplication.font()) if QApplication.instance() else QFont()
+    font.setPointSize(point_size)
+    font.setWeight(weight)
+    return font
 
 
 class FunctionWorker(QThread):
@@ -165,7 +179,7 @@ def universe_payload():
 
 
 def original_universe_html(initial_focus_topic="", initial_focus_source="manual", initial_focus_token=0):
-    template = resource_path("qt_app", "legacy_templates", "research_universe_template.html").read_text(encoding="utf-8")
+    template = resource_path("qt_app", "templates", "research_universe_template.html").read_text(encoding="utf-8")
     template = template.replace(
         "<script>",
         "<script src='qrc:///qtwebchannel/qwebchannel.js'></script>\n    <script>",
@@ -1039,10 +1053,10 @@ class SensorSceneWidget(QWidget):
         painter.setBrush(QColor(9, 21, 39, 170))
         painter.drawRoundedRect(title, 18, 18)
         painter.setPen(QColor("#f8fbff"))
-        painter.setFont(QFont("Segoe UI", 15, QFont.Bold))
+        painter.setFont(ui_font(15, QFont.Bold))
         painter.drawText(QRectF(title.left() + 16, title.top() + 8, 300, 30), "Multi-Sensor Evidence Explorer")
         painter.setPen(QColor(221, 240, 252, 180))
-        painter.setFont(QFont("Segoe UI", 7))
+        painter.setFont(ui_font(7))
         painter.drawText(QRectF(title.left() + 326, title.top() + 10, title.width() - 344, 34), Qt.TextWordWrap, "Case study as the base satellite scene; each observation tool adds a different evidence layer on top.")
 
         scene = QRectF(24, 82, rect.width() * 0.66, rect.height() - 106)
@@ -1095,7 +1109,7 @@ class SensorSceneWidget(QWidget):
         painter.drawRoundedRect(QRectF(inner.left() + 34, inner.bottom() - 82, 344, 34), 17, 17)
         painter.drawRoundedRect(QRectF(inner.right() - 214, inner.bottom() - 42, 190, 34), 17, 17)
         painter.setPen(QColor("#ffffff"))
-        painter.setFont(QFont("Segoe UI", 8, QFont.Bold))
+        painter.setFont(ui_font(8, QFont.Bold))
         painter.drawText(QRectF(inner.left() + 48, inner.top() + 48, 304, 20), f"Location: {case['location_label']} - {case['coords']}")
         painter.drawText(QRectF(inner.left() + 48, inner.bottom() - 74, 320, 20), f"Primary layer: {layer['short']} - {layer['measures']}")
         painter.drawText(QRectF(inner.right() - 198, inner.bottom() - 34, 170, 20), "Ocean cavity / shelf sea")
@@ -1110,12 +1124,12 @@ class SensorSceneWidget(QWidget):
         painter.setBrush(QColor(78, 163, 241, 44))
         painter.drawRoundedRect(QRectF(side.left() + 20, side.top() + 18, 145, 30), 15, 15)
         painter.setPen(QColor("#d8f2ff"))
-        painter.setFont(QFont("Segoe UI", 8, QFont.Bold))
+        painter.setFont(ui_font(8, QFont.Bold))
         painter.drawText(QRectF(side.left() + 28, side.top() + 25, 130, 18), f"{layer['short']} layer")
         painter.setPen(QColor("#f8fbff"))
-        painter.setFont(QFont("Segoe UI", 17, QFont.Bold))
+        painter.setFont(ui_font(17, QFont.Bold))
         painter.drawText(QRectF(side.left() + 20, side.top() + 64, side.width() - 40, 34), Qt.TextWordWrap, self.case_name)
-        painter.setFont(QFont("Segoe UI", 8))
+        painter.setFont(ui_font(8))
         painter.setPen(QColor(235, 248, 255, 198))
         painter.drawText(
             QRectF(side.left() + 20, side.top() + 104, side.width() - 40, 72),
@@ -1145,10 +1159,10 @@ class SensorSceneWidget(QWidget):
             painter.setBrush(QColor(255, 255, 255, 16))
             painter.drawRoundedRect(box, 15, 15)
             painter.setPen(QColor("#9ed8f5"))
-            painter.setFont(QFont("Segoe UI", 7, QFont.Bold))
+            painter.setFont(ui_font(7, QFont.Bold))
             painter.drawText(QRectF(box.left() + 12, box.top() + 7, box.width() - 24, 14), label)
             painter.setPen(QColor(245, 250, 255, 220))
-            painter.setFont(QFont("Segoe UI", 7))
+            painter.setFont(ui_font(7))
             painter.drawText(QRectF(box.left() + 12, box.top() + 22, box.width() - 24, box.height() - 26), Qt.TextWordWrap, text)
             y += box_height + gap
 
@@ -1413,13 +1427,13 @@ class StoryEngineWidget(QWidget):
         painter.setPen(QPen(QColor(210, 238, 255, 65), 1))
         painter.drawRoundedRect(title, 22, 22)
         painter.setPen(QColor("#9ed8f5"))
-        painter.setFont(QFont("Segoe UI", 8, QFont.Bold))
+        painter.setFont(ui_font(8, QFont.Bold))
         painter.drawText(QRectF(title.left() + 22, title.top() + 18, title.width() - 44, 18), f"SCIENTIFIC STORY ENGINE - {self.lens.upper()} LENS")
         painter.setPen(QColor("#f8fbff"))
-        painter.setFont(QFont("Segoe UI", 19, QFont.Bold))
+        painter.setFont(ui_font(19, QFont.Bold))
         painter.drawText(QRectF(title.left() + 22, title.top() + 48, title.width() - 44, 32), self.story)
         painter.setPen(QColor(222, 240, 252, 200))
-        painter.setFont(QFont("Segoe UI", 9))
+        painter.setFont(ui_font(9))
         painter.drawText(QRectF(title.left() + 22, title.top() + 82, title.width() - 44, 38), Qt.TextWordWrap, opening)
 
         stage = QRectF(28, 186, rect.width() * 0.64, rect.height() - 218)
@@ -1436,7 +1450,7 @@ class StoryEngineWidget(QWidget):
         painter.drawRoundedRect(replay, 18, 18)
         painter.drawRoundedRect(reset, 18, 18)
         painter.setPen(QColor("#f8fbff"))
-        painter.setFont(QFont("Segoe UI", 9, QFont.Bold))
+        painter.setFont(ui_font(9, QFont.Bold))
         if self.play_timer.isActive():
             play_label = "Playing"
         elif self.step >= len(nodes) - 1 and nodes:
@@ -1486,7 +1500,7 @@ class StoryEngineWidget(QWidget):
             painter.setPen(QPen(QColor(255, 255, 255, 70), 1))
             painter.drawEllipse(pos, preview_radius, preview_radius)
             painter.setPen(QColor(245, 250, 255, 125 if self.step < 0 else 72))
-            painter.setFont(QFont("Segoe UI", 7, QFont.Bold))
+            painter.setFont(ui_font(7, QFont.Bold))
             painter.drawText(QRectF(pos.x() - 70, pos.y() - 9, 140, 18), Qt.AlignCenter, node["name"])
             self.node_hitboxes.append((index, QRectF(pos.x() - preview_radius - 8, pos.y() - preview_radius - 8, (preview_radius + 8) * 2, (preview_radius + 8) * 2)))
         painter.setPen(QPen(QColor(8, 8, 10, 210), 10))
@@ -1511,7 +1525,7 @@ class StoryEngineWidget(QWidget):
             painter.drawEllipse(pos, radius, radius)
             self.node_hitboxes.append((index, QRectF(pos.x() - radius - 8, pos.y() - radius - 8, (radius + 8) * 2, (radius + 8) * 2)))
             painter.setPen(QColor("#ffffff"))
-            painter.setFont(QFont("Segoe UI", 7, QFont.Bold))
+            painter.setFont(ui_font(7, QFont.Bold))
             painter.drawText(QRectF(pos.x() - 70, pos.y() - 9, 140, 18), Qt.AlignCenter, name)
 
         chain = " -> ".join(node["name"] for node in nodes)
@@ -1520,7 +1534,7 @@ class StoryEngineWidget(QWidget):
         caption = QRectF(stage.left() + 110, stage.bottom() - 135, stage.width() - 220, 58)
         painter.drawRoundedRect(caption, 16, 16)
         painter.setPen(QColor(245, 250, 255, 220))
-        painter.setFont(QFont("Segoe UI", 9, QFont.Bold))
+        painter.setFont(ui_font(9, QFont.Bold))
         if self.step < 0:
             painter.drawText(caption.adjusted(14, 9, -14, -9), Qt.AlignCenter | Qt.TextWordWrap, "Click Begin Story to reveal the mechanism step by step, or click any glowing node to inspect its evidence card.")
         else:
@@ -1535,19 +1549,19 @@ class StoryEngineWidget(QWidget):
         painter.drawRoundedRect(QRectF(side.left() + 22, side.top() + 22, 145, 30), 15, 15)
         if self.step < 0:
             painter.setPen(QColor("#d8f2ff"))
-            painter.setFont(QFont("Segoe UI", 8, QFont.Bold))
+            painter.setFont(ui_font(8, QFont.Bold))
             painter.drawText(QRectF(side.left() + 32, side.top() + 28, 122, 18), "Scientific Story Engine")
             painter.setPen(QColor("#f8fbff"))
-            painter.setFont(QFont("Segoe UI", 18, QFont.Bold))
+            painter.setFont(ui_font(18, QFont.Bold))
             painter.drawText(QRectF(side.left() + 22, side.top() + 72, side.width() - 44, 34), self.story)
             painter.setPen(QColor(235, 248, 255, 210))
-            painter.setFont(QFont("Segoe UI", 9))
+            painter.setFont(ui_font(9))
             painter.drawText(QRectF(side.left() + 22, side.top() + 116, side.width() - 44, 72), Qt.TextWordWrap, opening)
             painter.setPen(QColor("#9ed8f5"))
-            painter.setFont(QFont("Segoe UI", 8, QFont.Bold))
+            painter.setFont(ui_font(8, QFont.Bold))
             painter.drawText(QRectF(side.left() + 22, side.top() + 214, side.width() - 44, 18), "CURRENT LENS")
             painter.setPen(QColor(245, 250, 255, 220))
-            painter.setFont(QFont("Segoe UI", 9))
+            painter.setFont(ui_font(9))
             painter.drawText(QRectF(side.left() + 22, side.top() + 238, side.width() - 44, 40), f"{self.lens} - {len(nodes)} story beats")
             painter.setBrush(QColor(34, 197, 94, 24))
             painter.setPen(QPen(QColor(74, 222, 128, 60), 1))
@@ -1558,13 +1572,13 @@ class StoryEngineWidget(QWidget):
         else:
             active = nodes[self.step]
             painter.setPen(QColor("#d8f2ff"))
-            painter.setFont(QFont("Segoe UI", 8, QFont.Bold))
+            painter.setFont(ui_font(8, QFont.Bold))
             painter.drawText(QRectF(side.left() + 32, side.top() + 28, 122, 18), f"{self.lens} - {active['kind']}")
             painter.setPen(QColor("#f8fbff"))
-            painter.setFont(QFont("Segoe UI", 18, QFont.Bold))
+            painter.setFont(ui_font(18, QFont.Bold))
             painter.drawText(QRectF(side.left() + 22, side.top() + 72, side.width() - 44, 34), active["name"])
             painter.setPen(QColor(235, 248, 255, 210))
-            painter.setFont(QFont("Segoe UI", 9))
+            painter.setFont(ui_font(9))
             painter.drawText(QRectF(side.left() + 22, side.top() + 110, side.width() - 44, 24), f"Node {self.step + 1} of {len(nodes)} in {self.story}.")
             y = side.top() + 128
             for label, text in [
@@ -1572,10 +1586,10 @@ class StoryEngineWidget(QWidget):
                 ("EVIDENCE LAYER", active["evidence"]),
             ]:
                 painter.setPen(QColor("#9ed8f5"))
-                painter.setFont(QFont("Segoe UI", 8, QFont.Bold))
+                painter.setFont(ui_font(8, QFont.Bold))
                 painter.drawText(QRectF(side.left() + 22, y, side.width() - 44, 18), label)
                 painter.setPen(QColor(245, 250, 255, 220))
-                painter.setFont(QFont("Segoe UI", 9))
+                painter.setFont(ui_font(9))
                 painter.drawText(QRectF(side.left() + 22, y + 22, side.width() - 44, 42), Qt.TextWordWrap, text)
                 y += 68
             mini_w = (side.width() - 53) / 2
@@ -1588,21 +1602,21 @@ class StoryEngineWidget(QWidget):
                 painter.setPen(QPen(QColor(255, 255, 255, 34), 1))
                 painter.drawRoundedRect(mini, 14, 14)
                 painter.setPen(QColor("#f8fbff"))
-                painter.setFont(QFont("Segoe UI", 8, QFont.Bold))
+                painter.setFont(ui_font(8, QFont.Bold))
                 painter.drawText(QRectF(mini.left() + 10, mini.top() + 10, mini.width() - 20, 18), label)
                 painter.setPen(QColor(230, 245, 255, 178))
-                painter.setFont(QFont("Segoe UI", 8))
+                painter.setFont(ui_font(8))
                 painter.drawText(QRectF(mini.left() + 10, mini.top() + 28, mini.width() - 20, 30), Qt.TextWordWrap, text)
             y += 76
             painter.setPen(QColor("#9ed8f5"))
-            painter.setFont(QFont("Segoe UI", 8, QFont.Bold))
+            painter.setFont(ui_font(8, QFont.Bold))
             painter.drawText(QRectF(side.left() + 22, y, side.width() - 44, 18), "SLIDE-READY CHAIN")
             slide_box = QRectF(side.left() + 22, y + 22, side.width() - 44, 56)
             painter.setBrush(QColor(34, 197, 94, 24))
             painter.setPen(QPen(QColor(74, 222, 128, 60), 1))
             painter.drawRoundedRect(slide_box, 16, 16)
             painter.setPen(QColor(235, 255, 242, 225))
-            painter.setFont(QFont("Segoe UI", 9))
+            painter.setFont(ui_font(9))
             painter.drawText(slide_box.adjusted(12, 10, -12, -10), Qt.TextWordWrap, chain)
 
 
@@ -1690,14 +1704,14 @@ class LabCanvasWidget(QWidget):
         painter.setBrush(QColor(245, 251, 255, 228))
         painter.drawRoundedRect(rect, 14, 14)
         painter.setPen(QColor("#17314d"))
-        painter.setFont(QFont("Segoe UI", 8, QFont.Bold))
+        painter.setFont(ui_font(8, QFont.Bold))
         painter.drawText(rect.adjusted(10, 0, -10, 0), Qt.AlignVCenter, text)
         return rect
 
     def _draw_bar(self, painter, rect, label, value, accent, text_color="#1f2937"):
         value = self._clip(value)
         painter.setPen(text_color if isinstance(text_color, QColor) else QColor(text_color))
-        painter.setFont(QFont("Segoe UI", 8, QFont.Bold))
+        painter.setFont(ui_font(8, QFont.Bold))
         painter.drawText(QRectF(rect.left(), rect.top() - 20, rect.width(), 18), label)
         painter.setPen(Qt.NoPen)
         painter.setBrush(QColor(226, 238, 247))
@@ -1858,7 +1872,7 @@ class LabCanvasWidget(QWidget):
             status = "Buttressing lost"
         painter.restore()
         painter.setPen(QColor("#f4fbff"))
-        painter.setFont(QFont("Segoe UI", 13, QFont.Bold))
+        painter.setFont(ui_font(13, QFont.Bold))
         painter.drawText(QRectF(plot.left() + 18, plot.top() + 16, plot.width() - 36, 28), "3D Conceptual Antarctic Ice Sheet Simulator")
         panel = QRectF(plot.right() - 270, plot.bottom() - 118, 236, 72)
         painter.setPen(QPen(QColor(190, 226, 255, 72), 1))
@@ -1973,7 +1987,7 @@ class LabCanvasWidget(QWidget):
         self._draw_tag(painter, gx + 42, shelf_rect.top() - 42, "Floating ice shelf", "#4aaad8", 132)
         self._draw_tag(painter, plot.right() - 128, ocean_rect.bottom() - 30, "Ocean", "#238ad2", 86)
         painter.setPen(QColor("#1f2937"))
-        painter.setFont(QFont("Segoe UI", 13, QFont.Bold))
+        painter.setFont(ui_font(13, QFont.Bold))
         painter.drawText(QRectF(plot.left() + 18, plot.top() + 16, plot.width() - 36, 28), "Conceptual Ice Shelf Buttressing Experiment")
         panel = QRectF(plot.right() - 284, plot.bottom() - 96, 250, 70)
         painter.setPen(QPen(QColor(195, 213, 226), 1))
@@ -2082,7 +2096,7 @@ class LabCanvasWidget(QWidget):
                 outer = QPointF(center.x() + (54 + 10 * sin(angle * 3)) * cos(angle), center.y() + (34 + 6 * cos(angle * 2)) * sin(angle))
                 painter.drawLine(inner, outer)
             painter.setPen(QColor("#ff463d"))
-            painter.setFont(QFont("Segoe UI", 18, QFont.Bold))
+            painter.setFont(ui_font(18, QFont.Bold))
             painter.drawText(QRectF(shelf.left(), shelf.center().y() - 16, shelf.width(), 34), Qt.AlignCenter, "ICE SHELF BREAKUP")
 
         speed = self._clip((velocity_myr - 300) / 1800, 0.15, 1)
@@ -2091,7 +2105,7 @@ class LabCanvasWidget(QWidget):
             self._draw_arrow(painter, QPointF(plot.left() + 36, y), QPointF(grounded.right() + 32 + 72 * speed, y), QColor(255, 140, 35), 2.5 + 5 * speed)
 
         painter.setPen(QColor("#ffffff"))
-        painter.setFont(QFont("Segoe UI", 15, QFont.Bold))
+        painter.setFont(ui_font(15, QFont.Bold))
         painter.drawText(QRectF(plot.left(), plot.top() + 24, plot.width(), 34), Qt.AlignCenter, stage_labels[stage])
         self._draw_tag(painter, grounded.left() - 4, grounded.top() - 40, "Grounded ice", "#167ef8", 112)
         self._draw_tag(painter, shelf.center().x() - 76, shelf.top() - 42, "Floating ice shelf", "#4aaad8", 142)
@@ -2108,7 +2122,7 @@ class LabCanvasWidget(QWidget):
         self._draw_bar(painter, QRectF(panel.left() + 16, panel.top() + 42, panel.width() - 32, 10), "Collapse risk", collapse_risk, QColor("#ef4444"), "#eaf6ff")
         self._draw_bar(painter, QRectF(panel.left() + 16, panel.top() + 72, panel.width() - 32, 10), "Buttressing remaining", buttressing_remaining, QColor("#38bdf8"), "#eaf6ff")
         painter.setPen(QColor("#eaf6ff"))
-        painter.setFont(QFont("Segoe UI", 8, QFont.Bold))
+        painter.setFont(ui_font(8, QFont.Bold))
         painter.drawText(QRectF(panel.left() + 16, panel.top() + 7, panel.width() - 32, 18), f"Auto stage {auto_stage} / displayed stage {stage}")
 
 
@@ -2184,7 +2198,7 @@ class CompassPlotWidget(QWidget):
             bubble_points.append((label, meta, pos, radius, selected))
 
         painter.setPen(QColor(255, 255, 255, 205))
-        painter.setFont(QFont("Segoe UI", 9, QFont.Bold))
+        painter.setFont(ui_font(9, QFont.Bold))
         painter.drawText(QRectF(plot.left() + plot.width() * 0.52, plot.top() + 22, 360, 30), "High impact + high uncertainty = frontier zone")
 
         for label, meta, pos, radius, selected in bubble_points:
@@ -2204,10 +2218,10 @@ class CompassPlotWidget(QWidget):
             painter.setPen(QPen(QColor(255, 255, 255, 118 if selected else 62), 1))
             painter.drawRoundedRect(label_rect, 8, 8)
             painter.setPen(QColor("#ffffff"))
-            painter.setFont(QFont("Segoe UI", 8 if selected else 7, QFont.Bold if selected else QFont.Normal))
+            painter.setFont(ui_font(8 if selected else 7, QFont.Bold if selected else QFont.Normal))
             painter.drawText(label_rect.adjusted(7, 3, -7, -3), Qt.AlignCenter | Qt.TextWordWrap, label)
         painter.setPen(QColor("#ffffff"))
-        painter.setFont(QFont("Segoe UI", 8))
+        painter.setFont(ui_font(8))
         painter.drawText(QRectF(plot.left(), plot.top() - 28, 220, 24), "Sea-level impact")
         painter.drawText(QRectF(plot.center().x() - 90, plot.bottom() + 22, 180, 24), Qt.AlignCenter, "Scientific uncertainty")
         painter.drawText(QRectF(plot.right() - 168, plot.bottom() - 34, 160, 28), Qt.AlignRight, "Directly observable")
@@ -2220,9 +2234,9 @@ class CompassPlotWidget(QWidget):
         painter.setPen(QPen(QColor(255, 255, 255, 82), 1))
         painter.drawRoundedRect(legend, 7, 7)
         painter.setPen(QColor(220, 236, 248, 210))
-        painter.setFont(QFont("Segoe UI", 7, QFont.Bold))
+        painter.setFont(ui_font(7, QFont.Bold))
         painter.drawText(QRectF(legend.left() - 32, legend.top() - 28, 82, 22), Qt.AlignCenter, "Observability")
-        painter.setFont(QFont("Segoe UI", 7))
+        painter.setFont(ui_font(7))
         painter.drawText(QRectF(legend.right() + 6, legend.top() - 6, 36, 16), "High")
         painter.drawText(QRectF(legend.right() + 6, legend.bottom() - 10, 36, 16), "Low")
 
@@ -2230,7 +2244,7 @@ class CompassPlotWidget(QWidget):
         plot = rect.adjusted(70, 48, -70, -64)
         info = self.direction_info
         painter.setPen(QColor("#f8fbff"))
-        painter.setFont(QFont("Segoe UI", 18, QFont.Bold))
+        painter.setFont(ui_font(18, QFont.Bold))
         painter.drawText(QRectF(rect.left() + 28, rect.top() + 20, rect.width() - 56, 34), f"{self.direction} research pathway")
         painter.setPen(QPen(QColor(126, 220, 255, 150), 3, Qt.SolidLine, Qt.RoundCap))
         y = plot.center().y()
@@ -2248,16 +2262,16 @@ class CompassPlotWidget(QWidget):
             painter.setPen(QPen(QColor("#ffffff"), 2))
             painter.drawEllipse(QPointF(x, y), 20, 20)
             painter.setPen(QColor("#ffffff"))
-            painter.setFont(QFont("Segoe UI", 10, QFont.Bold))
+            painter.setFont(ui_font(10, QFont.Bold))
             painter.drawText(QRectF(x - 90, y - 68, 180, 24), Qt.AlignCenter, label)
-            painter.setFont(QFont("Segoe UI", 9))
+            painter.setFont(ui_font(9))
             painter.setPen(QColor(220, 236, 248, 205))
             painter.drawText(QRectF(x - 95, y + 34, 190, 56), Qt.AlignHCenter | Qt.TextWordWrap, detail)
 
     def _draw_region_map(self, painter, rect):
         info = self.direction_info
         painter.setPen(QColor("#f8fbff"))
-        painter.setFont(QFont("Segoe UI", 18, QFont.Bold))
+        painter.setFont(ui_font(18, QFont.Bold))
         painter.drawText(QRectF(rect.left() + 28, rect.top() + 24, rect.width() - 56, 30), "Conceptual Region Map")
         map_rect = rect.adjusted(90, 74, -90, -52)
         ocean = QLinearGradient(map_rect.topLeft(), map_rect.bottomRight())
@@ -2284,10 +2298,10 @@ class CompassPlotWidget(QWidget):
             painter.setPen(QPen(QColor("#ffffff"), 2))
             painter.drawEllipse(p, 12, 12)
             painter.setPen(QColor("#ffffff"))
-            painter.setFont(QFont("Segoe UI", 9, QFont.Bold))
+            painter.setFont(ui_font(9, QFont.Bold))
             painter.drawText(QRectF(p.x() + 14, p.y() - 10, 190, 26), name)
         painter.setPen(QColor(220, 236, 248, 205))
-        painter.setFont(QFont("Segoe UI", 9))
+        painter.setFont(ui_font(9))
         painter.drawText(QRectF(map_rect.left() + 22, map_rect.bottom() - 42, map_rect.width() - 44, 28), Qt.AlignCenter, "Conceptual locator for research planning, not a precise GIS layer.")
 
     def _draw_proposal_builder(self, painter, rect):
@@ -2304,7 +2318,7 @@ class CompassPlotWidget(QWidget):
             5: "a high-end PhD-style frontier proposal",
         }.get(ambition, "a feasible undergraduate research proposal")
         painter.setPen(QColor("#f8fbff"))
-        painter.setFont(QFont("Segoe UI", 18, QFont.Bold))
+        painter.setFont(ui_font(18, QFont.Bold))
         painter.drawText(QRectF(rect.left() + 28, rect.top() + 24, rect.width() - 56, 30), "Generated Research Proposal Seed")
         box = rect.adjusted(36, 78, -36, -36)
         painter.setBrush(QColor(255, 255, 255, 18))
@@ -2328,7 +2342,7 @@ class CompassPlotWidget(QWidget):
             f"{info['student_angle']}"
         )
         painter.setPen(QColor(245, 250, 255, 220))
-        painter.setFont(QFont("Segoe UI", 9))
+        painter.setFont(ui_font(9))
         painter.drawText(box.adjusted(22, 20, -22, -20), Qt.TextWordWrap, proposal)
 
 
@@ -2349,10 +2363,16 @@ class NativeAtlasWindow(QMainWindow):
         self._stack_fade_label = None
         self._entering_project = False
         self.setWindowTitle(t("app.title", APP_TITLE))
-        icon_path = resource_path("antarctic_atlas.ico")
+        icon_path = _application_icon_path()
         if icon_path.exists():
             self.setWindowIcon(QIcon(str(icon_path)))
-        self.resize(1320, 860)
+        available = QApplication.primaryScreen().availableGeometry() if QApplication.primaryScreen() else None
+        if available:
+            width = min(1320, max(900, int(available.width() * 0.92)), available.width())
+            height = min(860, max(680, int(available.height() * 0.90)), available.height())
+            self.resize(width, height)
+        else:
+            self.resize(1320, 860)
         self._build_ui()
         self._landing_progress_timer = QTimer(self)
         self._landing_progress_timer.setTimerType(Qt.PreciseTimer)
@@ -2374,13 +2394,14 @@ class NativeAtlasWindow(QMainWindow):
         page = QWidget()
         page.setObjectName("LandingRoot")
         outer = QVBoxLayout(page)
-        outer.setContentsMargins(44, 36, 44, 36)
+        outer.setContentsMargins(24, 28, 24, 28)
         outer.setSpacing(0)
         outer.addStretch(1)
 
         card = Card()
         card.setObjectName("LandingCard")
-        card.setFixedWidth(860)
+        card.setMaximumWidth(860)
+        card.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
         layout = QVBoxLayout(card)
         layout.setContentsMargins(58, 56, 58, 56)
         layout.setSpacing(20)
@@ -2388,7 +2409,7 @@ class NativeAtlasWindow(QMainWindow):
         title = QLabel(t("landing.title", "🌎 Antarctic Ice Sheet Research Atlas"))
         title.setObjectName("LandingTitle")
         title.setAlignment(Qt.AlignCenter)
-        title.setWordWrap(False)
+        title.setWordWrap(True)
         title.setMinimumHeight(64)
         subtitle = QLabel(t("landing.subtitle", "An interactive research universe for exploring the Antarctic Ice Sheet review paper."))
         subtitle.setObjectName("LandingSubtitle")
@@ -2818,12 +2839,11 @@ class NativeAtlasWindow(QMainWindow):
 
 
     def _apply_styles(self):
-        self.setStyleSheet(
-            """
+        stylesheet = """
             QMainWindow, QStackedWidget#Shell, QWidget#Root {
                 background: #050816;
                 color: #eef6ff;
-                font-family: "Segoe UI";
+                font-family: "__SYSTEM_UI_FONT__";
                 font-size: 14px;
             }
             QWidget#LandingRoot {
@@ -3239,7 +3259,8 @@ class NativeAtlasWindow(QMainWindow):
                 border-radius: 999px;
             }
             """
-        )
+        system_font = QApplication.font().family().replace('"', '\\"')
+        self.setStyleSheet(stylesheet.replace("__SYSTEM_UI_FONT__", system_font))
 
 
 from qt_app.pages import (
@@ -3269,13 +3290,67 @@ for _qt_page_module in _QT_PAGE_MODULES:
 del _qt_page_module, _qt_name, _qt_value
 
 
+def _install_packaged_smoke_probe(app, window):
+    """Exit a packaged app after its bundled resources and all pages load."""
+
+    started = time.monotonic()
+    result = {"finished": False}
+
+    def finish(code, message):
+        if result["finished"]:
+            return
+        result["finished"] = True
+        print(message, flush=True)
+        window.close()
+        app.exit(code)
+
+    def poll():
+        status_widget = getattr(window, "landing_status", None)
+        status_text = status_widget.text() if status_widget else ""
+        if "failed" in status_text.lower():
+            finish(1, f"MACOS_APP_SMOKE_FAILED: {status_text}")
+            return
+        if getattr(window, "_main_ready", False):
+            try:
+                for index in range(len(window._page_builders)):
+                    window._ensure_page_built(index)
+                built = sum(widget is not None for widget in window._page_widgets)
+                if built != 6:
+                    raise RuntimeError(f"expected 6 pages, built {built}")
+                if not window.pages:
+                    raise RuntimeError("bundled paper returned no readable pages")
+            except Exception as exc:
+                finish(1, f"MACOS_APP_SMOKE_FAILED: {exc}")
+                return
+            QTimer.singleShot(
+                1000,
+                lambda: finish(
+                    0,
+                    f"MACOS_APP_SMOKE_OK pages={len(window.pages)} modules={built}",
+                ),
+            )
+            return
+        if time.monotonic() - started > 120:
+            finish(1, f"MACOS_APP_SMOKE_TIMEOUT: {status_text}")
+            return
+        QTimer.singleShot(100, poll)
+
+    QTimer.singleShot(0, poll)
+
+
 def main():
     app = QApplication(sys.argv)
     app.setApplicationName(t("app.title", APP_TITLE))
+    app.setOrganizationName("Omica Chow")
+    icon_path = _application_icon_path()
+    if icon_path.exists():
+        app.setWindowIcon(QIcon(str(icon_path)))
     window = NativeAtlasWindow()
     window.show()
     window.raise_()
     window.activateWindow()
+    if os.environ.get(PACKAGED_SMOKE_ENV) == "1":
+        _install_packaged_smoke_probe(app, window)
     sys.exit(app.exec())
 
 

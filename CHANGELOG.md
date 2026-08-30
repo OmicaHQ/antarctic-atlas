@@ -8,8 +8,16 @@ All notable changes to Antarctic Research Atlas are documented here.
 - `v2`: Streamlit productization and maintenance phase. Added iOS-style visual polish, Windows installer packaging, Streamlit module splitting, local AI options, and layout fixes while preserving the original app model.
 - `v3.0`: Qt desktop reconstruction phase. Rebuilt the experience as a native Qt desktop shell while preserving the original function and UI intent.
 - `v3.1`: Unified bilingual desktop phase. Consolidates English and Chinese into one app with in-app switching and broader i18n coverage.
+- `v3.2`: Apple Silicon macOS phase. Adds a native arm64 package, macOS paths and assets, reproducible release tooling, and a Mac-focused source tree.
 
-## v3.1.3 - Technical Optimization
+## v3.2.0 - Apple Silicon macOS Support
+
+### Added
+
+- Added a native Apple Silicon (`arm64`) application bundle for macOS 13 or later.
+- Added the macOS PyInstaller spec, native `.icns` icon, external-cache development environment, reproducible setup/build scripts, and SHA-256 release artifact.
+- Added macOS-native settings and paper-cache locations under the user's Library folders.
+- Added source and packaged smoke tests that parse all 89 paper pages and construct all six modules without making an external AI request.
 
 ### Fixed
 
@@ -21,13 +29,17 @@ All notable changes to Antarctic Research Atlas are documented here.
 
 ### Changed
 
-- Extracted a single dependency-free AI client (`core/ai.py`) shared by the desktop app and the legacy Streamlit web app, removing ~1000 lines of triplicated Ollama/DeepSeek/OpenAI payload, streaming, and parsing logic.
-- Consolidated paper search/PDF into `core/paper.py`; the legacy `atlas_app/paper.py` is now a thin shim (keeps the web app's `<mark>` highlight).
-- Added a persistent PDF text cache (keyed by file identity, stored under `%APPDATA%/AntarcticAtlas/pages.pkl`): the ~30s startup PDF parse is now ~0.02s on subsequent launches.
-- Added `core/data.py` with shared JSON loaders; the desktop app now loads `data/*.json` from the bundle-aware shared loader.
-- Pinned `requirements.txt`, removed retired `pywebview`, split the legacy Streamlit demo deps from the desktop runtime deps.
-- Synced both PyInstaller specs: the ZH spec no longer bundles the retired Streamlit/`atlas_app` tree, and both now bundle `data/`.
-- Aligned installer versions: EN and ZH Inno Setup scripts now both declare v3.1.2 (matching the CHANGELOG), and the ZH installer cleans up legacy Streamlit leftovers.
+- Extracted a single dependency-free AI client (`core/ai.py`) for Ollama, DeepSeek, and OpenAI payload, streaming, and parsing logic.
+- Consolidated paper search/PDF into `core/paper.py` and added a persistent cache under `~/Library/Caches/Antarctic Atlas/pages.pkl`.
+- Added `core/data.py` with bundle-aware shared JSON and resource loaders.
+- Split pinned native runtime and developer dependencies for a smaller, reproducible Mac package.
+- Removed Windows installers, Android experiments, legacy Streamlit/web surfaces, screenshots, and generated build material from the active Mac development tree.
+
+### Validation
+
+- 35 automated tests pass.
+- The source and packaged applications load all 89 paper pages and construct all six modules.
+- The packaged executable is verified as native `arm64`, its ad-hoc signature passes strict verification, and the extracted archive passes a cold-start smoke test.
 
 ## v3.1.2 - Chinese AI Answer Streaming Fix
 
