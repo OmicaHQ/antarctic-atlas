@@ -1,6 +1,6 @@
 {
-  "app.title": "南极科研图谱",
-  "landing.title": "🌎 南极冰盖科研图谱",
+  "app.title": "南极图谱",
+  "landing.title": "🌎 南极图谱",
   "landing.subtitle": "用于探索南极冰盖综述论文的交互式科研宇宙。",
   "landing.status.initial": "正在加载科研工作区...",
   "landing.status.loading_modules": "正在加载论文证据与可视化模块...",

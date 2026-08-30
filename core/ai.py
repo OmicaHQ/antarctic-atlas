@@ -4,6 +4,7 @@ The Qt presentation layer is handled by the caller. All functions take plain
 values and return plain values, so they can run on any thread.
 """
 import json
+import math
 import os
 import re
 
@@ -40,6 +41,33 @@ def default_model(backend):
 def env_api_key(backend):
     var = _ENV_KEY.get(backend)
     return os.environ.get(var, "").strip() if var else ""
+
+
+def resolve_api_key(
+    backend,
+    *,
+    typed_backend="",
+    typed_key="",
+    session_keys=None,
+    environ=None,
+):
+    """Resolve one provider's key without reusing another provider's input.
+
+    The desktop uses one password field for multiple providers.  The field's
+    owner therefore has to match ``backend`` before its value is eligible.
+    Session values and environment variables are also provider-scoped.
+    """
+
+    env_name = _ENV_KEY.get(backend)
+    if not env_name:
+        return ""
+    if backend == typed_backend and str(typed_key or "").strip():
+        return str(typed_key).strip()
+    stored = str((session_keys or {}).get(backend, "") or "").strip()
+    if stored:
+        return stored
+    env = os.environ if environ is None else environ
+    return str(env.get(env_name, "") or "").strip()
 
 
 def check_ollama():
@@ -263,6 +291,11 @@ def parse_classification(raw):
         confidence = float(obj.get("confidence", 0) or 0)
     except (TypeError, ValueError):
         confidence = 0.0
+    if not math.isfinite(confidence):
+        confidence = 0.0
+    elif confidence > 1.0 and confidence <= 100.0:
+        confidence /= 100.0
+    confidence = max(0.0, min(1.0, confidence))
     return topic, confidence
 
 

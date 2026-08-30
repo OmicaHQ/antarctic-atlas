@@ -168,6 +168,7 @@ _MANUAL_ZH = {
     "Geothermal Heat Flux": "地热通量",
     "Subglacial Hydrology": "冰下水文",
     "Satellite Altimetry": "卫星测高",
+    "Altimetry": "测高",
     "InSAR Velocity": "InSAR 速度",
     "Radar & Field Data": "雷达与野外数据",
     "Pliocene": "上新世",

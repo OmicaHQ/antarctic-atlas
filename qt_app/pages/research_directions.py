@@ -2,7 +2,7 @@ from desktop_qt_app import *
 
 def _research_directions_page(self):
     page, layout = self._page_shell(
-        "🧭 Research Compass",
+        "🧭 Research Directions",
         "Explore frontier questions from the review paper: choose a theme, inspect uncertainty, connect regions and methods, then generate a starter research idea.",
     )
     top = QHBoxLayout()
@@ -230,6 +230,35 @@ def _direction_selected_focus(self, info):
 
 
 def _direction_proposal_text(self, name, info, question, method_focus, region_focus, ambition):
+    if current_locale().startswith("zh"):
+        ambition_text = {
+            1: "小型课程项目式文献综合",
+            2: "聚焦的探索性分析",
+            3: "可执行的本科生研究方案",
+            4: "包含可视化或建模的进阶作品集项目",
+            5: "博士研究风格的前沿方案",
+        }.get(ambition, "可执行的本科生研究方案")
+        display_name = translate_text(name)
+        display_question = translate_text(question)
+        methods = "、".join(translate_text(item) for item in method_focus) if method_focus else "选定的观测与模型方法"
+        regions = "、".join(translate_text(item) for item in region_focus) if region_focus else "合适的南极案例区域"
+        return (
+            f"标题：{display_name}：{display_question}\n\n"
+            f"研究类型：{ambition_text}\n\n"
+            "研究动机：\n"
+            f"{translate_text(info['why_now'])}\n\n"
+            "知识缺口：\n"
+            f"{translate_text(info['gap'])}\n\n"
+            "可行方法：\n"
+            f"围绕 {regions} 使用 {methods}。目标是连接机制、观测与不确定性，而不只是概述论文。\n\n"
+            "预期产出：\n"
+            "1. 一张机制概念图。\n"
+            "2. 一张把观测与物理解释联系起来的小型证据表。\n"
+            "3. 一个解释该研究方向的可视化图表或交互模块。\n"
+            "4. 一段说明未知问题的简短不确定性讨论。\n\n"
+            "为什么适合放入 Antarctic Atlas：\n"
+            f"{translate_text(info['student_angle'])}"
+        )
     ambition_text = {
         1: "a small class-project style literature synthesis",
         2: "a focused exploratory analysis",
@@ -267,21 +296,33 @@ def _direction_proposal_filename(self, name):
 def _download_direction_proposal(self):
     if not hasattr(self, "direction_combo"):
         return
+    is_zh = current_locale().startswith("zh")
     name = combo_current_key(self.direction_combo)
     info = DIRECTION_DATA.get(name, DIRECTION_DATA["Ocean heat pathways"])
     question, method_focus, region_focus = self._direction_selected_focus(info)
     ambition = self.direction_ambition.value() if hasattr(self, "direction_ambition") else 3
     proposal = self._direction_proposal_text(name, info, question, method_focus, region_focus, ambition)
     default_name = self._direction_proposal_filename(name)
-    path, _ = QFileDialog.getSaveFileName(self, "Save proposal seed", default_name, "Text files (*.txt)")
+    dialog_title = "保存研究方案" if is_zh else "Save proposal seed"
+    file_filter = "文本文件 (*.txt)" if is_zh else "Text files (*.txt)"
+    path, _ = QFileDialog.getSaveFileName(self, dialog_title, default_name, file_filter)
     if not path:
         if hasattr(self, "direction_download_status"):
-            self.direction_download_status.setText("Save cancelled.")
+            self.direction_download_status.setText("已取消保存。" if is_zh else "Save cancelled.")
         return
-    with open(path, "w", encoding="utf-8") as handle:
-        handle.write(proposal)
+    if not path.lower().endswith(".txt"):
+        path = f"{path}.txt"
+    try:
+        with open(path, "w", encoding="utf-8") as handle:
+            handle.write(proposal)
+    except OSError as exc:
+        if hasattr(self, "direction_download_status"):
+            message = f"保存失败：{exc}" if is_zh else f"Could not save proposal: {exc}"
+            self.direction_download_status.setText(message)
+        return
     if hasattr(self, "direction_download_status"):
-        self.direction_download_status.setText(f"Saved proposal seed to {path}")
+        message = f"研究方案已保存至 {path}" if is_zh else f"Saved proposal seed to {path}"
+        self.direction_download_status.setText(message)
 
 
 def _update_direction_details(self):

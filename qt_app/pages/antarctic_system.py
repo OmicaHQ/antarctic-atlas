@@ -51,11 +51,12 @@ def _antarctic_system_page(self):
     self.system_synthesis = QTextBrowser()
     self.system_synthesis.setObjectName("KnowledgeCard")
     self.system_synthesis.setMinimumHeight(190)
-    self.system_synthesis.setVisible(False)
+    self.system_synthesis.setVisible(True)
     system_summary_caption = QLabel("The text summarizes observation logic from the review-paper case studies.")
     system_summary_caption.setObjectName("Muted")
     system_summary_caption.setWordWrap(True)
     layout.addWidget(system_summary_caption)
+    layout.addWidget(self.system_synthesis)
 
     self.system_builder_toggle = QPushButton("Build the multi-sensor synthesis")
     self.system_builder_toggle.setObjectName("ExpanderButton")
@@ -182,19 +183,26 @@ def _update_system_synthesis(self, layers):
     case_name = combo_current_key(self.system_case_combo) if hasattr(self, "system_case_combo") else "Thwaites Glacier"
     case = system_case(case_name)
     layer = system_tool(case_name, layer_name)
+    display_case = translate_text(case_name)
+    display_layer = translate_text(layer_name)
     if hasattr(self, "system_metric_cards"):
-        self.system_metric_cards["Case"].set_value(case_name, case["region"])
-        self.system_metric_cards["Primary layer"].set_value(layer_name, layer["measures"])
-        self.system_metric_cards["Visible layers"].set_value(str(len(layers)), " + ".join(system_tool(case_name, name)["short"] for name in layers))
+        self.system_metric_cards["Case"].set_value(display_case, translate_text(case["region"]))
+        self.system_metric_cards["Primary layer"].set_value(display_layer, translate_text(layer["measures"]))
+        self.system_metric_cards["Visible layers"].set_value(
+            str(len(layers)),
+            " + ".join(translate_text(system_tool(case_name, name)["short"]) for name in layers),
+        )
     if hasattr(self, "system_synthesis"):
         rows = "".join(
-            f"<li><b>{html.escape(system_tool(case_name, name)['short'])}</b>: {html.escape(system_tool(case_name, name)['interpretation'])}</li>"
+            f"<li><b>{html.escape(translate_text(system_tool(case_name, name)['short']))}</b>: "
+            f"{html.escape(translate_text(system_tool(case_name, name)['interpretation']))}</li>"
             for name in layers
         )
+        context_label = "案例背景" if current_locale().startswith("zh") else "Case context"
         self.system_synthesis.setHtml(
-            f"<div class='ios-kicker'>OBSERVATION SUMMARY</div><h3>{html.escape(case_name)}</h3>"
-            f"<p><b>Case context:</b> {html.escape(case['base_note'])}</p>"
-            f"<p><b>{html.escape(layer_name)}:</b> {html.escape(layer['observed'])}</p>"
+            f"<div class='ios-kicker'>OBSERVATION SUMMARY</div><h3>{html.escape(display_case)}</h3>"
+            f"<p><b>{context_label}:</b> {html.escape(translate_text(case['base_note']))}</p>"
+            f"<p><b>{html.escape(display_layer)}:</b> {html.escape(translate_text(layer['observed']))}</p>"
             f"<ul>{rows}</ul>"
         )
 

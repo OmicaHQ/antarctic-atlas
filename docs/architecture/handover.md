@@ -3,6 +3,14 @@
 This note records the design constraints that matter for continued Mac
 development.
 
+## Release contract
+
+- v3.2.1 is an Apple Silicon (`arm64`) release and requires macOS 15.0 or
+  later. Intel and universal2 builds are out of scope.
+- The published app is ad-hoc signed, not Developer ID signed, and not
+  notarized. Keep the README's first-open Gatekeeper instructions accurate
+  until the signing and notarization pipeline changes.
+
 ## Runtime shape
 
 - `desktop_qt_app.py` is the single application entry point.
@@ -33,7 +41,7 @@ development.
 ## Local state
 
 - Settings: `~/Library/Application Support/Antarctic Atlas/settings.json`
-- Parsed-paper cache: `~/Library/Caches/Antarctic Atlas/pages.pkl`
+- Parsed-paper cache: `~/Library/Caches/Antarctic Atlas/pages.json`
 - Development environment: macOS user cache, exposed through the repository's
   `.venv` link
 
@@ -43,8 +51,11 @@ Tests and smoke checks redirect settings and caches to temporary directories.
 
 A source smoke check is complete only when the paper loads and all six modules
 construct without an external AI request. A packaged build is complete only
-when the archive extracts, its executable is `arm64`, its ad-hoc signature
-verifies, and the packaged smoke check exits successfully.
+when the archive extracts, its executable is `arm64`, every packaged Mach-O is
+compatible with the macOS 15.0 deployment target, its configured signature
+verifies, and the packaged smoke check exits successfully. For v3.2.1, that
+configured signature is ad-hoc; Developer ID signing and notarization are not
+release claims.
 
 ## Recommended next refactor
 

@@ -1,6 +1,8 @@
 """Core paper search and text processing with no interface dependencies."""
+import hashlib
 import html
-import pickle
+import json
+import os
 import re
 from pathlib import Path
 
@@ -32,6 +34,11 @@ def clean_text(text: str) -> str:
 
 
 _HIGHLIGHT_SPAN = "<span style='background-color:#7a5a13; color:#fff7d6; font-weight:700'>"
+_CACHE_VERSION = 1
+_REFERENCE_HEADING_RE = re.compile(r"^\s*(?:references|bibliography)\s*(?::|$)", re.IGNORECASE)
+_REFERENCE_TRAILING_HEADING_RE = re.compile(r"\b(?:references|bibliography)\s*$", re.IGNORECASE)
+_REFERENCE_YEAR_RE = re.compile(r"\((?:18|19|20)\d{2}[a-z]?\)\s*[.,]", re.IGNORECASE)
+_REFERENCE_DOI_RE = re.compile(r"(?:https?://)?doi\.org/|\bdoi\s*:", re.IGNORECASE)
 
 
 def extract_search_keywords(query: str) -> list[str]:
@@ -64,22 +71,62 @@ def _query_keywords(query: str) -> list[str]:
     return [token.lower() for token in dict.fromkeys(tokens) if len(token.strip()) > 1]
 
 
-def build_search_excerpt(text: str, keywords: list[str], radius: int = 220, highlight: str = "span") -> str:
-    cleaned = clean_text(text)
-    lowered = cleaned.lower()
-    hit_positions = [lowered.find(keyword.lower()) for keyword in keywords if keyword and lowered.find(keyword.lower()) >= 0]
-    if hit_positions:
-        center = min(hit_positions)
+def _normalized_keywords(keywords: list[str]) -> list[str]:
+    normalized = []
+    for keyword in keywords:
+        cleaned = clean_text(str(keyword)).lower()
+        if cleaned:
+            normalized.append(cleaned)
+    return sorted({keyword for keyword in normalized if len(keyword) > 1}, key=len, reverse=True)
+
+
+def _match_window_bounds(text: str, keywords: list[str], radius: int) -> tuple[int, int]:
+    """Choose the text window containing the densest cluster of keyword hits."""
+
+    if not text:
+        return 0, 0
+    radius = max(1, int(radius))
+    lowered = text.lower()
+    occurrences: list[tuple[int, int, int]] = []
+    for keyword in _normalized_keywords(keywords):
+        weight = 3 if re.search(r"[\s-]", keyword) else 1
+        for match in re.finditer(re.escape(keyword), lowered):
+            occurrences.append((match.start(), match.end(), weight))
+    if not occurrences:
+        return 0, min(len(text), radius * 2)
+
+    best_key = None
+    best_bounds = (0, min(len(text), radius * 2))
+    for hit_start, hit_end, hit_weight in occurrences:
+        center = (hit_start + hit_end) // 2
         start = max(0, center - radius)
-        end = min(len(cleaned), center + radius)
-    else:
-        start, end = 0, min(len(cleaned), radius * 2)
-    excerpt = cleaned[start:end]
+        end = min(len(text), center + radius)
+        density = sum(
+            weight
+            for occurrence_start, occurrence_end, weight in occurrences
+            if occurrence_start < end and occurrence_end > start
+        )
+        key = (density, hit_weight, -start)
+        if best_key is None or key > best_key:
+            best_key = key
+            best_bounds = (start, end)
+    return best_bounds
+
+
+def extract_search_window(text: str, keywords: list[str], radius: int = 220) -> str:
+    """Return a plain-text excerpt centered on the strongest match cluster."""
+
+    cleaned = clean_text(text)
+    start, end = _match_window_bounds(cleaned, keywords, radius)
     prefix = "..." if start > 0 else ""
     suffix = "..." if end < len(cleaned) else ""
-    escaped = html.escape(prefix + excerpt + suffix)
+    return prefix + cleaned[start:end] + suffix
+
+
+def build_search_excerpt(text: str, keywords: list[str], radius: int = 220, highlight: str = "span") -> str:
+    escaped = html.escape(extract_search_window(text, keywords, radius=radius))
     open_tag, close_tag = _highlight_tags(highlight)
-    keywords = sorted({k for k in (str(k).lower() for k in keywords) if len(k) > 1}, key=len, reverse=True)
+    keywords = _normalized_keywords(keywords)
     if keywords:
         pattern = re.compile("|".join(re.escape(html.escape(k)) for k in keywords), re.IGNORECASE)
         escaped = pattern.sub(lambda match: f"{open_tag}{match.group(0)}{close_tag}", escaped)
@@ -102,19 +149,72 @@ def extract_paper_keywords(text: str) -> list[str]:
     return [term.lower() for term in dict.fromkeys(terms) if len(term) > 1]
 
 
+def _reference_heading_kind(text: str) -> str:
+    lines = [line.strip() for line in str(text or "").splitlines() if line.strip()]
+    for line in lines:
+        if re.fullmatch(r"(?:references|bibliography)\s*:?", line, re.IGNORECASE):
+            return "exact"
+        if _REFERENCE_HEADING_RE.match(line):
+            return "exact"
+    if any(_REFERENCE_TRAILING_HEADING_RE.search(line) for line in lines):
+        return "trailing"
+    return ""
+
+
+def _reference_density(text: str) -> tuple[int, int, float]:
+    lines = [line.strip() for line in str(text or "").splitlines() if len(line.strip()) > 3]
+    if not lines:
+        return 0, 0, 0.0
+    doi_count = len(_REFERENCE_DOI_RE.findall(str(text or "")))
+    entry_lines = sum(bool(_REFERENCE_YEAR_RE.search(line)) for line in lines)
+    return doi_count, entry_lines, entry_lines / len(lines)
+
+
+def _is_dense_reference_page(text: str) -> bool:
+    doi_count, entry_lines, entry_ratio = _reference_density(text)
+    return doi_count >= 5 and entry_lines >= 5 and entry_ratio >= 0.18
+
+
 def is_low_value_reference_page(text: str) -> bool:
-    lowered = clean_text(text).lower()
-    signals = [
-        "references",
-        "bibliography",
-        " et al.",
-        "doi:",
-        "journal of geophysical research",
-        "geophysical research letters",
-    ]
-    signal_count = sum(lowered.count(signal) for signal in signals)
-    citation_like = len(re.findall(r"\(\d{4}\)|\b19\d{2}\b|\b20\d{2}\b", lowered))
-    return signal_count >= 3 or citation_like >= 18
+    """Classify a page without mistaking citation-rich review prose for references."""
+
+    return _reference_heading_kind(text) == "exact" or _is_dense_reference_page(text)
+
+
+def reference_section_start(pages: list[PaperPage]) -> int | None:
+    """Return the first pure-reference PDF page number, if one is detected.
+
+    Detection is sequential so the final short tail page remains excluded once
+    a References section starts. A mixed two-column heading page is retained and
+    the first dense page after it becomes the boundary.
+    """
+
+    if not pages:
+        return None
+    search_from = len(pages) // 3
+    for index in range(search_from, len(pages)):
+        page = pages[index]
+        heading_kind = _reference_heading_kind(page.text)
+        current_dense = _is_dense_reference_page(page.text)
+        next_dense = index + 1 < len(pages) and _is_dense_reference_page(pages[index + 1].text)
+        if heading_kind == "exact":
+            return page.page
+        if heading_kind == "trailing" and next_dense:
+            return pages[index + 1].page
+        if current_dense and (next_dense or index == len(pages) - 1):
+            return page.page
+    return None
+
+
+def _searchable_pages(
+    pages: list[PaperPage], *, include_references: bool = False
+) -> list[PaperPage]:
+    if include_references:
+        return pages
+    boundary = reference_section_start(pages)
+    if boundary is None:
+        return pages
+    return [page for page in pages if page.page < boundary]
 
 
 def is_overview_question(text: str) -> bool:
@@ -133,12 +233,18 @@ def clean_answer_markdown(text: str) -> str:
     return cleaned.strip()
 
 
-def search_pages(pages: list[PaperPage], query: str, max_results: int = 12) -> list[PaperPage]:
+def search_pages(
+    pages: list[PaperPage],
+    query: str,
+    max_results: int = 12,
+    *,
+    include_references: bool = False,
+) -> list[PaperPage]:
     keywords = _query_keywords(query)
     if not keywords:
         return []
     results = []
-    for page in pages:
+    for page in _searchable_pages(pages, include_references=include_references):
         lowered = page.text.lower()
         score = sum(lowered.count(keyword) for keyword in keywords)
         if score:
@@ -151,7 +257,7 @@ def scored_search_pages(pages: list[PaperPage], query: str, max_results: int = 5
     if not keywords:
         return []
     results = []
-    for page in pages:
+    for page in _searchable_pages(pages):
         lowered = page.text.lower()
         score = sum(lowered.count(keyword) for keyword in keywords)
         if score:
@@ -162,12 +268,11 @@ def scored_search_pages(pages: list[PaperPage], query: str, max_results: int = 5
 def scored_search_pages_by_keywords(
     pages: list[PaperPage], keywords: list[str], max_results: int = 5
 ) -> list[tuple[float, PaperPage]]:
-    normalized = [clean_text(str(keyword)).lower() for keyword in keywords if clean_text(str(keyword))]
-    normalized = list(dict.fromkeys(normalized))
+    normalized = _normalized_keywords(keywords)
     if not normalized:
         return []
     results: list[tuple[float, PaperPage]] = []
-    for page in pages:
+    for page in _searchable_pages(pages):
         lowered = page.text.lower()
         score = 0.0
         for keyword in normalized:
@@ -175,8 +280,6 @@ def scored_search_pages_by_keywords(
             if count:
                 score += count * (3 if " " in keyword else 1)
         if score:
-            if is_low_value_reference_page(page.text):
-                score *= 0.05
             results.append((score, page))
     return sorted(results, key=lambda item: item[0], reverse=True)[:max_results]
 
@@ -191,14 +294,61 @@ def _cache_path():
 def _pdf_fingerprint(pdf_path):
     try:
         stat = pdf_path.stat()
-        return stat.st_size, int(stat.st_mtime)
+        digest = hashlib.sha256()
+        with pdf_path.open("rb") as handle:
+            for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+                digest.update(chunk)
+        return {
+            "size": stat.st_size,
+            "mtime_ns": stat.st_mtime_ns,
+            "sha256": digest.hexdigest(),
+        }
     except OSError:
         return None
 
 
+def _cached_pages(stored, fingerprint, x_tolerance, y_tolerance):
+    if not isinstance(stored, dict) or stored.get("version") != _CACHE_VERSION:
+        return None
+    if stored.get("fingerprint") != fingerprint:
+        return None
+    if stored.get("x_tolerance") != x_tolerance or stored.get("y_tolerance") != y_tolerance:
+        return None
+    raw_pages = stored.get("pages")
+    if not isinstance(raw_pages, list) or not raw_pages:
+        return None
+    pages = []
+    previous_page = 0
+    for raw_page in raw_pages:
+        if not isinstance(raw_page, dict):
+            return None
+        page_number = raw_page.get("page")
+        text = raw_page.get("text")
+        if not isinstance(page_number, int) or page_number <= previous_page:
+            return None
+        if not isinstance(text, str) or not text.strip():
+            return None
+        pages.append(PaperPage(page_number, text))
+        previous_page = page_number
+    return pages
+
+
+def _write_cache(cache: Path, payload: dict) -> None:
+    cache.parent.mkdir(parents=True, exist_ok=True)
+    temporary = cache.with_name(f".{cache.name}.{os.getpid()}.tmp")
+    try:
+        temporary.write_text(json.dumps(payload, ensure_ascii=False), encoding="utf-8")
+        os.replace(temporary, cache)
+    finally:
+        try:
+            temporary.unlink(missing_ok=True)
+        except OSError:
+            pass
+
+
 def load_pdf_pages(pdf_path, x_tolerance=1.5, y_tolerance=3.0):
     """Parse a PDF into PaperPage list, using a persistent cache keyed by file
-    identity. The cache turns a ~27s pdfplumber parse into a ~0.05s pickle read."""
+    identity. The cache turns a full pdfplumber parse into a fast JSON read."""
     pdf_path = Path(pdf_path)
     if not pdf_path.exists():
         raise FileNotFoundError(f"Source PDF not found: {pdf_path}")
@@ -206,11 +356,12 @@ def load_pdf_pages(pdf_path, x_tolerance=1.5, y_tolerance=3.0):
     cache = _cache_path()
     if fingerprint is not None and cache.exists():
         try:
-            stored = pickle.loads(cache.read_bytes())
-        except Exception:
+            stored = json.loads(cache.read_text(encoding="utf-8"))
+        except (OSError, UnicodeError, json.JSONDecodeError):
             stored = None
-        if isinstance(stored, dict) and stored.get("fingerprint") == fingerprint:
-            return [PaperPage(p["page"], p["text"]) for p in stored["pages"]]
+        cached = _cached_pages(stored, fingerprint, x_tolerance, y_tolerance)
+        if cached is not None:
+            return cached
 
     pages = []
     with pdfplumber.open(pdf_path) as pdf:
@@ -223,10 +374,13 @@ def load_pdf_pages(pdf_path, x_tolerance=1.5, y_tolerance=3.0):
 
     if fingerprint is not None:
         try:
-            cache.parent.mkdir(parents=True, exist_ok=True)
-            cache.write_bytes(pickle.dumps({"fingerprint": fingerprint, "pages": [
-                {"page": p.page, "text": p.text} for p in pages
-            ]}))
+            _write_cache(cache, {
+                "version": _CACHE_VERSION,
+                "fingerprint": fingerprint,
+                "x_tolerance": x_tolerance,
+                "y_tolerance": y_tolerance,
+                "pages": [{"page": p.page, "text": p.text} for p in pages],
+            })
         except OSError:
             pass
     return pages

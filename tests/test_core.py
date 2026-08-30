@@ -5,6 +5,8 @@ reference-page filtering, and answer cleaning.
 Run: python -m pytest tests/ -v
 """
 
+import json
+import pickle
 import sys
 from pathlib import Path
 
@@ -20,10 +22,12 @@ from core.paper import (
     clean_answer_markdown,
     clean_text,
     extract_paper_keywords,
+    extract_search_window,
     extract_search_keywords,
     is_low_value_reference_page,
     is_overview_question,
     load_pdf_pages,
+    reference_section_start,
     scored_search_pages,
     scored_search_pages_by_keywords,
     search_pages,
@@ -143,6 +147,27 @@ def test_build_search_excerpt_mark_highlight():
     assert result == "<mark>CDW</mark> drives basal melt"
 
 
+def test_extract_search_window_returns_plain_text_from_densest_match_cluster():
+    text = (
+        "How is basal forcing represented? "
+        + "background material " * 40
+        + "Grounding line retreat accelerates when basal melt removes ice-shelf support."
+    )
+    result = extract_search_window(
+        text,
+        ["how", "basal", "grounding line", "retreat", "basal melt", "ice-shelf"],
+        radius=90,
+    )
+    assert "Grounding line retreat" in result
+    assert "basal melt" in result
+    assert "<span" not in result
+
+
+def test_extract_search_window_falls_back_to_page_start_without_a_match():
+    result = extract_search_window("alpha beta gamma delta", ["missing"], radius=6)
+    assert result == "alpha beta g..."
+
+
 # ── search_pages ──────────────────────────────────────────
 
 def test_search_pages_finds_match(sample_pages):
@@ -204,6 +229,57 @@ def test_is_low_value_reference_page_passes_science():
     assert is_low_value_reference_page(science_page) is False
 
 
+def test_reference_classifier_keeps_citation_rich_review_prose():
+    science_page = " ".join(
+        f"Study {year} by Smith et al. supports grounding-line retreat in the scientific discussion."
+        for year in range(1990, 2022)
+    )
+    assert is_low_value_reference_page(science_page) is False
+
+
+def test_reference_section_start_keeps_mixed_heading_page_and_excludes_tail():
+    dense_references = "\n".join(
+        f"Author, A. ({year}). Ice study. https://doi.org/10.1000/{year}"
+        for year in range(1990, 2000)
+    )
+    pages = [
+        PaperPage(1, "Grounding line science."),
+        PaperPage(2, "More grounding line evidence."),
+        PaperPage(3, "Glossary material\nThis review was prepared at a References"),
+        PaperPage(4, dense_references),
+        PaperPage(5, "Tail, T. (2020). Grounding line. https://doi.org/10.1000/tail"),
+    ]
+    assert reference_section_start(pages) == 4
+    assert [page.page for page in search_pages(pages, "grounding line")] == [1, 2]
+    assert 5 in [
+        page.page
+        for page in search_pages(pages, "grounding line", include_references=True)
+    ]
+
+
+def test_bundled_paper_reference_boundary_and_match_window(tmp_path, monkeypatch):
+    from config import PDF_PATH
+
+    monkeypatch.setattr("core.paper._cache_path", lambda: tmp_path / "real-paper-cache.json")
+    pages = load_pdf_pages(PDF_PATH)
+    by_number = {page.page: page for page in pages}
+
+    assert len(pages) == 89
+    assert reference_section_start(pages) == 64
+    assert is_low_value_reference_page(by_number[60].text) is False
+    assert is_low_value_reference_page(by_number[63].text) is False
+    assert is_low_value_reference_page(by_number[64].text) is True
+    assert len([page for page in pages if page.page >= reference_section_start(pages)]) == 26
+
+    window = extract_search_window(
+        by_number[10].text,
+        ["how", "does", "basal", "melting", "basal melt", "ice shelf", "ocean heat"],
+        radius=220,
+    )
+    assert "basal" in window.lower()
+    assert all(page.page < 64 for _, page in scored_search_pages(pages, "grounding line"))
+
+
 # ── is_overview_question ──────────────────────────────────
 
 def test_is_overview_question_detects_summary():
@@ -254,58 +330,63 @@ def test_scored_search_by_keywords(sample_pages):
     assert results[0][1].page == 2
 
 
-def test_scored_search_by_keywords_downranks_references(sample_pages):
-    """Reference-heavy pages should be downranked."""
+def test_scored_search_by_keywords_excludes_references(sample_pages):
+    """Evidence search should omit the detected reference section."""
     results = scored_search_pages_by_keywords(sample_pages, ["journal", "geophysical"])
-    # Page 5 is the reference page, should not be top result
-    scores = {page.page: score for score, page in results}
-    # Reference page score should be heavily penalized
-    if 5 in scores:
-        # If it appears, should have very low relative score
-        assert scores[5] < 1.0
+    assert all(page.page != 5 for _, page in results)
 
 
 # ── load_pdf_pages / cache ────────────────────────────────
 
+class _FakeTextPage:
+    def __init__(self, text):
+        self._text = text
+
+    def extract_text(self, x_tolerance=None, y_tolerance=None):
+        return self._text
+
+
+class _FakePDF:
+    def __init__(self, pages):
+        self.pages = pages
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *exc):
+        return False
+
+
+class _FakePDFPlumber:
+    def __init__(self):
+        self.open_count = 0
+
+    def open(self, path):
+        self.open_count += 1
+        return _FakePDF([_FakeTextPage("CDW intrusion"), _FakeTextPage("Basal melt")])
+
+
+def _write_pickle_marker(path):
+    Path(path).write_text("pickle executed", encoding="utf-8")
+
+
+class _UnsafePicklePayload:
+    def __init__(self, marker):
+        self.marker = str(marker)
+
+    def __reduce__(self):
+        return _write_pickle_marker, (self.marker,)
+
+
 def test_load_pdf_pages_cache_roundtrip(tmp_path, monkeypatch):
     """load_pdf_pages must return PaperPage list and populate the cache so the
     next call skips pdfplumber (verified by reading the cache file)."""
-    import pickle
-
-    cache_file = tmp_path / "pages.pkl"
+    cache_file = tmp_path / "pages.json"
     monkeypatch.setattr("core.paper._cache_path", lambda: cache_file)
 
     pdf = tmp_path / "fake.pdf"
     pdf.write_bytes(b"%PDF-1.4 fake")
-
-    # Monkeypatch pdfplumber so the test never needs a real PDF.
-    class FakeTextPage:
-        def __init__(self, num, text):
-            self.num = num
-            self._text = text
-
-        def extract_text(self, x_tolerance=None, y_tolerance=None):
-            return self._text
-
-    class FakePDF:
-        def __init__(self, pages):
-            self.pages = pages
-
-        def __enter__(self):
-            return self
-
-        def __exit__(self, *exc):
-            return False
-
-    class FakePDFPages:
-        def __init__(self):
-            self.open_count = 0
-
-        def open(self, path):
-            self.open_count += 1
-            return FakePDF([FakeTextPage(1, "CDW intrusion"), FakeTextPage(2, "Basal melt")])
-
-    fake_pdf = FakePDFPages()
+    fake_pdf = _FakePDFPlumber()
     monkeypatch.setattr("core.paper.pdfplumber", fake_pdf)
 
     pages = load_pdf_pages(pdf)
@@ -315,7 +396,8 @@ def test_load_pdf_pages_cache_roundtrip(tmp_path, monkeypatch):
 
     # Cache written and keyed by fingerprint.
     assert cache_file.exists()
-    stored = pickle.loads(cache_file.read_bytes())
+    stored = json.loads(cache_file.read_text(encoding="utf-8"))
+    assert stored["version"] == 1
     assert stored["fingerprint"] is not None
     assert stored["pages"][0]["text"] == "CDW intrusion"
 
@@ -323,6 +405,50 @@ def test_load_pdf_pages_cache_roundtrip(tmp_path, monkeypatch):
     # invoked again (open_count stays 1).
     assert load_pdf_pages(pdf)[0].text == "CDW intrusion"
     assert fake_pdf.open_count == 1
+
+
+def test_default_paper_cache_path_uses_safe_json_format():
+    from core.paths import paper_cache_path
+
+    assert paper_cache_path().name == "pages.json"
+
+
+def test_load_pdf_pages_ignores_unsafe_pickle_cache(tmp_path, monkeypatch):
+    cache_file = tmp_path / "pages.json"
+    marker = tmp_path / "pickle-executed"
+    cache_file.write_bytes(pickle.dumps(_UnsafePicklePayload(marker)))
+    monkeypatch.setattr("core.paper._cache_path", lambda: cache_file)
+    fake_pdf = _FakePDFPlumber()
+    monkeypatch.setattr("core.paper.pdfplumber", fake_pdf)
+    pdf = tmp_path / "fake.pdf"
+    pdf.write_bytes(b"%PDF-1.4 fake")
+
+    assert load_pdf_pages(pdf)[0].text == "CDW intrusion"
+    assert fake_pdf.open_count == 1
+    assert not marker.exists()
+    assert json.loads(cache_file.read_text(encoding="utf-8"))["version"] == 1
+
+
+def test_load_pdf_pages_rebuilds_structurally_invalid_json_cache(tmp_path, monkeypatch):
+    from core.paper import _pdf_fingerprint
+
+    cache_file = tmp_path / "pages.json"
+    monkeypatch.setattr("core.paper._cache_path", lambda: cache_file)
+    fake_pdf = _FakePDFPlumber()
+    monkeypatch.setattr("core.paper.pdfplumber", fake_pdf)
+    pdf = tmp_path / "fake.pdf"
+    pdf.write_bytes(b"%PDF-1.4 fake")
+    cache_file.write_text(json.dumps({
+        "version": 1,
+        "fingerprint": _pdf_fingerprint(pdf),
+        "x_tolerance": 1.5,
+        "y_tolerance": 3.0,
+        "pages": [{"page": 1}],
+    }), encoding="utf-8")
+
+    assert load_pdf_pages(pdf)[0].text == "CDW intrusion"
+    assert fake_pdf.open_count == 1
+    assert json.loads(cache_file.read_text(encoding="utf-8"))["pages"][0]["text"] == "CDW intrusion"
 
 
 def test_load_pdf_pages_missing_pdf_raises(tmp_path):

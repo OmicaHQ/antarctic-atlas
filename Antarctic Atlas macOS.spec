@@ -1,10 +1,16 @@
 # -*- mode: python ; coding: utf-8 -*-
 
+import os
 from pathlib import Path
 
 app_version = Path('VERSION').read_text(encoding='utf-8').strip()
+codesign_identity = os.environ.get('ANTARCTIC_ATLAS_CODESIGN_IDENTITY') or None
+entitlements_file = os.environ.get('ANTARCTIC_ATLAS_ENTITLEMENTS_FILE') or None
 
 datas = [
+    ('VERSION', '.'),
+    ('LICENSE', '.'),
+    ('THIRD_PARTY_NOTICES.md', '.'),
     ('antarctic_atlas.png', '.'),
     ('qt_app/templates', 'qt_app/templates'),
     ('locales', 'locales'),
@@ -56,8 +62,8 @@ exe = EXE(
     disable_windowed_traceback=False,
     argv_emulation=False,
     target_arch='arm64',
-    codesign_identity=None,
-    entitlements_file=None,
+    codesign_identity=codesign_identity,
+    entitlements_file=entitlements_file,
     icon='installer/antarctic_atlas.icns',
 )
 
@@ -80,7 +86,7 @@ app = BUNDLE(
         'CFBundleName': 'Antarctic Atlas',
         'CFBundleShortVersionString': app_version,
         'CFBundleVersion': app_version,
-        'LSMinimumSystemVersion': '13.0',
+        'LSMinimumSystemVersion': '15.0',
         'NSHighResolutionCapable': True,
         'NSPrincipalClass': 'NSApplication',
     },

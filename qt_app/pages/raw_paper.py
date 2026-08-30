@@ -2,13 +2,20 @@ from desktop_qt_app import *
 from PySide6.QtGui import QFontDatabase
 
 def _raw_paper_page(self):
+    subtitle = (
+        f"已从综述论文加载 {len(self.pages)} 个可读页面。"
+        if current_locale().startswith("zh")
+        else f"Loaded {len(self.pages)} readable pages from the review paper."
+    )
     page, layout = self._page_shell(
         "📄 Read Raw Paper",
-        f"Loaded {len(self.pages)} readable pages from the review paper.",
+        subtitle,
     )
     search_row = QHBoxLayout()
     self.paper_query = QLineEdit()
+    self.paper_query.setAccessibleName(translate_text("Paper search query"))
     self.paper_query.setPlaceholderText("Example: grounding line, basal melt, Thwaites")
+    self.paper_query.returnPressed.connect(self._search_paper)
     search_button = QPushButton("Search")
     search_button.clicked.connect(self._search_paper)
     search_row.addWidget(self.paper_query, 1)
@@ -51,9 +58,6 @@ def _raw_paper_page(self):
     self.paper_matches.setVisible(False)
     layout.addWidget(self.paper_matches)
 
-    self.paper_results = QListWidget()
-    self.paper_results.setObjectName("ResultsList")
-    self.paper_results.setVisible(False)
     self.paper_text_label = QLabel("Page 1")
     self.paper_text_label.setObjectName("SmallLabel")
     layout.addWidget(self.paper_text_label)
@@ -62,7 +66,6 @@ def _raw_paper_page(self):
     self.paper_text.setFont(QFontDatabase.systemFont(QFontDatabase.FixedFont))
     self.paper_text.setFontPointSize(10)
     self.paper_text.setMinimumHeight(600)
-    self.paper_results.currentRowChanged.connect(self._show_selected_paper_page)
     layout.addWidget(self.paper_text, 1)
     self.current_paper_pages = [self.pages[0]] if self.pages else []
     self._show_paper_page_number(1)
@@ -79,14 +82,15 @@ def _search_paper(self):
             self.paper_slider_card.setVisible(True)
         self._show_paper_page_number(self.paper_page_slider.value())
         return
-    raw_results = search_pages(self.pages, query, max_results=8)
+    raw_results = search_pages(self.pages, query, max_results=8, include_references=True)
     no_matches = not raw_results
     results = raw_results or self.pages[:1]
     if hasattr(self, "paper_slider_card"):
         self.paper_slider_card.setVisible(False)
     self.current_paper_pages = results
     self._populate_paper_match_combo(results)
-    self._populate_paper_results(self.current_paper_pages)
+    if results:
+        self._show_selected_paper_match(0)
     self._render_paper_matches(query, results, no_matches=no_matches)
 
 
@@ -99,7 +103,6 @@ def _show_paper_page_number(self, page_number):
     if hasattr(self, "paper_text_label"):
         self.paper_text_label.setText(f"Page {page.page}")
     self.current_paper_pages = [page]
-    self._populate_paper_results(self.current_paper_pages)
     self._render_paper_text(page)
 
 
@@ -147,36 +150,8 @@ def _show_selected_paper_match(self, index):
         self.paper_page_label.setText(f"Matching pages: Page {page.page}")
     if hasattr(self, "paper_text_label"):
         self.paper_text_label.setText(f"Page {page.page}")
-    if hasattr(self, "paper_results") and self.paper_results.currentRow() != index:
-        self.paper_results.blockSignals(True)
-        self.paper_results.setCurrentRow(index)
-        self.paper_results.blockSignals(False)
     if hasattr(self, "paper_text"):
         self._render_paper_text(page)
-
-
-def _populate_paper_results(self, pages):
-    self.paper_results.clear()
-    for page in pages:
-        excerpt = clean_text(page.text)[:90]
-        self.paper_results.addItem(f"Page {page.page}: {excerpt}...")
-    self.paper_results.setCurrentRow(0)
-
-
-def _show_selected_paper_page(self, row):
-    if row < 0 or row >= len(self.current_paper_pages):
-        return
-    page = self.current_paper_pages[row]
-    if hasattr(self, "paper_page_label"):
-        prefix = "Matching pages" if hasattr(self, "paper_match_card") and not self.paper_match_card.isHidden() else "Select page"
-        self.paper_page_label.setText(f"{prefix}: Page {page.page}")
-    if hasattr(self, "paper_text_label"):
-        self.paper_text_label.setText(f"Page {page.page}")
-    if hasattr(self, "paper_match_combo") and self.paper_match_combo.isVisible() and self.paper_match_combo.currentIndex() != row:
-        self.paper_match_combo.blockSignals(True)
-        self.paper_match_combo.setCurrentIndex(row)
-        self.paper_match_combo.blockSignals(False)
-    self._render_paper_text(page)
 
 
 def _render_paper_text(self, page):

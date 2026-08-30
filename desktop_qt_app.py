@@ -9,8 +9,8 @@ from pathlib import Path
 
 import requests
 import jieba
-from PySide6.QtCore import QEasingCurve, QObject, QPointF, QProcess, QPropertyAnimation, QRectF, QSize, Qt, QThread, QTimer, Signal, Slot
-from PySide6.QtGui import QBrush, QColor, QFont, QIcon, QLinearGradient, QPainter, QPainterPath, QPen, QPixmap, QPolygonF, QRadialGradient
+from PySide6.QtCore import QEasingCurve, QObject, QPointF, QProcess, QPropertyAnimation, QRectF, QSize, Qt, QThread, QTimer, QUrl, Signal, Slot
+from PySide6.QtGui import QAction, QBrush, QColor, QDesktopServices, QFont, QIcon, QLinearGradient, QPainter, QPainterPath, QPen, QPixmap, QPolygonF, QRadialGradient
 from PySide6.QtWebChannel import QWebChannel
 from PySide6.QtWebEngineWidgets import QWebEngineView
 from PySide6.QtWidgets import (
@@ -27,6 +27,7 @@ from PySide6.QtWidgets import (
     QListWidget,
     QListWidgetItem,
     QMainWindow,
+    QMessageBox,
     QProgressBar,
     QPushButton,
     QRadioButton,
@@ -56,11 +57,13 @@ from qt_app.config import (
 from qt_app.i18n import combo_current_key, current_locale, install_qt_i18n_hooks, localize_runtime_globals, localize_widget_tree, set_locale, t, translate_html, translate_text
 from core.data import load_data_json, resource_path
 from core.paper import (CHINESE_PAPER_KEYWORDS, build_search_excerpt, clean_answer_markdown, clean_text, extract_paper_keywords, extract_search_keywords, is_low_value_reference_page, is_overview_question, load_pdf_pages, scored_search_pages, scored_search_pages_by_keywords, search_pages)
+from core.version import app_version
 sys.modules.setdefault("desktop_qt_app", sys.modules[__name__])
 install_qt_i18n_hooks()
 
 
-APP_TITLE = "Antarctic Research Atlas"
+APP_TITLE = "Antarctic Atlas"
+APP_VERSION = app_version()
 TARGET_FRAME_RATE = 120
 FRAME_INTERVAL_MS = max(1, round(1000 / TARGET_FRAME_RATE))
 SLOW_ANIMATION_INTERVAL_MS = 33
@@ -92,9 +95,12 @@ class FunctionWorker(QThread):
 
     def run(self):
         try:
-            self.resultReady.emit(self.fn(*self.args, **self.kwargs))
+            result = self.fn(*self.args, **self.kwargs)
+            if not self.isInterruptionRequested():
+                self.resultReady.emit(result)
         except Exception as exc:
-            self.errorReady.emit(str(exc))
+            if not self.isInterruptionRequested():
+                self.errorReady.emit(str(exc))
 
 
 class StreamWorker(QThread):
@@ -110,9 +116,16 @@ class StreamWorker(QThread):
 
     def run(self):
         try:
-            self.resultReady.emit(self.fn(self.chunkReady.emit, *self.args, **self.kwargs))
+            def emit_chunk(piece):
+                if not self.isInterruptionRequested():
+                    self.chunkReady.emit(piece)
+
+            result = self.fn(emit_chunk, *self.args, **self.kwargs)
+            if not self.isInterruptionRequested():
+                self.resultReady.emit(result)
         except Exception as exc:
-            self.errorReady.emit(str(exc))
+            if not self.isInterruptionRequested():
+                self.errorReady.emit(str(exc))
 
 
 UNIVERSE_TOPIC_DETAILS = load_data_json("topics.json")
@@ -251,9 +264,11 @@ def original_universe_html(initial_focus_topic="", initial_focus_source="manual"
         'Click a sphere · Ask below · matched module auto-focuses here',
         html.escape(translate_text("Click a sphere · Ask below · matched module auto-focuses here")),
     )
+    # The group-display patch above runs first, so match its resulting
+    # expression when replacing the graph-level badge labels.
     template = template.replace(
-        '${d.level === 0 ? "Core system" : d.level === 1 ? "Research area" : safe(d.group)}',
-        '${d.level === 0 ? safe(data.labels.core_system || "Core system") : d.level === 1 ? safe(data.labels.research_area || "Research area") : safe(d.group)}',
+        '${d.level === 0 ? "Core system" : d.level === 1 ? "Research area" : safe(d.groupDisplay || d.group)}',
+        '${d.level === 0 ? safe(data.labels.core_system || "Core system") : d.level === 1 ? safe(data.labels.research_area || "Research area") : safe(d.groupDisplay || d.group)}',
     )
     template = template.replace('<div class="label">Key question</div>', '<div class="label">${safe(data.labels.key_question || "KEY QUESTION")}</div>')
     template = template.replace('<div class="label">Why it matters</div>', '<div class="label">${safe(data.labels.why_it_matters || "WHY IT MATTERS")}</div>')
@@ -2357,12 +2372,14 @@ class NativeAtlasWindow(QMainWindow):
         self._landing_progress_phase = 0
         self._landing_progress_cap = 82
         self._prepare_worker = None
+        self._shutting_down = False
         self._page_builders = []
         self._page_widgets = []
         self._stack_fade = None
         self._stack_fade_label = None
         self._entering_project = False
         self.setWindowTitle(t("app.title", APP_TITLE))
+        self.setMinimumSize(980, 680)
         icon_path = _application_icon_path()
         if icon_path.exists():
             self.setWindowIcon(QIcon(str(icon_path)))
@@ -2374,6 +2391,7 @@ class NativeAtlasWindow(QMainWindow):
         else:
             self.resize(1320, 860)
         self._build_ui()
+        self._build_app_menu()
         self._landing_progress_timer = QTimer(self)
         self._landing_progress_timer.setTimerType(Qt.PreciseTimer)
         self._landing_progress_timer.timeout.connect(self._tick_landing_progress)
@@ -2382,6 +2400,44 @@ class NativeAtlasWindow(QMainWindow):
 
     def _load_data(self):
         return load_pdf_pages(PDF_PATH)
+
+    def _build_app_menu(self):
+        is_zh = current_locale().startswith("zh")
+        app_menu = self.menuBar().addMenu("帮助" if is_zh else "Help")
+        about_action = QAction("关于 Antarctic Atlas" if is_zh else "About Antarctic Atlas", self)
+        about_action.triggered.connect(self._show_about_dialog)
+        releases_action = QAction("查看 GitHub Releases" if is_zh else "GitHub Releases", self)
+        releases_action.triggered.connect(
+            lambda: QDesktopServices.openUrl(QUrl("https://github.com/OmicaChow/antarctic-atlas/releases"))
+        )
+        issues_action = QAction("报告问题" if is_zh else "Report an Issue", self)
+        issues_action.triggered.connect(
+            lambda: QDesktopServices.openUrl(QUrl("https://github.com/OmicaChow/antarctic-atlas/issues"))
+        )
+        app_menu.addAction(about_action)
+        app_menu.addSeparator()
+        app_menu.addAction(releases_action)
+        app_menu.addAction(issues_action)
+
+    def _show_about_dialog(self):
+        is_zh = current_locale().startswith("zh")
+        if is_zh:
+            text = (
+                f"<h3>Antarctic Atlas {APP_VERSION}</h3>"
+                "<p>面向 Apple Silicon 的南极冰盖论文探索工具。</p>"
+                "<p>内置论文：Noble et al. (2020)，DOI 10.1029/2019RG000663，"
+                "按 Creative Commons Attribution License 提供。</p>"
+                "<p>纯证据模式不联网；选择在线 AI 服务时，问题和检索段落会发送给所选服务商。API 密钥仅保留在本次运行中。</p>"
+            )
+        else:
+            text = (
+                f"<h3>Antarctic Atlas {APP_VERSION}</h3>"
+                "<p>An Apple Silicon explorer for an Antarctic Ice Sheet review paper.</p>"
+                "<p>Included paper: Noble et al. (2020), DOI 10.1029/2019RG000663, "
+                "provided under the Creative Commons Attribution License.</p>"
+                "<p>Evidence-only mode stays offline. When an online AI provider is selected, the question and retrieved passages are sent to that provider. API keys remain in memory for this run only.</p>"
+            )
+        QMessageBox.about(self, "关于 Antarctic Atlas" if is_zh else "About Antarctic Atlas", text)
 
     def _build_ui(self):
         self.shell = QStackedWidget()
@@ -2454,7 +2510,7 @@ class NativeAtlasWindow(QMainWindow):
         self.landing_progress.setValue(int(self._landing_progress_value))
 
     def _prepare_main_app(self):
-        if self._main_ready or self._main_building:
+        if self._shutting_down or self._main_ready or self._main_building:
             return
         self._main_building = True
         try:
@@ -2473,6 +2529,8 @@ class NativeAtlasWindow(QMainWindow):
             self._on_prepare_failed(str(exc))
 
     def _on_pages_loaded(self, pages):
+        if self._shutting_down:
+            return
         self.pages = pages
         if hasattr(self, "landing_status"):
             self.landing_status.setText(t("landing.status.preparing_workspace", "Preparing interactive workspace..."))
@@ -2483,6 +2541,9 @@ class NativeAtlasWindow(QMainWindow):
         QTimer.singleShot(30, self._finish_prepare_main_app)
 
     def _finish_prepare_main_app(self):
+        if self._shutting_down:
+            self._main_building = False
+            return
         try:
             self.shell.addWidget(self._main_app())
             self._ensure_page_built(0)
@@ -2507,6 +2568,9 @@ class NativeAtlasWindow(QMainWindow):
             self._main_building = False
 
     def _on_prepare_failed(self, message):
+        if self._shutting_down:
+            self._main_building = False
+            return
         if hasattr(self, "_landing_progress_timer"):
             self._landing_progress_timer.stop()
         if hasattr(self, "landing_status"):
@@ -2588,6 +2652,7 @@ class NativeAtlasWindow(QMainWindow):
 
         self.nav = QListWidget()
         self.nav.setObjectName("Nav")
+        self.nav.setAccessibleName(t("nav.brand", "Navigation"))
         self.nav.setFixedWidth(220)
         self.nav_labels = [
             t("nav.research_universe", "Research Universe"),
@@ -2605,6 +2670,7 @@ class NativeAtlasWindow(QMainWindow):
         language_label = QLabel(t("nav.language", "Language"))
         language_label.setObjectName("SidebarCaption")
         self.language_combo = QComboBox()
+        self.language_combo.setAccessibleName(t("nav.language", "Language"))
         self.language_combo.addItem("English", "en")
         self.language_combo.addItem("中文", "zh")
         active_locale = "zh" if current_locale().startswith("zh") else "en"
@@ -2653,8 +2719,69 @@ class NativeAtlasWindow(QMainWindow):
             return
         set_locale(selected)
         restart_args = sys.argv if not getattr(sys, "frozen", False) else sys.argv[1:]
-        QProcess.startDetached(sys.executable, restart_args)
+        detached = QProcess.startDetached(sys.executable, restart_args)
+        started = bool(detached[0] if isinstance(detached, tuple) else detached)
+        if not started:
+            set_locale(active)
+            self.language_combo.blockSignals(True)
+            for index in range(self.language_combo.count()):
+                if self.language_combo.itemData(index) == active:
+                    self.language_combo.setCurrentIndex(index)
+                    break
+            self.language_combo.blockSignals(False)
+            QMessageBox.warning(
+                self,
+                "无法切换语言" if current_locale().startswith("zh") else "Language switch failed",
+                "无法重新启动 Antarctic Atlas，语言设置未更改。" if current_locale().startswith("zh") else "Antarctic Atlas could not restart, so the language setting was left unchanged.",
+            )
+            return
         QApplication.quit()
+
+    def _running_workers(self):
+        candidates = [getattr(self, "_prepare_worker", None)]
+        candidates.extend(getattr(self, "_universe_workers", []) or [])
+        running = []
+        seen = set()
+        for worker in candidates:
+            if worker is None or id(worker) in seen:
+                continue
+            seen.add(id(worker))
+            try:
+                if worker.isRunning():
+                    running.append(worker)
+            except RuntimeError:
+                continue
+        return running
+
+    def _shutdown_workers(self, timeout_ms=3000):
+        self._shutting_down = True
+        for timer in self.findChildren(QTimer):
+            timer.stop()
+        self._universe_answer_token = getattr(self, "_universe_answer_token", 0) + 1
+        self._universe_classifier_token = getattr(self, "_universe_classifier_token", 0) + 1
+        workers = self._running_workers()
+        for worker in workers:
+            worker.requestInterruption()
+        deadline = time.monotonic() + max(0, timeout_ms) / 1000
+        for worker in workers:
+            remaining_ms = max(0, int((deadline - time.monotonic()) * 1000))
+            try:
+                worker.wait(remaining_ms)
+            except RuntimeError:
+                continue
+        # A requests call can be blocked inside native networking code.  At
+        # process shutdown only, make the last resort explicit so Qt never
+        # destroys a live QThread and aborts the application.
+        for worker in self._running_workers():
+            try:
+                worker.terminate()
+                worker.wait(1000)
+            except RuntimeError:
+                continue
+
+    def closeEvent(self, event):
+        self._shutdown_workers()
+        super().closeEvent(event)
 
     def _lazy_page_placeholder(self, label):
         page = QWidget()
@@ -3341,11 +3468,13 @@ def _install_packaged_smoke_probe(app, window):
 def main():
     app = QApplication(sys.argv)
     app.setApplicationName(t("app.title", APP_TITLE))
+    app.setApplicationVersion(APP_VERSION)
     app.setOrganizationName("Omica Chow")
     icon_path = _application_icon_path()
     if icon_path.exists():
         app.setWindowIcon(QIcon(str(icon_path)))
     window = NativeAtlasWindow()
+    app.aboutToQuit.connect(window._shutdown_workers)
     window.show()
     window.raise_()
     window.activateWindow()

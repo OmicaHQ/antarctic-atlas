@@ -1,7 +1,7 @@
 # Native Apple Silicon macOS desktop runtime
 PySide6==6.10.3
-pdfplumber==0.11.8
+pdfplumber==0.11.10
 pypdfium2==5.9.0
-pdfminer.six==20251107
+pdfminer.six==20260107
 jieba==0.42.1
-requests==2.32.5
+requests==2.34.2

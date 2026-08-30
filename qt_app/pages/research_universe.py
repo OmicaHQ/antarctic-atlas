@@ -1,6 +1,13 @@
 from desktop_qt_app import *
 
-from core.ai import chat as ai_chat, classify as ai_classify, extract_backend_text
+from core.ai import (
+    chat as ai_chat,
+    classify as ai_classify,
+    extract_backend_text,
+    resolve_api_key,
+)
+from core.paper import extract_search_window
+from core.universe import match_topic
 
 def _u_zh():
     return current_locale().startswith("zh")
@@ -23,6 +30,9 @@ def _u_display_module(parent, topic):
 
 
 def _research_universe_page(self):
+    self._universe_saved_keys = {"DeepSeek API": "", "OpenAI API": ""}
+    self._universe_draft_keys = {"DeepSeek API": "", "OpenAI API": ""}
+    self._universe_key_field_backend = ""
     page, layout = self._page_shell(
         "🌌 Research Universe Explorer",
         "",
@@ -52,6 +62,7 @@ def _research_universe_page(self):
     backend_label = QLabel("AI Backend")
     backend_label.setObjectName("SmallLabel")
     self.universe_backend = QComboBox()
+    self.universe_backend.setAccessibleName(_u_text("AI backend", "AI 后端"))
     self.universe_backend.addItems(["Evidence only", "Local Ollama", "DeepSeek API", "OpenAI API"])
     self.universe_backend.currentTextChanged.connect(self._update_universe_backend_controls)
     self.universe_backend_info = QLabel(_u_text(
@@ -63,18 +74,22 @@ def _research_universe_page(self):
     self.universe_model_label = QLabel("Model")
     self.universe_model_label.setObjectName("SmallLabel")
     self.universe_model_combo = QComboBox()
+    self.universe_model_combo.setAccessibleName(_u_text("AI model", "AI 模型"))
     self.universe_model_combo.currentTextChanged.connect(self._on_universe_model_changed)
-    self.universe_api_label = QLabel("API settings")
+    self.universe_api_label = QLabel(_u_text("API key (this session only)", "API 密钥（仅本次运行）"))
     self.universe_api_label.setObjectName("SmallLabel")
     self.universe_api_key = QLineEdit()
+    self.universe_api_key.setAccessibleName(_u_text("Provider API key for this session", "本次运行使用的服务商 API 密钥"))
     self.universe_api_key.setEchoMode(QLineEdit.Password)
     self.universe_api_key.setPlaceholderText("sk-...")
     self.universe_api_key.textChanged.connect(lambda _text: self._show_current_universe_connection_status())
-    self.universe_save_key = QPushButton("Save & Test Connection")
+    self.universe_save_key = QPushButton(_u_text("Use & Test Connection", "本次会话使用并测试"))
     self.universe_save_key.clicked.connect(self._test_universe_backend_connection)
     question_label = QLabel(_u_text("Ask a question about the Antarctic Ice Sheet review paper:", "询问有关南极冰盖综述论文的问题："))
+    question_label.setObjectName("SmallLabel")
     question_label.setWordWrap(True)
     self.universe_search = QLineEdit()
+    self.universe_search.setAccessibleName(_u_text("Research question", "研究问题"))
     self.universe_search.setPlaceholderText(_u_text("Example: Why is grounding line retreat important?", "示例：为什么接地线后退很重要？"))
     self.universe_focus_button = QPushButton("Search evidence")
     self.universe_focus_button.clicked.connect(self._focus_universe_topic)
@@ -142,13 +157,13 @@ def _research_universe_page(self):
     self.universe_answer.setVisible(False)
     layout.addWidget(self.universe_answer)
 
-    self._universe_saved_keys = {"DeepSeek API": "", "OpenAI API": ""}
     self._universe_answer_worker = None
     self._universe_test_worker = None
     self._universe_classifier_worker = None
     self._universe_workers = []
     self._universe_answer_token = 0
     self._universe_classifier_token = 0
+    self._universe_test_token = 0
     self._ollama_auto_test_started = False
     self._universe_type_timer = QTimer(self)
     self._universe_type_timer.setInterval(18)
@@ -230,18 +245,24 @@ def _show_current_universe_connection_status(self):
             "纯证据模式已启用。问题使用本地证据检索，不调用 AI 模型。",
         ), "neutral")
         return
-    typed_key = self.universe_api_key.text().strip() if backend in ["DeepSeek API", "OpenAI API"] and hasattr(self, "universe_api_key") else ""
+    typed_key = (
+        self.universe_api_key.text().strip()
+        if backend in ["DeepSeek API", "OpenAI API"]
+        and getattr(self, "_universe_key_field_backend", "") == backend
+        and hasattr(self, "universe_api_key")
+        else ""
+    )
     saved_key = getattr(self, "_universe_saved_keys", {}).get(backend, "") if backend in ["DeepSeek API", "OpenAI API"] else ""
     if backend in ["DeepSeek API", "OpenAI API"] and not self._universe_api_key(backend):
         self._set_universe_backend_info(_u_text(
-            f"{backend} / {model}: enter your API key, then Save & Test to enable AI module matching.",
-            f"{backend} / {model}：请输入 API 密钥，然后保存并测试以启用 AI 模块匹配。",
+            f"{backend} / {model}: enter your API key, then Use & Test to enable AI module matching.",
+            f"{backend} / {model}：请输入 API 密钥，然后在本次会话中使用并测试，以启用 AI 模块匹配。",
         ), "neutral")
         return
     if backend in ["DeepSeek API", "OpenAI API"] and typed_key and typed_key != saved_key:
         self._set_universe_backend_info(_u_text(
-            f"{backend} / {model}: key entered but not saved. Requests can run now; Save & Test verifies and stores it for this session.",
-            f"{backend} / {model}：密钥已输入但尚未保存。现在也可以直接请求；保存并测试会验证连接并在本次会话中保存。",
+            f"{backend} / {model}: key entered for this provider. Use & Test verifies it for this session.",
+            f"{backend} / {model}：已为当前服务商输入密钥。使用并测试会在本次会话中验证它。",
         ), "testing")
         return
     status = self._current_universe_connection_status(backend, model)
@@ -262,8 +283,8 @@ def _show_current_universe_connection_status(self):
         ), "failed")
     else:
         self._set_universe_backend_info(_u_text(
-            f"{backend} / {model}: key saved. Run Save & Test once to verify the connection.",
-            f"{backend} / {model}：密钥已保存。请运行一次保存并测试来验证连接。",
+            f"{backend} / {model}: a session or environment key is available. Run Use & Test to verify the connection.",
+            f"{backend} / {model}：本次会话或环境变量中已有密钥。请运行“使用并测试”来验证连接。",
         ), "neutral")
 
 
@@ -275,6 +296,7 @@ def _update_universe_backend_controls(self):
     if not hasattr(self, "universe_backend"):
         return
     backend = combo_current_key(self.universe_backend)
+    _activate_universe_backend(self, backend)
     model_options = []
     if backend == "Local Ollama":
         model_options = [OLLAMA_MODEL]
@@ -283,13 +305,13 @@ def _update_universe_backend_controls(self):
             f"已选择本地 Ollama。当前本地模型：{OLLAMA_MODEL}。连接状态尚未测试。",
         )
     elif backend == "DeepSeek API":
-        model_options = [DEEPSEEK_MODEL, "deepseek-v4-flash", "deepseek-chat", "deepseek-reasoner"]
+        model_options = [DEEPSEEK_MODEL, "deepseek-v4-flash"]
         configured = bool(os.environ.get("DEEPSEEK_API_KEY") or self._universe_saved_keys.get("DeepSeek API", ""))
-        status = _u_text("DeepSeek API key is saved. Save & Test verifies the connection.", "DeepSeek API 密钥已保存。保存并测试会验证连接。") if configured else _u_text("DeepSeek API key is not configured.", "DeepSeek API 密钥尚未配置。")
+        status = _u_text("A DeepSeek key is available for this session. Use & Test verifies the connection.", "本次会话已有 DeepSeek 密钥。使用并测试会验证连接。") if configured else _u_text("DeepSeek API key is not configured.", "DeepSeek API 密钥尚未配置。")
     elif backend == "OpenAI API":
         model_options = OPENAI_MODEL_OPTIONS or [OPENAI_MODEL]
         configured = bool(os.environ.get("OPENAI_API_KEY") or self._universe_saved_keys.get("OpenAI API", ""))
-        status = _u_text("OpenAI API key is saved. Save & Test verifies the connection.", "OpenAI API 密钥已保存。保存并测试会验证连接。") if configured else _u_text("OpenAI API key is not configured.", "OpenAI API 密钥尚未配置。")
+        status = _u_text("An OpenAI key is available for this session. Use & Test verifies the connection.", "本次会话已有 OpenAI 密钥。使用并测试会验证连接。") if configured else _u_text("OpenAI API key is not configured.", "OpenAI API 密钥尚未配置。")
     else:
         status = _u_text(
             "Evidence-only mode is active. Questions will focus the map and retrieve relevant passages without calling an AI API.",
@@ -308,19 +330,96 @@ def _update_universe_backend_controls(self):
     needs_key = backend in ["DeepSeek API", "OpenAI API"]
     for widget in [self.universe_api_label, self.universe_api_key]:
         widget.setVisible(needs_key)
+    self._switch_universe_key_field(backend)
     self.universe_save_key.setVisible(backend != "Evidence only")
     if backend == "Local Ollama":
         self.universe_save_key.setText("Test Local Ollama")
     elif backend == "DeepSeek API":
-        self.universe_save_key.setText("Save & Test DeepSeek")
+        self.universe_save_key.setText(_u_text("Use & Test DeepSeek", "使用并测试 DeepSeek"))
     else:
-        self.universe_save_key.setText("Save & Test OpenAI")
+        self.universe_save_key.setText(_u_text("Use & Test OpenAI", "使用并测试 OpenAI"))
     self._show_current_universe_connection_status()
     if backend == "Local Ollama":
         QTimer.singleShot(100, self._auto_test_ollama_if_needed)
 
 
+def _activate_universe_backend(self, backend):
+    """Make a provider switch an explicit cancellation and result boundary."""
+
+    previous = getattr(self, "_universe_active_backend", None)
+    if previous is not None and previous != backend:
+        _invalidate_universe_backend_work(self)
+    self._universe_active_backend = backend
+
+
+def _invalidate_universe_backend_work(self):
+    """Interrupt provider work and reject any result already queued for the UI."""
+
+    self._universe_answer_token = getattr(self, "_universe_answer_token", 0) + 1
+    self._universe_classifier_token = getattr(self, "_universe_classifier_token", 0) + 1
+    self._universe_test_token = getattr(self, "_universe_test_token", 0) + 1
+
+    had_answer = getattr(self, "_universe_answer_worker", None) is not None
+    had_classifier = getattr(self, "_universe_classifier_worker", None) is not None
+    seen = set()
+    for attribute in [
+        "_universe_answer_worker",
+        "_universe_classifier_worker",
+        "_universe_test_worker",
+    ]:
+        worker = getattr(self, attribute, None)
+        if worker is not None and id(worker) not in seen:
+            seen.add(id(worker))
+            try:
+                if worker.isRunning():
+                    worker.requestInterruption()
+            except RuntimeError:
+                pass
+        setattr(self, attribute, None)
+
+    for status in getattr(self, "_universe_connection_status", {}).values():
+        if status.get("state") == "testing":
+            status.update(state="unknown", message="")
+
+    if hasattr(self, "universe_focus_button"):
+        self.universe_focus_button.setEnabled(True)
+    if hasattr(self, "universe_save_key"):
+        self.universe_save_key.setEnabled(True)
+    if hasattr(self, "universe_answer_progress"):
+        self.universe_answer_progress.setRange(0, 100)
+        self.universe_answer_progress.setVisible(False)
+    if had_classifier and hasattr(self, "universe_evidence"):
+        self.universe_evidence.setVisible(False)
+    if had_answer and hasattr(self, "universe_answer"):
+        self.universe_answer.setVisible(False)
+    if hasattr(self, "_set_universe_work_status"):
+        self._set_universe_work_status("", False)
+
+
+def _switch_universe_key_field(self, backend):
+    if not hasattr(self, "universe_api_key"):
+        return
+    previous = getattr(self, "_universe_key_field_backend", "")
+    if previous in ["DeepSeek API", "OpenAI API"]:
+        self._universe_draft_keys[previous] = self.universe_api_key.text().strip()
+    self._universe_key_field_backend = backend if backend in ["DeepSeek API", "OpenAI API"] else ""
+    value = ""
+    if self._universe_key_field_backend:
+        value = (
+            self._universe_draft_keys.get(backend, "")
+            or self._universe_saved_keys.get(backend, "")
+        )
+    self.universe_api_key.blockSignals(True)
+    self.universe_api_key.setText(value)
+    self.universe_api_key.setPlaceholderText(
+        "DeepSeek API key" if backend == "DeepSeek API" else "OpenAI API key"
+    )
+    self.universe_api_key.blockSignals(False)
+
+
 def _auto_test_ollama_if_needed(self):
+    if getattr(self, "_shutting_down", False):
+        return
     if not hasattr(self, "universe_backend") or not hasattr(self, "universe_model_combo"):
         return
     if combo_current_key(self.universe_backend) != "Local Ollama":
@@ -335,11 +434,16 @@ def _auto_test_ollama_if_needed(self):
         f"本地 Ollama / {model}：正在自动检查本地模型...",
     ))
     self._show_current_universe_connection_status()
+    self._universe_test_token += 1
+    token = self._universe_test_token
     worker = FunctionWorker(self._test_universe_backend_connection_sync, "Local Ollama", model, "")
     self._universe_test_worker = worker
-    worker.resultReady.connect(self._finish_universe_backend_test)
+    worker.resultReady.connect(
+        lambda result, token=token: self._finish_universe_backend_test(token, result)
+    )
     worker.errorReady.connect(
-        lambda message, model=model: self._finish_universe_backend_test(
+        lambda message, token=token, model=model: self._finish_universe_backend_test(
+            token,
             {"ok": False, "backend": "Local Ollama", "model": model, "message": _u_text(
                 f"Local Ollama / {model}: automatic check failed. {message}",
                 f"本地 Ollama / {model}：自动检查失败。{message}",
@@ -356,10 +460,18 @@ def _test_universe_backend_connection(self):
     backend = combo_current_key(self.universe_backend) if hasattr(self, "universe_backend") else "Evidence only"
     if backend == "Evidence only":
         return
-    key = self.universe_api_key.text().strip()
+    key = (
+        self.universe_api_key.text().strip()
+        if getattr(self, "_universe_key_field_backend", "") == backend
+        else ""
+    )
     needs_key = backend in ["DeepSeek API", "OpenAI API"]
     saved_key = getattr(self, "_universe_saved_keys", {}).get(backend, "")
-    env_key = os.environ.get("DEEPSEEK_API_KEY" if backend == "DeepSeek API" else "OPENAI_API_KEY")
+    env_key = ""
+    if backend == "DeepSeek API":
+        env_key = os.environ.get("DEEPSEEK_API_KEY", "")
+    elif backend == "OpenAI API":
+        env_key = os.environ.get("OPENAI_API_KEY", "")
     if needs_key and not key and not saved_key and not env_key:
         self._set_universe_backend_info(_u_text(
             f"{backend}: enter an API key first, or set the matching environment variable.",
@@ -368,21 +480,27 @@ def _test_universe_backend_connection(self):
         return
     if needs_key and key:
         self._universe_saved_keys[backend] = key
-    active_key = key or saved_key or env_key or ""
+        self._universe_draft_keys[backend] = key
+    active_key = (key or saved_key or env_key or "") if needs_key else ""
     model = combo_current_key(self.universe_model_combo) if hasattr(self, "universe_model_combo") else ""
-    verb = "key saved; testing connection" if needs_key else "testing local connection"
-    zh_verb = "密钥已保存，正在测试连接" if needs_key else "正在测试本地连接"
+    verb = "using the key for this session; testing connection" if needs_key else "testing local connection"
+    zh_verb = "正在本次会话中使用该密钥并测试连接" if needs_key else "正在测试本地连接"
     self._set_universe_connection_status(backend, model, "testing", _u_text(
         f"{backend} / {model}: {verb}...",
         f"{backend} / {model}：{zh_verb}...",
     ))
     self._show_current_universe_connection_status()
     self.universe_save_key.setEnabled(False)
+    self._universe_test_token += 1
+    token = self._universe_test_token
     worker = FunctionWorker(self._test_universe_backend_connection_sync, backend, model, active_key)
     self._universe_test_worker = worker
-    worker.resultReady.connect(self._finish_universe_backend_test)
+    worker.resultReady.connect(
+        lambda result, token=token: self._finish_universe_backend_test(token, result)
+    )
     worker.errorReady.connect(
-        lambda message, backend=backend, model=model: self._finish_universe_backend_test(
+        lambda message, token=token, backend=backend, model=model: self._finish_universe_backend_test(
+            token,
             {"ok": False, "backend": backend, "model": model, "message": _u_text(
                 f"{backend} / {model}: request failed. {message}",
                 f"{backend} / {model}：请求失败。{message}",
@@ -424,7 +542,12 @@ def _test_universe_backend_connection_sync(self, backend, model, api_key=""):
     )}
 
 
-def _finish_universe_backend_test(self, result):
+def _finish_universe_backend_test(self, token, result):
+    if (
+        getattr(self, "_shutting_down", False)
+        or token != getattr(self, "_universe_test_token", 0)
+    ):
+        return
     if isinstance(result, str):
         backend = combo_current_key(self.universe_backend)
         model = combo_current_key(self.universe_model_combo) if hasattr(self, "universe_model_combo") else ""
@@ -461,15 +584,13 @@ def _worker_is_running(self, worker):
 
 
 def _universe_api_key(self, backend):
-    if backend == "DeepSeek API":
-        saved_keys = getattr(self, "_universe_saved_keys", {})
-        typed_key = self.universe_api_key.text().strip() if hasattr(self, "universe_api_key") else ""
-        return (typed_key or saved_keys.get("DeepSeek API") or os.environ.get("DEEPSEEK_API_KEY", "")).strip()
-    if backend == "OpenAI API":
-        saved_keys = getattr(self, "_universe_saved_keys", {})
-        typed_key = self.universe_api_key.text().strip() if hasattr(self, "universe_api_key") else ""
-        return (typed_key or saved_keys.get("OpenAI API") or os.environ.get("OPENAI_API_KEY", "")).strip()
-    return ""
+    typed_key = self.universe_api_key.text() if hasattr(self, "universe_api_key") else ""
+    return resolve_api_key(
+        backend,
+        typed_backend=getattr(self, "_universe_key_field_backend", ""),
+        typed_key=typed_key,
+        session_keys=getattr(self, "_universe_saved_keys", {}),
+    )
 
 
 def _universe_model(self, backend):
@@ -525,10 +646,7 @@ def _classify_universe_topic_with_backend(self, question, backend, api_key="", m
     return ai_classify(question, allowed, backend, model=model or None, api_key=api_key)
 
 
-def _stream_universe_answer(self, on_chunk, backend, topic, query, scored_pages, display, api_key="", model=""):
-    passages = []
-    for score, page in scored_pages[:4]:
-        passages.append({"page": page.page, "text": clean_text(page.text)[:1200], "score": score})
+def _stream_universe_answer(self, on_chunk, backend, topic, query, passages, display, api_key="", model=""):
     context = "\n\n".join([f"Excerpt {index + 1}:\n{item['text']}" for index, item in enumerate(passages)])
     if not context:
         context = "No retrieved paper excerpts were available. Say that no passages were retrieved and ask the user to try a more specific research term."
@@ -606,45 +724,17 @@ def _focus_universe_topic(self):
     query = raw_query.lower()
     if not query:
         return
-    best_name = "Antarctic Ice Sheet"
-    best_score = 0
-    tokens = re.findall(r"[a-zA-Z]{3,}", query)
-    for name in self.topic_names:
-        haystack = name.lower()
-        parent = next((area.lower() for area, meta in RESEARCH_AREAS.items() if name in meta["topics"]), "")
-        detail = ""
-        is_leaf = False
-        for area_name, meta in RESEARCH_AREAS.items():
-            if name in meta["topics"]:
-                detail = meta["topics"][name].lower()
-                is_leaf = True
-                break
-            if name == area_name:
-                detail = f"{meta['question']} {meta['why']}".lower()
-        score = 0
-        if name in UNIVERSE_TOPIC_KEYWORDS:
-            for keyword in UNIVERSE_TOPIC_KEYWORDS[name]:
-                kw = keyword.lower()
-                if kw in query:
-                    score += max(6, min(16, len(kw) // 2)) if is_leaf else max(3, min(9, len(kw) // 3))
-                else:
-                    for part in re.findall(r"[a-zA-Z]{4,}", kw):
-                        if part in tokens:
-                            score += 2 if is_leaf else 1
-        for token in tokens:
-            if token in haystack:
-                score += 3 if is_leaf else 1
-            if token in detail:
-                score += 2 if is_leaf else 1
-            if token in parent:
-                score += 1
-        if haystack in query:
-            score += 6 if is_leaf else 2
-        if is_leaf and score >= 4:
-            score += 2
-        if score > best_score:
-            best_name = name
-            best_score = score
+    topic_context = {"Antarctic Ice Sheet": "Antarctic climate ice sheet"}
+    for area_name, meta in RESEARCH_AREAS.items():
+        topic_context[area_name] = f"{meta['question']} {meta['why']}"
+        for name, detail in meta["topics"].items():
+            topic_context[name] = f"{area_name} {detail}"
+    best_name, best_score = match_topic(
+        raw_query,
+        self.topic_names,
+        topic_keywords=UNIVERSE_TOPIC_KEYWORDS,
+        topic_context=topic_context,
+    )
     backend = combo_current_key(self.universe_backend) if hasattr(self, "universe_backend") else "Evidence only"
     source = "keyword_fallback"
     if backend != "Evidence only":
@@ -712,7 +802,7 @@ def _start_universe_ai_classification(self, raw_query, backend, fallback_name, f
 
 
 def _finish_universe_ai_classification(self, token, backend, raw_query, fallback_name, fallback_score, result):
-    if token != self._universe_classifier_token:
+    if getattr(self, "_shutting_down", False) or token != self._universe_classifier_token:
         return
     self.universe_focus_button.setEnabled(True)
     self.universe_answer_progress.setRange(0, 100)
@@ -743,7 +833,7 @@ def _finish_universe_ai_classification(self, token, backend, raw_query, fallback
 
 
 def _fail_universe_ai_classification(self, token, backend, raw_query, fallback_name, fallback_score, message):
-    if token != self._universe_classifier_token:
+    if getattr(self, "_shutting_down", False) or token != self._universe_classifier_token:
         return
     self.universe_focus_button.setEnabled(True)
     self.universe_answer_progress.setRange(0, 100)
@@ -797,15 +887,13 @@ def _render_universe_context(self, topic, query="", best_score=0, classifier_sou
         ]
         scored_pages = (intro_pages + useful_matches)[:5]
     snippets = []
+    retrieved_passages = []
     for score, page in scored_pages:
-        cleaned = clean_text(page.text)
-        first_word = (search_query.split() or [topic])[0].lower()
-        hit = cleaned.lower().find(first_word)
-        if hit < 0:
-            hit = 0
-        excerpt = html.escape(cleaned[max(0, hit - 260): hit + 1340])
+        excerpt_text = extract_search_window(page.text, paper_keywords, radius=650)
+        retrieved_passages.append({"page": page.page, "text": excerpt_text, "score": score})
+        excerpt = html.escape(excerpt_text)
         page_label = _u_text(f"PAGE {page.page} | SCORE {score}", f"第 {page.page} 页 | 匹配分 {score}")
-        snippets.append(f'<div class="ios-result-card"><div class="ios-kicker">{html.escape(page_label)}</div><p>{excerpt}...</p></div>')
+        snippets.append(f'<div class="ios-result-card"><div class="ios-kicker">{html.escape(page_label)}</div><p>{excerpt}</p></div>')
     display = _u_display_module(parent, topic)
     match_note = _u_text(
         "Evidence-only mode used keyword matching.",
@@ -857,7 +945,7 @@ def _render_universe_context(self, topic, query="", best_score=0, classifier_sou
                 backend,
                 topic,
                 query or topic_text or topic,
-                scored_pages,
+                retrieved_passages[:4],
                 display,
                 answer_api_key,
                 model,
@@ -885,7 +973,7 @@ def _render_universe_context(self, topic, query="", best_score=0, classifier_sou
 
 
 def _append_universe_answer_chunk(self, token, piece):
-    if token != self._universe_answer_token:
+    if getattr(self, "_shutting_down", False) or token != self._universe_answer_token:
         return
     self._universe_stream_answer += str(piece)
     if hasattr(self, "universe_answer"):
@@ -894,7 +982,7 @@ def _append_universe_answer_chunk(self, token, piece):
 
 
 def _finish_universe_stream_answer(self, token, backend, answer):
-    if token != self._universe_answer_token:
+    if getattr(self, "_shutting_down", False) or token != self._universe_answer_token:
         return
     if answer and not self._universe_stream_answer:
         self._universe_stream_answer = answer
@@ -920,7 +1008,7 @@ def _stop_universe_answer_typewriter(self, clear=True):
 
 
 def _fail_universe_answer(self, token, backend, message):
-    if token != self._universe_answer_token:
+    if getattr(self, "_shutting_down", False) or token != self._universe_answer_token:
         return
     self._stop_universe_answer_typewriter()
     self.universe_answer_progress.setRange(0, 100)

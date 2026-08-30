@@ -64,3 +64,4 @@ def test_zh_standalone_labels_still_translate(zh_locale):
     assert zh_locale.translate_text("Compass") == "罗盘"
     assert zh_locale.translate_text("Key gap") == "关键缺口"
     assert zh_locale.translate_text("OBSERVATION") == "观测"
+    assert zh_locale.translate_text("Altimetry") == "测高"

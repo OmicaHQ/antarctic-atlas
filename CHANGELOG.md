@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to Antarctic Research Atlas are documented here.
+All notable changes to Antarctic Atlas are documented here.
 
 ## Version Line Summary
 
@@ -10,11 +10,42 @@ All notable changes to Antarctic Research Atlas are documented here.
 - `v3.1`: Unified bilingual desktop phase. Consolidates English and Chinese into one app with in-app switching and broader i18n coverage.
 - `v3.2`: Apple Silicon macOS phase. Adds a native arm64 package, macOS paths and assets, reproducible release tooling, and a Mac-focused source tree.
 
+## v3.2.1 - Stable Apple Silicon Release
+
+### Added
+
+- Added an in-app About panel with the running version, paper attribution, privacy boundary, and links to Releases and Issues.
+- Added bundled project and third-party license notices.
+- Added regression coverage for provider-scoped credentials, bilingual topic matching, reference-section detection, safe cache handling, match-centered excerpts, Mini Lab physics, exports, raw-paper search, visible synthesis, and worker shutdown.
+
+### Fixed
+
+- Prevented a DeepSeek key typed in the shared credential field from being reused for OpenAI, and vice versa. Keys remain provider-scoped and in memory only for the current run.
+- Made AI-provider changes interrupt active workers and invalidate queued classification, answer, and connection-test results. Local Ollama no longer reads or carries online-provider credentials.
+- Fixed the shutdown crash caused by destroying a still-running Qt worker during app close, language restart, or an active AI request.
+- Restored Chinese Evidence-only matching for grounding-line retreat, ice-shelf basal melt, CDW intrusion, GRACE, and other graph topics.
+- Replaced the citation-count heuristic that incorrectly treated most review-paper body pages as references. The bundled paper now keeps science pages through page 63 and excludes the pure References section on pages 64–89 from evidence retrieval.
+- Centered both visible evidence and AI context on the strongest keyword cluster instead of the first word or top of a page.
+- Corrected the Mini Lab surface-temperature response so warming increases conceptual melt pressure, and corrected the snowfall display to use the same units as the calculation.
+- Made all Mini Lab diagnoses visible, restored the Antarctic System summary card, enabled Return-to-search in Raw Paper, and made proposal export report write failures.
+- Fixed the dark-theme Research Copilot question label, the Chinese knowledge-graph `Core system` label, and the remaining English Altimetry label in the Chinese System summary.
+- Removed discontinued DeepSeek model choices and constrained malformed AI classifier confidence values.
+- Replaced executable pickle paper caches with validated, atomic JSON caches.
+
+### Release hardening
+
+- Updated `pdfplumber`, `pdfminer.six`, and `requests` to patched versions and added isolated dependency checks to the build.
+- Corrected the packaged minimum requirement to macOS 15 after inspecting every bundled Mach-O deployment target.
+- Added build-time checks for arm64 architecture, signature integrity, Mach-O minimum versions, extracted-archive integrity, and packaged cold start.
+- Preserved an explicitly configured Developer ID identity instead of overwriting it with an ad-hoc signature. The current public build remains transparently identified as ad-hoc signed and not notarized because no Developer ID identity is installed on the build Mac.
+
 ## v3.2.0 - Apple Silicon macOS Support
 
 ### Added
 
-- Added a native Apple Silicon (`arm64`) application bundle for macOS 13 or later.
+- Added a native Apple Silicon (`arm64`) application bundle. This preview was
+  initially documented for macOS 13; v3.2.1 later corrected the actual bundled
+  runtime requirement to macOS 15.
 - Added the macOS PyInstaller spec, native `.icns` icon, external-cache development environment, reproducible setup/build scripts, and SHA-256 release artifact.
 - Added macOS-native settings and paper-cache locations under the user's Library folders.
 - Added source and packaged smoke tests that parse all 89 paper pages and construct all six modules without making an external AI request.

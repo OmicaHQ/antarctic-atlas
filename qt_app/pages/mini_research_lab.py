@@ -1,4 +1,5 @@
 from desktop_qt_app import *
+from core.simulation import glacier_surface_melt_pressure
 
 
 def _lab_zh():
@@ -100,6 +101,7 @@ def _mini_lab_page(self):
         value_label.setObjectName("SliderValue")
         value_label.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
         slider = QSlider(Qt.Horizontal)
+        slider.setAccessibleName(_lab_text(label))
         slider.setRange(minimum, maximum)
         slider.setValue(value)
         slider.valueChanged.connect(self._update_lab)
@@ -132,8 +134,8 @@ def _mini_lab_page(self):
 
     self.lab_diagnosis = QTextBrowser()
     self.lab_diagnosis.setObjectName("KnowledgeCard")
-    self.lab_diagnosis.setMaximumHeight(86)
-    self.lab_diagnosis.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+    self.lab_diagnosis.setMaximumHeight(150)
+    self.lab_diagnosis.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
     layout.addWidget(self.lab_diagnosis)
 
     self.lab_canvas = LabCanvasWidget()
@@ -160,7 +162,7 @@ def _mini_lab_page(self):
 def _format_lab_control_value(self, label, value):
     if label == "Simulation Year":
         return str(value)
-    if "Temperature" in label or "Forcing (°C)" in label or "Slope" in label:
+    if "Temperature" in label or "Forcing (°C)" in label or "Slope" in label or "Snowfall" in label:
         return f"{value / 10:.1f}"
     if "Friction" in label:
         return f"{value / 100:.2f}"
@@ -224,12 +226,20 @@ def _update_lab(self):
             ("Grounding Line Retreat", f"{retreat:.1f} km", "Retreat proxy"),
             ("Sea Level Contribution", f"{sea_level:.2f} m", "Scenario signal"),
         ]
-        diagnosis = (
-            "<p><b>How to read this lab:</b> thick, laterally confined, pinned shelves push blue back-stress arrows "
-            "against grounded ice; thinning, calving, warm ocean forcing, or weak pinning reduce support.<br>"
-            f"<b>Current diagnosis:</b> buttressing is {buttressing:.0f}/100, with about {velocity_myr:.0f} m/yr "
-            f"of conceptual ice speed and {retreat:.1f} km of retreat pressure.</p>"
-        )
+        if _lab_zh():
+            diagnosis = (
+                "<p><b>阅读方法：</b>较厚、受侧向约束并被固定点牵制的冰架，会以蓝色背应力箭头"
+                "支撑陆地冰；变薄、崩解、暖海水强迫或固定作用减弱都会降低支撑。<br>"
+                f"<b>当前诊断：</b>支撑指数为 {buttressing:.0f}/100，概念性冰流速度约为 "
+                f"{velocity_myr:.0f} m/yr，后退压力为 {retreat:.1f} km。</p>"
+            )
+        else:
+            diagnosis = (
+                "<p><b>How to read this lab:</b> thick, laterally confined, pinned shelves push blue back-stress arrows "
+                "against grounded ice; thinning, calving, warm ocean forcing, or weak pinning reduce support.<br>"
+                f"<b>Current diagnosis:</b> buttressing is {buttressing:.0f}/100, with about {velocity_myr:.0f} m/yr "
+                f"of conceptual ice speed and {retreat:.1f} km of retreat pressure.</p>"
+            )
     elif experiment == "Hydrofracture & Ice Shelf Collapse Lab":
         surface_melt = slider(0)
         firn = slider(1)
@@ -306,7 +316,7 @@ def _update_lab(self):
             )
     else:
         year = slider(0)
-        air_temp = slider(1)
+        air_temp = slider(1) / 10
         ocean = slider(2) / 10
         snowfall = slider(3) / 10
         shelf = slider(4)
@@ -332,12 +342,14 @@ def _update_lab(self):
             velocity_strength *= 1.45
         if shelf_collapse:
             velocity_strength *= 1.35
-        ice_loss = ((abs(air_temp) * 0.04 + max(effective_ocean, 0) * 2.6) * (1.25 - friction * 0.65) / (snowfall + 0.5))
+        surface_melt_pressure = glacier_surface_melt_pressure(air_temp)
+        ice_loss = ((surface_melt_pressure + max(effective_ocean, 0) * 2.6) * (1.25 - friction * 0.65) / (snowfall + 0.5))
         velocity = velocity_strength * 1.8
         sea_level = retreat * 0.013
         values = {
             "year": year,
             "air_temp": air_temp,
+            "surface_melt_pressure": surface_melt_pressure,
             "ocean": ocean,
             "snowfall": snowfall,
             "shelf": shelf,
@@ -361,26 +373,33 @@ def _update_lab(self):
         ]
         active_flags = []
         if misi_on:
-            active_flags.append("MISI feedback")
+            active_flags.append(_lab_text("MISI feedback", "MISI 反馈"))
         if shelf_collapse:
-            active_flags.append("ice-shelf collapse")
+            active_flags.append(_lab_text("ice-shelf collapse", "冰架崩解"))
         if cdw_intrusion:
-            active_flags.append("CDW warm-water intrusion")
-        flags = ", ".join(active_flags) if active_flags else "no nonlinear feedback toggles"
-        diagnosis = (
-            "<p><b>Legend:</b> white-blue grounded ice, light-blue floating shelf, brown bedrock, red grounding line, "
-            "orange flow arrows, cyan ice parcels, and warm CDW forcing.<br>"
-            f"<b>Current diagnosis:</b> {flags}. Effective shelf thickness is {effective_shelf:.0f} m and retreat pressure is {retreat:.1f} km.</p>"
-        )
+            active_flags.append(_lab_text("CDW warm-water intrusion", "CDW 暖水入侵"))
+        flags = ", ".join(active_flags) if active_flags else _lab_text("no nonlinear feedback toggles", "未启用非线性反馈开关")
+        if _lab_zh():
+            diagnosis = (
+                "<p><b>图例：</b>白蓝色为接地冰体，浅蓝色为浮动冰架，棕色为基岩，红线为接地线，"
+                "橙色箭头为冰流，青色粒子为冰体单元，暖色区域为 CDW 强迫。<br>"
+                f"<b>当前诊断：</b>{flags}。有效冰架厚度为 {effective_shelf:.0f} m，后退压力为 {retreat:.1f} km。</p>"
+            )
+        else:
+            diagnosis = (
+                "<p><b>Legend:</b> white-blue grounded ice, light-blue floating shelf, brown bedrock, red grounding line, "
+                "orange flow arrows, cyan ice parcels, and warm CDW forcing.<br>"
+                f"<b>Current diagnosis:</b> {flags}. Effective shelf thickness is {effective_shelf:.0f} m and retreat pressure is {retreat:.1f} km.</p>"
+            )
     if hasattr(self, "lab_canvas"):
         self.lab_canvas.set_values(values)
     if hasattr(self, "lab_metric_cards"):
         for card, (label, value, detail) in zip(self.lab_metric_cards.values(), metrics):
-            card.label_widget.setText(label)
-            card.set_value(value, detail)
+            card.label_widget.setText(translate_text(label))
+            card.set_value(value, translate_text(detail))
     if hasattr(self, "lab_diagnosis"):
         self.lab_diagnosis.setHtml(diagnosis)
-        self.lab_diagnosis.setVisible(experiment == "Hydrofracture & Ice Shelf Collapse Lab")
+        self.lab_diagnosis.setVisible(True)
     if hasattr(self, "lab_sea_level_signal"):
         if experiment == "Hydrofracture & Ice Shelf Collapse Lab":
             self.lab_sea_level_signal.set_value(f"{values.get('sea_level', 0):.2f} m", "Conceptual scenario signal")

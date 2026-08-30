@@ -56,4 +56,4 @@ def settings_path() -> Path:
 
 
 def paper_cache_path() -> Path:
-    return app_cache_dir() / "pages.pkl"
+    return app_cache_dir() / "pages.json"

@@ -1,6 +1,6 @@
 {
-  "app.title": "Antarctic Research Atlas",
-  "landing.title": "🌎 Antarctic Ice Sheet Research Atlas",
+  "app.title": "Antarctic Atlas",
+  "landing.title": "🌎 Antarctic Atlas",
   "landing.subtitle": "An interactive research universe for exploring the Antarctic Ice Sheet review paper.",
   "landing.status.initial": "Loading atlas workspace...",
   "landing.status.loading_modules": "Loading paper evidence and visual modules...",
