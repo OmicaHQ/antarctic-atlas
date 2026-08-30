@@ -220,9 +220,13 @@ artifact_dir="$project_root/dist"
 artifact_name="Antarctic-Atlas-v${app_version}-macOS-arm64.zip"
 artifact_path="$artifact_dir/$artifact_name"
 checksum_path="$artifact_path.sha256"
+dmg_name="Antarctic-Atlas-v${app_version}-macOS-arm64.dmg"
+dmg_path="$artifact_dir/$dmg_name"
 /bin/mkdir -p "$artifact_dir"
 /bin/rm -f -- "$artifact_path"
 /bin/rm -f -- "$checksum_path"
+/bin/rm -f -- "$dmg_path"
+/bin/rm -f -- "$dmg_path.sha256"
 /usr/bin/ditto -c -k --norsrc --noextattr --noqtn --keepParent "$app_path" "$artifact_path"
 
 verify_dir="$build_root/verify"
@@ -240,6 +244,10 @@ ANTARCTIC_ATLAS_CONFIG_DIR="$smoke_root/config" \
 ANTARCTIC_ATLAS_CACHE_DIR="$smoke_root/cache" \
 ANTARCTIC_ATLAS_SMOKE_TEST=1 \
   "$verified_app/Contents/MacOS/Antarctic Atlas"
+
+DMGBUILD_BIN="$build_root/venv/bin/dmgbuild" \
+DMGBUILD_PYTHON="$build_root/venv/bin/python" \
+  "$script_dir/build-dmg.sh" "$verified_app" "$dmg_path"
 
 # macOS 27 currently caches the packaged, thinned Qt plug-ins in a way that can
 # temporarily shadow the universal plug-ins in the development environment.
@@ -277,6 +285,8 @@ PY
 
 print "Built and verified: $artifact_path"
 print "SHA-256: $checksum_path"
+print "Built and verified: $dmg_path"
+print "SHA-256: $dmg_path.sha256"
 if [[ -n "$codesign_identity" ]]; then
   print 'The app has a Developer ID signature with Hardened Runtime. Notarization and stapling remain separate release steps.'
 else

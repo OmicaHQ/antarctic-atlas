@@ -10,6 +10,25 @@ All notable changes to Antarctic Atlas are documented here.
 - `v3.1`: Unified bilingual desktop phase. Consolidates English and Chinese into one app with in-app switching and broader i18n coverage.
 - `v3.2`: Apple Silicon macOS phase. Adds a native arm64 package, macOS paths and assets, reproducible release tooling, and a Mac-focused source tree.
 
+## v3.2.2 - Drag-to-Install macOS Release
+
+### Added
+
+- Added a polished drag-to-install DMG with a Finder Applications shortcut,
+  deterministic icon layout, branded aurora and ice-shelf background,
+  low-profile frosted icon pedestals, custom volume icon, checksum, mount
+  verification, and a cold launch after copying the app out of the read-only
+  image.
+- Added CI preservation of the verified DMG, fallback ZIP, and both checksum
+  files, plus a guard that requires release tags to match `VERSION`.
+
+### Distribution
+
+- The DMG is now the primary Apple Silicon download. The ZIP remains available
+  as a fallback package.
+- The app remains ad-hoc signed and not notarized; this release improves the
+  installation experience without changing the documented Gatekeeper boundary.
+
 ## v3.2.1 - Stable Apple Silicon Release
 
 ### Added

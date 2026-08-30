@@ -8,7 +8,7 @@
 
 Available editions:
 
-- **macOS:** [v3.2.1 stable release for Apple Silicon](https://github.com/OmicaChow/antarctic-atlas/releases/tag/v3.2.1)
+- **macOS:** [v3.2.2 drag-to-install release for Apple Silicon](https://github.com/OmicaChow/antarctic-atlas/releases/tag/v3.2.2)
 - **Windows:** [download the v3.1.2 installer directly](https://github.com/OmicaChow/antarctic-atlas/releases/download/v3.1.2/Antarctic-Atlas-v3.1.2-Setup.exe)
 - **Web:** [hosted legacy demo](https://antarctic-research-atlas.streamlit.app/)
   (availability and access may depend on Streamlit)
@@ -89,21 +89,28 @@ text directly within the desktop app.
 
 ---
 
-## macOS Desktop App — v3.2.1 Stable
+## macOS Desktop App — v3.2.2
 
-The macOS v3.2.1 build is self-contained and does not require Python or `uv`.
+The macOS v3.2.2 build is self-contained and does not require Python or `uv`.
 
 | Requirement | Support |
 | --- | --- |
 | Mac | Apple Silicon (`arm64`) only; Intel Macs are not supported |
 | Operating system | macOS 15.0 or later |
-| Archive | `Antarctic-Atlas-v3.2.1-macOS-arm64.zip` |
+| Primary installer | `Antarctic-Atlas-v3.2.2-macOS-arm64.dmg` |
+| Fallback archive | `Antarctic-Atlas-v3.2.2-macOS-arm64.zip` |
 
-Download both files from the
-[v3.2.1 stable macOS release](https://github.com/OmicaChow/antarctic-atlas/releases/tag/v3.2.1):
+<p align="center">
+  <img src="assets/macos-dmg-installer-v3.2.2.png" alt="Antarctic Atlas drag-to-Applications installer on macOS" width="680">
+</p>
 
-- `Antarctic-Atlas-v3.2.1-macOS-arm64.zip`
-- `Antarctic-Atlas-v3.2.1-macOS-arm64.zip.sha256`
+Download the DMG and its checksum from the
+[v3.2.2 macOS release](https://github.com/OmicaChow/antarctic-atlas/releases/tag/v3.2.2):
+
+- `Antarctic-Atlas-v3.2.2-macOS-arm64.dmg`
+- `Antarctic-Atlas-v3.2.2-macOS-arm64.dmg.sha256`
+
+The release also includes a versioned ZIP and checksum as fallback downloads.
 
 ### Verify the macOS download
 
@@ -111,7 +118,7 @@ With both files in `~/Downloads`, run:
 
 ```zsh
 cd ~/Downloads
-shasum -a 256 -c Antarctic-Atlas-v3.2.1-macOS-arm64.zip.sha256
+shasum -a 256 -c Antarctic-Atlas-v3.2.2-macOS-arm64.dmg.sha256
 ```
 
 Continue only if the result ends with `OK`. If verification fails, delete both
@@ -119,12 +126,13 @@ files and download them again from the official release page.
 
 ### Install and approve the first launch
 
-1. Double-click the ZIP file.
-2. Drag `Antarctic Atlas.app` into `/Applications`.
-3. In Finder, Control-click the app and choose **Open**.
-4. Choose **Open** again in the confirmation dialog.
+1. Double-click the DMG file.
+2. Drag `Antarctic Atlas.app` onto the `Applications` shortcut.
+3. Eject the `Antarctic Atlas 3.2.2` disk image.
+4. In Applications, Control-click the app and choose **Open**.
+5. Choose **Open** again in the confirmation dialog.
 
-The v3.2.1 app is **ad-hoc signed**. It is not signed with an Apple Developer ID
+The v3.2.2 app is **ad-hoc signed**. It is not signed with an Apple Developer ID
 and has not been notarized by Apple. If Gatekeeper still blocks it, attempt to
 open it once, then go to **System Settings > Privacy & Security**. In the
 Security section choose **Open Anyway**, authenticate, and confirm **Open**.
@@ -132,7 +140,7 @@ Only download the app from this repository's official release page.
 
 ### Upgrade
 
-Quit Antarctic Atlas, download and verify the new archive, then replace the
+Quit Antarctic Atlas, download and verify the new installer, then replace the
 existing `Antarctic Atlas.app` in `/Applications`. Settings and the replaceable
 paper cache remain outside the app bundle and survive a normal upgrade.
 
@@ -188,7 +196,7 @@ historical tags and Git history preserve the earlier implementation record.
 
 ---
 
-## Privacy and Optional AI in macOS v3.2.1
+## Privacy and Optional AI in macOS v3.2.2
 
 **Evidence-only mode is local and offline.** It searches the bundled paper,
 does not call an AI provider, and sends no telemetry. The app contains no usage
@@ -232,17 +240,19 @@ Run the full test suite and source smoke test:
 .venv/bin/python scripts/macos-smoke.py
 ```
 
-Build and verify the macOS archive:
+Build and verify the macOS installers:
 
 ```zsh
 scripts/build-macos.sh
 ```
 
-The build produces the versioned ZIP and SHA-256 file under `dist/`. It checks
-the dependency environment, `arm64` architecture, macOS 15 deployment target,
-signature, extracted archive, and a cold packaged-app smoke launch. Without an
-explicit Developer ID identity, it creates the ad-hoc signature used by the
-v3.2.1 release. Notarization remains a separate, currently unperformed step.
+The build produces a versioned drag-to-install DMG, fallback ZIP, and SHA-256
+files under `dist/`. It checks the dependency environment, `arm64`
+architecture, macOS 15 deployment target, signature, ZIP extraction, DMG
+layout and Applications shortcut, copied-app integrity, and cold packaged-app
+launches. Without an explicit Developer ID identity, it creates the ad-hoc
+signature used by the v3.2.2 release. Notarization remains a separate,
+currently unperformed step.
 
 This source workflow does not rebuild the Windows v3.1.2 installer or the
 hosted Streamlit demo.
@@ -255,7 +265,7 @@ hosted Streamlit demo.
 core/                  paper search, models, data loading, and macOS paths
 data/                  research topics, areas, and keyword mappings
 docs/                  migration and architecture notes
-installer/             application icons
+installer/             application and disk-image artwork
 locales/               English and Chinese translations
 qt_app/                PySide6 pages and interface support
 scripts/               macOS setup, validation, and packaging scripts
@@ -277,6 +287,8 @@ See the [macOS release guide](docs/MACOS_MIGRATION.md),
 
 ## Version History
 
+- **v3.2.2:** Apple Silicon DMG release with a branded drag-to-Applications
+  installer, fixed Finder layout, checksums, and CI-preserved artifacts.
 - **v3.2.1:** Stable Apple Silicon macOS release with native Qt packaging,
   bilingual UI, paper-grounded exploration, local/offline evidence mode,
   optional AI providers, Mac-specific install guidance, and release validation.

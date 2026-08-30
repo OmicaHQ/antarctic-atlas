@@ -1,7 +1,7 @@
 # Third-Party Notices
 
 This document records the direct runtime dependencies and bundled scientific
-work distributed with Antarctic Atlas v3.2.1. Each component remains subject to
+work distributed with Antarctic Atlas v3.2.2. Each component remains subject to
 its own license. This list does not replace the license and notice files shipped
 by those components or cover every transitive library in the packaged app.
 
@@ -40,6 +40,11 @@ licensed under GPL-2.0-or-later with its special bootloader exception, which
 permits distributing applications built with its bootloader. See the
 [PyInstaller license](https://github.com/pyinstaller/pyinstaller/blob/v6.20.0/COPYING.txt)
 for the complete terms.
+
+The drag-to-install disk image is assembled with dmgbuild 1.6.7. dmgbuild is
+licensed under the MIT License and uses macOS's native disk-image tools. See
+the [dmgbuild project](https://github.com/dmgbuild/dmgbuild) for its source and
+license.
 
 ## Bundled scientific paper
 

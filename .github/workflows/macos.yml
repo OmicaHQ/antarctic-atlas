@@ -3,6 +3,7 @@ name: macOS Apple Silicon
 on:
   push:
     branches: [main]
+    tags: ['v*']
   pull_request:
   workflow_dispatch:
 
@@ -43,5 +44,23 @@ jobs:
           QTWEBENGINE_CHROMIUM_FLAGS: --disable-gpu
         run: .venv/bin/python scripts/macos-smoke.py
 
-      - name: Build and verify the Apple Silicon archive
+      - name: Build and verify the Apple Silicon installers
         run: scripts/build-macos.sh
+
+      - name: Verify release tag matches VERSION
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: test "${GITHUB_REF_NAME#v}" = "$(tr -d '[:space:]' < VERSION)"
+
+      - name: Preserve verified macOS installers
+        if: github.event_name != 'pull_request'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: antarctic-atlas-macos-${{ github.sha }}
+          path: |
+            dist/*.dmg
+            dist/*.dmg.sha256
+            dist/*.zip
+            dist/*.zip.sha256
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 14

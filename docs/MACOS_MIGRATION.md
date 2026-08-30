@@ -1,6 +1,6 @@
 # macOS Apple Silicon release
 
-Version 3.2.1 is the stable Apple Silicon (`arm64`) desktop release for macOS
+Version 3.2.2 is the drag-to-install Apple Silicon (`arm64`) desktop release for macOS
 15.0 or later. Intel Macs are not supported. The active working tree is
 intentionally Mac-only; earlier Windows,
 Android, web, and Streamlit work remains available through Git history where it
@@ -34,22 +34,24 @@ Build the app with:
 scripts/build-macos.sh
 ```
 
-The script creates `dist/Antarctic-Atlas-v3.2.1-macOS-arm64.zip` and its SHA-256
-file. It builds and signs the `.app` in a private temporary directory, verifies
-its `arm64` architecture, extracts the archive again, and performs a cold
-packaged-app smoke test. Extract the archive and move `Antarctic Atlas.app` into
-the user's Applications folder before opening it.
+The script creates the primary drag-to-install
+`dist/Antarctic-Atlas-v3.2.2-macOS-arm64.dmg`, a fallback ZIP, and SHA-256 files
+for both packages. It builds and signs the `.app` in a private temporary
+directory, verifies its `arm64` architecture, extracts the ZIP again, mounts
+the read-only DMG, checks its Finder layout and Applications shortcut, and
+performs cold packaged-app smoke tests. Open the DMG and drag
+`Antarctic Atlas.app` onto the Applications shortcut before opening it.
 
 On the current macOS 27 environment, launching a thinned packaged Qt app can
 temporarily shadow the universal Qt plug-ins used for source development. The
 build script refreshes the four already-cached Qt wheels offline and immediately
 checks that the development runtime is still loadable.
 
-The published v3.2.1 app uses an ad-hoc signature. It is not signed with an
+The published v3.2.2 app uses an ad-hoc signature. It is not signed with an
 Apple Developer ID and has not been notarized, so the README documents the
 required first-open Gatekeeper approval. The build script can use a Developer
-ID Application identity when one is explicitly configured, but notarization,
-stapling, and DMG distribution remain future release-hardening work.
+ID Application identity when one is explicitly configured, but notarization
+and stapling remain future release-hardening work.
 
 ## Platform paths
 
@@ -68,7 +70,7 @@ directories, so validation never changes the user's real settings or cache.
 5. English/Chinese switching restarts the packaged app exactly once.
 6. Evidence-only search and proposal export work without an API key.
 7. The Finder-launched `.app` has no working-directory dependency.
-8. The downloaded ad-hoc-signed ZIP follows the documented Gatekeeper approval
+8. The downloaded ad-hoc-signed DMG follows the documented Gatekeeper approval
    flow on a clean Mac account.
 
 ## Deferred release hardening
@@ -76,4 +78,4 @@ directories, so validation never changes the user's real settings or cache.
 - Intel or universal2 packaging
 - Mac App Store sandboxing
 - Persisting API keys in Keychain
-- Developer ID signing, notarization, stapling, and public DMG distribution
+- Developer ID signing, notarization, and stapling
