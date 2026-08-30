@@ -1,205 +1,317 @@
-# Antarctic Atlas for macOS
+# Antarctic Research Atlas
 
-Antarctic Atlas is an Apple Silicon desktop application for exploring the
-Antarctic Ice Sheet through an included 89-page scientific review. It combines
-local paper search, six interactive research modules, bilingual English/Chinese
-UI, and optional AI assistance.
+<p align="center">
+  <img src="assets/antarctic-atlas-social-preview.png" alt="Antarctic Atlas logo" width="820">
+</p>
 
-## v3.2.1 stable Mac release
+**Antarctic Atlas is an interactive educational and research platform for exploring the Antarctic Ice Sheet.**
+
+Available editions:
+
+- **macOS:** [v3.2.1 stable release for Apple Silicon](https://github.com/OmicaChow/antarctic-atlas/releases/tag/v3.2.1)
+- **Windows:** [download the v3.1.2 installer directly](https://github.com/OmicaChow/antarctic-atlas/releases/download/v3.1.2/Antarctic-Atlas-v3.1.2-Setup.exe)
+- **Web:** [hosted legacy demo](https://antarctic-research-atlas.streamlit.app/)
+  (availability and access may depend on Streamlit)
+
+---
+
+## Project Overview
+
+Antarctic Atlas is a cross-platform research project with published desktop
+builds for macOS and Windows, plus a separately hosted legacy web experience.
+It transforms an included 89-page review paper:
+
+**Noble, T. L. et al. (2020). _The Sensitivity of the Antarctic Ice Sheet to a
+Changing Climate: Past, Present, and Future._ Reviews of Geophysics, 58,
+e2019RG000663.**
+
+into a visual, AI-assisted environment for exploring Antarctic science. The
+platform combines scientific visualization, interactive exploration,
+paper-grounded evidence retrieval, educational tools, and optional AI support.
+
+The current `main` branch is the native macOS development line. Published
+Windows and web editions remain part of the project and are linked below, but
+their former build/runtime source is not present in current `main`.
+
+---
+
+## Features
+
+### Research Universe Explorer
+
+![Research Universe Explorer](research_universe_explorer.png)
+
+Explore key concepts and relationships in Antarctic Ice Sheet research through
+an interactive knowledge universe. Evidence-only search works locally, while
+optional AI backends can help identify relevant modules and answer from
+retrieved paper passages.
+
+### Antarctic System Explorer
+
+![Antarctic System Explorer](antarctic_system_explorer.png)
+
+Visualize satellite observations and compare different glaciers and ice
+shelves using multiple observation layers.
+
+### AI Visualizer
+
+![AI Visualizer](ai_visualizer.png)
+
+Generate conceptual scientific stories and animations based on the review
+paper.
+
+### Mini Research Lab
+
+![Mini Research Lab](mini_research_lab1.png)
+
+![Mini Research Lab](mini_research_lab2.png)
+
+![Mini Research Lab](mini_research_lab3.png)
+
+![Mini Research Lab](mini_research_lab4.png)
+
+Conduct interactive experiments and explore Antarctic system responses under
+different scenarios. These are educational, conceptual simulations rather than
+operational forecasts.
+
+### Research Compass / Research Directions
+
+![Research Compass](research_compass.png)
+
+Explore future research questions, open scientific challenges, and emerging
+directions in Antarctic science. The current macOS edition calls this module
+Research Directions and can export a starter proposal as text.
+
+### Read Raw Paper
+
+Access the complete review paper PDF, navigate by page, and search its extracted
+text directly within the desktop app.
+
+---
+
+## macOS Desktop App — v3.2.1 Stable
+
+The macOS v3.2.1 build is self-contained and does not require Python or `uv`.
 
 | Requirement | Support |
 | --- | --- |
 | Mac | Apple Silicon (`arm64`) only; Intel Macs are not supported |
-| macOS | macOS 15.0 or later |
-| Package | `Antarctic-Atlas-v3.2.1-macOS-arm64.zip` |
-| Runtime | Self-contained; Python and `uv` are not required |
+| Operating system | macOS 15.0 or later |
+| Archive | `Antarctic-Atlas-v3.2.1-macOS-arm64.zip` |
 
-Download the current stable build from the
-[latest release](https://github.com/OmicaChow/antarctic-atlas/releases/latest).
+Download both files from the
+[v3.2.1 stable macOS release](https://github.com/OmicaChow/antarctic-atlas/releases/tag/v3.2.1):
 
-The v3.2.1 app is **ad-hoc signed**. It is not signed with an Apple Developer ID
-and has not been notarized by Apple. Gatekeeper will therefore require an
-explicit first-open approval. Only download the app from this repository's
-official release page.
+- `Antarctic-Atlas-v3.2.1-macOS-arm64.zip`
+- `Antarctic-Atlas-v3.2.1-macOS-arm64.zip.sha256`
 
-## What is included
+### Verify the macOS download
 
-- Research Universe Explorer with evidence retrieval and optional AI answers
-- Antarctic System Explorer
-- AI Visualizer for conceptual scientific exploration
-- Mini Research Lab
-- Research Directions with text export
-- Read Raw Paper with page navigation and search
-- The complete 89-page Noble et al. (2020) review paper
-
-The visual and simulation modules are educational, conceptual tools. They are
-not operational forecasts or substitutes for the underlying paper and expert
-scientific judgment.
-
-## Privacy and AI behavior
-
-**Evidence-only mode is local and offline.** It searches the bundled paper on
-the Mac, does not call an AI service, and sends no telemetry. The application
-contains no analytics or usage tracking.
-
-AI is optional:
-
-- **Local Ollama** sends the question and retrieved paper passages only to the
-  Ollama service on `127.0.0.1`.
-- **DeepSeek API** or **OpenAI API** sends the question and locally retrieved
-  paper passages to the selected online provider. That provider's terms and
-  privacy policy then apply.
-- API keys entered in the app are held only in memory for the current run. The
-  app does not save them to settings, disk, or Keychain; they are cleared when
-  the app quits. Keys supplied through environment variables remain managed by
-  the launching environment.
-
-The current DeepSeek V4 choices are `deepseek-v4-pro` and
-`deepseek-v4-flash`.
-
-## Install
-
-1. Open the [latest release](https://github.com/OmicaChow/antarctic-atlas/releases/latest).
-2. Download both `Antarctic-Atlas-v3.2.1-macOS-arm64.zip` and
-   `Antarctic-Atlas-v3.2.1-macOS-arm64.zip.sha256`.
-3. Verify the download as described below.
-4. Double-click the ZIP file, then drag `Antarctic Atlas.app` into
-   `/Applications`.
-5. In Finder, Control-click `Antarctic Atlas.app`, choose **Open**, then choose
-   **Open** again in the confirmation dialog.
-
-If macOS still blocks the app, attempt to open it once, then go to **System
-Settings > Privacy & Security**. In the Security section, choose **Open Anyway**,
-authenticate, and confirm **Open**. This approval should only be needed for the
-first launch of a downloaded build.
-
-### Verify the SHA-256 checksum
-
-With both downloaded files in `~/Downloads`, run:
+With both files in `~/Downloads`, run:
 
 ```zsh
 cd ~/Downloads
 shasum -a 256 -c Antarctic-Atlas-v3.2.1-macOS-arm64.zip.sha256
 ```
 
-Continue only if the result ends with `OK`. If it does not, delete the download
-and obtain both files again from the official release page.
+Continue only if the result ends with `OK`. If verification fails, delete both
+files and download them again from the official release page.
 
-## Upgrade
+### Install and approve the first launch
 
-1. Quit Antarctic Atlas.
-2. Download and verify the new ZIP and checksum from the
-   [latest release](https://github.com/OmicaChow/antarctic-atlas/releases/latest).
-3. Extract the ZIP and replace the existing `Antarctic Atlas.app` in
-   `/Applications`.
-4. Use the first-open Gatekeeper steps above if macOS asks again.
+1. Double-click the ZIP file.
+2. Drag `Antarctic Atlas.app` into `/Applications`.
+3. In Finder, Control-click the app and choose **Open**.
+4. Choose **Open** again in the confirmation dialog.
 
-Settings and the replaceable paper cache live outside the app bundle and are
-kept during a normal upgrade.
+The v3.2.1 app is **ad-hoc signed**. It is not signed with an Apple Developer ID
+and has not been notarized by Apple. If Gatekeeper still blocks it, attempt to
+open it once, then go to **System Settings > Privacy & Security**. In the
+Security section choose **Open Anyway**, authenticate, and confirm **Open**.
+Only download the app from this repository's official release page.
 
-## Uninstall or reset local data
+### Upgrade
 
-Quit Antarctic Atlas, then move `/Applications/Antarctic Atlas.app` to the
-Trash. If it was installed in `~/Applications`, remove that copy instead.
+Quit Antarctic Atlas, download and verify the new archive, then replace the
+existing `Antarctic Atlas.app` in `/Applications`. Settings and the replaceable
+paper cache remain outside the app bundle and survive a normal upgrade.
 
-To remove local data as well, open Finder, choose **Go > Go to Folder**, and
-visit these locations:
+### Uninstall or reset local data
+
+Quit the app and move `/Applications/Antarctic Atlas.app` to the Trash. If it
+was installed under `~/Applications`, remove that copy instead.
+
+To remove local data, use Finder's **Go > Go to Folder** command and visit:
 
 - `~/Library/Application Support/Antarctic Atlas/` — contains `settings.json`
 - `~/Library/Caches/Antarctic Atlas/` — contains the replaceable `pages.json`
   paper cache
 
-Delete only the Antarctic Atlas folder or the named file at each location.
-Removing `pages.json` is safe; the bundled 89-page paper will be parsed again on
-the next launch.
+Delete only the Antarctic Atlas folder or named file at each location. Removing
+`pages.json` is safe; the included paper will be parsed again on the next
+launch.
 
-## Troubleshooting and issues
+---
 
-- Confirm that the Mac has Apple Silicon and is running macOS 15.0 or later.
-- For an initial Gatekeeper block, follow the first-open steps under
-  [Install](#install).
-- Evidence-only search works without an API key. Online answers require a valid
-  key for the selected provider; Local Ollama requires the configured local
-  model to be running.
-- If paper loading appears stale, quit the app and remove only
-  `~/Library/Caches/Antarctic Atlas/pages.json`.
+## Windows Desktop App — v3.1.2
 
-Report reproducible problems through
-[GitHub Issues](https://github.com/OmicaChow/antarctic-atlas/issues). Include the
-app version, macOS version, Mac model/chip, exact error text, and steps to
-reproduce. Never include an API key in an issue or screenshot.
+Windows remains available as the published bilingual Qt installer from the
+v3.1.2 release. This Windows download is intentionally pinned to that version;
+use the direct installer or its versioned release page below.
 
-## Develop, test, and build
+[Download `Antarctic-Atlas-v3.1.2-Setup.exe`](https://github.com/OmicaChow/antarctic-atlas/releases/download/v3.1.2/Antarctic-Atlas-v3.1.2-Setup.exe)
 
-Development requires an Apple Silicon Mac, macOS 15.0 or later, and
-[`uv`](https://docs.astral.sh/uv/). Packaging also requires Xcode.app. The setup
-script creates a Python 3.12 environment in the macOS user cache and exposes it
-through the repository's `.venv` link.
+[View the Windows v3.1.2 release notes](https://github.com/OmicaChow/antarctic-atlas/releases/tag/v3.1.2)
+
+- Installer: `Antarctic-Atlas-v3.1.2-Setup.exe`
+- SHA-256: `394BC66DE8A417BA3B4BC94D1212F9CA2E1A8AC51E0E868CBD893FC451E166FC`
+
+The installer creates Start Menu and optional Desktop shortcuts for one-click
+launch. It does not require Python, a Streamlit server, or manual dependency
+setup. The installer metadata shows `Omica Chow`, but the installer is not
+code-signed, so Windows may display an unknown-publisher warning.
+
+The current `main` branch no longer contains the former Windows packaging
+toolchain. Use this published v3.1.2 binary for the documented Windows edition.
+
+---
+
+## Hosted Web Demo
+
+[Visit the hosted Antarctic Atlas legacy demo](https://antarctic-research-atlas.streamlit.app/)
+
+The hosted Streamlit demo is a legacy project edition maintained separately
+from the current native macOS source. Its availability and access are controlled
+by Streamlit and may require sign-in. Current `main` does **not** contain the
+removed Streamlit application needed to reproduce that hosted demo locally;
+historical tags and Git history preserve the earlier implementation record.
+
+---
+
+## Privacy and Optional AI in macOS v3.2.1
+
+**Evidence-only mode is local and offline.** It searches the bundled paper,
+does not call an AI provider, and sends no telemetry. The app contains no usage
+analytics or tracking.
+
+AI support is optional:
+
+- **Local Ollama** sends the question and retrieved paper passages only to the
+  Ollama service on `127.0.0.1`.
+- **DeepSeek API** or **OpenAI API** sends the question and locally retrieved
+  paper passages to the selected online provider. That provider's terms and
+  privacy policy apply.
+- API keys entered in the app remain in memory for the current run only. The
+  app does not save them to settings, disk, or Keychain. Keys supplied through
+  environment variables remain managed by the launching environment.
+
+The current DeepSeek V4 choices are `deepseek-v4-pro` and
+`deepseek-v4-flash`. Local Ollama targets `gemma4:e4b`.
+
+---
+
+## Develop the Current macOS Source
+
+Current `main` targets an Apple Silicon Mac running macOS 15.0 or later.
+Development requires [`uv`](https://docs.astral.sh/uv/); packaging additionally
+requires Xcode.app.
+
+Set up and run:
 
 ```zsh
+git clone https://github.com/OmicaChow/antarctic-atlas.git
+cd antarctic-atlas
 scripts/setup-macos.sh
 .venv/bin/python desktop_qt_app.py
 ```
 
-Run the full automated test suite and source smoke test:
+Run the full test suite and source smoke test:
 
 ```zsh
 .venv/bin/python -m pytest tests -q
 .venv/bin/python scripts/macos-smoke.py
 ```
 
-Build and verify the release archive:
+Build and verify the macOS archive:
 
 ```zsh
 scripts/build-macos.sh
 ```
 
 The build produces the versioned ZIP and SHA-256 file under `dist/`. It checks
-the packaged dependencies, `arm64` architecture, macOS 15 deployment target,
-signature, archive extraction, and a cold packaged-app smoke launch. Without an
-explicit Developer ID identity, the script creates the ad-hoc signature used by
-the v3.2.1 release; notarization is a separate, currently unperformed step.
+the dependency environment, `arm64` architecture, macOS 15 deployment target,
+signature, extracted archive, and a cold packaged-app smoke launch. Without an
+explicit Developer ID identity, it creates the ad-hoc signature used by the
+v3.2.1 release. Notarization remains a separate, currently unperformed step.
 
-## Repository and local files
+This source workflow does not rebuild the Windows v3.1.2 installer or the
+hosted Streamlit demo.
+
+---
+
+## Repository Layout and Support
 
 ```text
 core/                  paper search, models, data loading, and macOS paths
 data/                  research topics, areas, and keyword mappings
 docs/                  migration and architecture notes
-installer/             native macOS icon
+installer/             application icons
 locales/               English and Chinese translations
 qt_app/                PySide6 pages and interface support
-scripts/               setup, validation, and packaging scripts
+scripts/               macOS setup, validation, and packaging scripts
 tests/                 automated tests
-desktop_qt_app.py      application entry point
+desktop_qt_app.py      current native application entry point
 VERSION                application and release version
 ```
 
-Mutable files stay outside the repository and app bundle:
+Report reproducible problems through
+[GitHub Issues](https://github.com/OmicaChow/antarctic-atlas/issues). Include
+the platform, app version, operating-system version, exact error text, and steps
+to reproduce. Never include an API key in an issue or screenshot.
 
-- Settings: `~/Library/Application Support/Antarctic Atlas/settings.json`
-- Paper cache: `~/Library/Caches/Antarctic Atlas/pages.json`
-- Development environment: the macOS user cache, linked as `.venv`
-
-See the [macOS release guide](docs/MACOS_MIGRATION.md), the
+See the [macOS release guide](docs/MACOS_MIGRATION.md),
 [architecture handover](docs/architecture/handover.md), and
 [third-party notices](THIRD_PARTY_NOTICES.md).
 
-## License and scientific source
+---
+
+## Version History
+
+- **v3.2.1:** Stable Apple Silicon macOS release with native Qt packaging,
+  bilingual UI, paper-grounded exploration, local/offline evidence mode,
+  optional AI providers, Mac-specific install guidance, and release validation.
+- **v3.1.2:** Published unified bilingual Qt desktop installer for Windows and
+  the direct Windows download retained above.
+- **v3.1:** Unified bilingual desktop phase with in-app English/Chinese
+  switching and broader localization across widgets, visual scenes, Universe
+  labels, and export text.
+- **v3.0:** Native Qt desktop reconstruction phase, moving the product from a
+  Streamlit-in-a-window approach toward a Qt shell with animated modules,
+  WebEngine Research Universe, AI/RAG calls, and packaged delivery.
+- **v2:** Streamlit desktop/productization phase with Windows packaging,
+  interface refinement, module splitting, and local AI options.
+- **v1:** Original Streamlit research atlas and the foundation of the hosted
+  legacy web experience.
+
+See [CHANGELOG.md](CHANGELOG.md) for detailed release notes.
+
+## Credits, Scientific Source, and License
+
+Developed by Omica Chow.
 
 The Antarctic Atlas project code is licensed under the [MIT License](LICENSE).
-Third-party libraries retain their own licenses; see
+Third-party components retain their own licenses; see
 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 
-The bundled paper is a separate copyrighted scientific work distributed under
-the Creative Commons Attribution 4.0 International License
-([CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)):
+The bundled paper is a separate copyrighted scientific work:
 
 > Noble, T. L. et al. (2020). *The Sensitivity of the Antarctic Ice Sheet to a
 > Changing Climate: Past, Present, and Future.* Reviews of Geophysics, 58,
 > e2019RG000663. [https://doi.org/10.1029/2019RG000663](https://doi.org/10.1029/2019RG000663)
 
-Copyright © 2020 The Authors. Reuse must provide appropriate attribution. The
-project's MIT license does not replace or extend to the paper's CC BY 4.0 terms.
+Copyright © 2020 The Authors. The article is distributed under the
+[Creative Commons Attribution 4.0 International License](https://creativecommons.org/licenses/by/4.0/)
+(CC BY 4.0). Reuse must provide appropriate attribution. The project's MIT
+License does not replace or extend to the paper's license.
 
 Source repository: <https://github.com/OmicaChow/antarctic-atlas>
