@@ -12,3 +12,8 @@ __pycache__/
 # macOS build artifacts
 /build/
 /dist/
+/dist-native/
+/dist-native-release/
+/macos-native/.build/
+/macos-native/.build-native/
+/macos-native/.swiftpm/

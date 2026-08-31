@@ -9,6 +9,7 @@
 Available editions:
 
 - **macOS:** [v3.2.2 drag-to-install release for Apple Silicon](https://github.com/OmicaChow/antarctic-atlas/releases/tag/v3.2.2)
+- **macOS Preview:** [v4.0.0 native SwiftUI preview for Apple Silicon](https://github.com/OmicaChow/antarctic-atlas/releases/tag/v4.0.0)
 - **Windows:** [download the v3.1.2 installer directly](https://github.com/OmicaChow/antarctic-atlas/releases/download/v3.1.2/Antarctic-Atlas-v3.1.2-Setup.exe)
 - **Web:** [hosted legacy demo](https://antarctic-research-atlas.streamlit.app/)
   (availability and access may depend on Streamlit)
@@ -159,6 +160,30 @@ Delete only the Antarctic Atlas folder or named file at each location. Removing
 `pages.json` is safe; the included paper will be parsed again on the next
 launch.
 
+## Native macOS Preview — v4.0.0
+
+The v4.0.0 Preview is the next-generation SwiftUI/AppKit client. It keeps the
+same evidence-grounded paper and six research modules while restoring the
+original Windows-era Universe orb language, smooth focus transitions, and
+precise orb hit targets. The preview installs beside the stable v3.2.2 app as
+`Antarctic Atlas Native Preview.app`.
+
+| Requirement | Support |
+| --- | --- |
+| Mac | Apple Silicon (`arm64`) only; Intel Macs are not supported |
+| Operating system | macOS 15.0 or later |
+| Primary installer | `Antarctic-Atlas-v4.0.0-macOS-arm64.dmg` |
+| Fallback archive | `Antarctic-Atlas-v4.0.0-macOS-arm64.zip` |
+
+Download the preview installer and checksum from the
+[v4.0.0 Preview release](https://github.com/OmicaChow/antarctic-atlas/releases/tag/v4.0.0).
+The release is marked **Pre-release** while the native client continues through
+parity testing. It is ad-hoc signed and not notarized; on first launch,
+Control-click the app in Finder and choose **Open**.
+
+The preview does not replace the stable app. Quit either copy before updating
+that copy, and keep the stable v3.2.2 app if you need the published Qt client.
+
 ---
 
 ## Windows Desktop App — v3.1.2
@@ -287,6 +312,9 @@ See the [macOS release guide](docs/MACOS_MIGRATION.md),
 
 ## Version History
 
+- **v4.0.0 Preview:** Native SwiftUI/AppKit macOS client for Apple Silicon with
+  source-faithful Universe orb interactions, improved module transitions,
+  precision hit testing, and a polished drag-to-Applications preview installer.
 - **v3.2.2:** Apple Silicon DMG release with a branded drag-to-Applications
   installer, fixed Finder layout, checksums, and CI-preserved artifacts.
 - **v3.2.1:** Stable Apple Silicon macOS release with native Qt packaging,

@@ -44,6 +44,18 @@ jobs:
           QTWEBENGINE_CHROMIUM_FLAGS: --disable-gpu
         run: .venv/bin/python scripts/macos-smoke.py
 
+      - name: Type-check the native SwiftUI client
+        run: |
+          SDK_PATH=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk
+          SWIFTC_BIN=/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc
+          "$SWIFTC_BIN" -typecheck -parse-as-library \
+            -target arm64-apple-macosx15.0 \
+            -sdk "$SDK_PATH" \
+            macos-native/Sources/AntarcticAtlas/*.swift
+
+      - name: Build the native Preview bundle
+        run: macos-native/scripts/build-app.sh
+
       - name: Build and verify the Apple Silicon installers
         run: scripts/build-macos.sh
 
@@ -61,6 +73,7 @@ jobs:
             dist/*.dmg.sha256
             dist/*.zip
             dist/*.zip.sha256
+            dist-native/Antarctic Atlas Native Preview.app
           if-no-files-found: error
           compression-level: 0
           retention-days: 14

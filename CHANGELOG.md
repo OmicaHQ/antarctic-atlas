@@ -10,6 +10,38 @@ All notable changes to Antarctic Atlas are documented here.
 - `v3.1`: Unified bilingual desktop phase. Consolidates English and Chinese into one app with in-app switching and broader i18n coverage.
 - `v3.2`: Apple Silicon macOS phase. Adds a native arm64 package, macOS paths and assets, reproducible release tooling, and a Mac-focused source tree.
 
+## v4.0.0 Preview — Native macOS Client
+
+### Added
+
+- Added a native SwiftUI/AppKit client for Apple Silicon Macs running macOS 15
+  or later, distributed as a separate `Antarctic Atlas Native Preview.app` so
+  it can be evaluated beside the stable Qt release.
+- Added a reproducible native Preview release builder that creates a branded
+  drag-to-Applications DMG, fallback ZIP, and SHA-256 checksum files.
+
+### Changed
+
+- Rebuilt Research Universe around the original Windows-era colored orb
+  language: titles sit directly on each sphere, focus transitions move the
+  hierarchy together, and links animate with the selected topic.
+- Added collision-aware layout and coordinate-aware hit testing so tightly
+  packed spheres no longer trigger neighboring topics accidentally.
+- Restored source-faithful motion and interaction behavior across System
+  Explorer, AI Visualizer, Mini Research Lab, Research Directions, and the raw
+  paper reader, including Reduce Motion support.
+- Removed the misleading synthetic Mini Research Lab trend chart; results now
+  flow directly from the selected scene to diagnosis and measured metrics.
+- Disabled the bright rectangular keyboard focus halo around the Universe
+  canvas while preserving keyboard navigation.
+
+### Preview boundary
+
+- The Windows v3.1.2 installer, hosted web edition, and stable macOS v3.2.2
+  Qt build remain unchanged.
+- The preview app is ad-hoc signed and not notarized by Apple. Gatekeeper may
+  require the documented Control-click **Open** approval on first launch.
+
 ## v3.2.2 - Drag-to-Install macOS Release
 
 ### Added
