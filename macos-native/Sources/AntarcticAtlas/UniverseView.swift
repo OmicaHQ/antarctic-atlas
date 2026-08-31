@@ -1,4 +1,5 @@
 import AppKit
+import Darwin
 import SwiftUI
 
 struct UniverseView: View {
@@ -428,10 +429,10 @@ private struct UniverseGraphCanvas: View {
                 )
                 let breath = reduceMotion
                     ? 0.0
-                    : (sin(time * (2 * .pi / 4.2)) + 1) / 2
+                    : (Darwin.sin(time * (2 * .pi / 4.2)) + 1) / 2
                 let targetPulse = reduceMotion
                     ? 0.0
-                    : (sin(time * (2 * .pi / 0.78)) + 1) / 2
+                    : (Darwin.sin(time * (2 * .pi / 0.78)) + 1) / 2
                 let dashPhase = reduceMotion ? 0 : CGFloat((time / 1.55) * 38)
 
                 ZStack {
@@ -565,7 +566,7 @@ private struct UniverseGraphCanvas: View {
             1
         )
         guard progress < 1 else { return transitionTarget }
-        let eased = 1 - pow(1 - progress, 3)
+        let eased = 1 - Darwin.pow(1 - progress, 3)
 
         var interpolated = transitionTarget
         for (id, destination) in transitionTarget {
@@ -613,8 +614,8 @@ private struct UniverseGraphCanvas: View {
             let angle = (2 * Double.pi * Double(index) / Double(max(shown.count, 1))) - .pi / 2
             positions[node.id] = clamped(
                 CGPoint(
-                    x: center.x + cos(angle) * ringRadius,
-                    y: center.y + sin(angle) * ringRadius
+                    x: center.x + CGFloat(Darwin.cos(angle) * Double(ringRadius)),
+                    y: center.y + CGFloat(Darwin.sin(angle) * Double(ringRadius))
                 ),
                 in: size
             )
@@ -645,8 +646,8 @@ private struct UniverseGraphCanvas: View {
             let angle = 2 * Double.pi * Double(index) / Double(max(remaining.count, 1)) + 0.17
             positions[node.id] = clamped(
                 CGPoint(
-                    x: center.x + cos(angle) * outerHorizontalRadius,
-                    y: center.y + sin(angle) * outerVerticalRadius
+                    x: center.x + CGFloat(Darwin.cos(angle) * Double(outerHorizontalRadius)),
+                    y: center.y + CGFloat(Darwin.sin(angle) * Double(outerVerticalRadius))
                 ),
                 in: size
             )
@@ -718,8 +719,8 @@ private struct UniverseGraphCanvas: View {
     private func polar(center: CGPoint, degrees: Double, radius: Double) -> CGPoint {
         let angle = (degrees - 90) * .pi / 180
         return CGPoint(
-            x: center.x + cos(angle) * radius,
-            y: center.y + sin(angle) * radius
+            x: center.x + CGFloat(Darwin.cos(angle) * radius),
+            y: center.y + CGFloat(Darwin.sin(angle) * radius)
         )
     }
 
@@ -833,7 +834,10 @@ private struct UniverseGraphCanvas: View {
                         )
                     } else {
                         let angle = Double(leftIndex * 53 + rightIndex * 97) * .pi / 180
-                        direction = CGPoint(x: cos(angle), y: sin(angle))
+                        direction = CGPoint(
+                            x: CGFloat(Darwin.cos(angle)),
+                            y: CGFloat(Darwin.sin(angle))
+                        )
                     }
 
                     let separation = minimumDistance - max(distance, 0.001)
