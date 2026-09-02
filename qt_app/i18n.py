@@ -18,6 +18,7 @@ _HOOKS_INSTALLED = False
 _PROTECTED_TERMS = (
     "OpenAI",
     "DeepSeek",
+    "OrcaRouter",
     "Ollama",
     "ChatGPT",
     "RAG",
@@ -50,6 +51,7 @@ _TERM_FIXES = {
     "AI展示台": "AI 可视化器",
     "本地Ollama": "本地 Ollama",
     "Select 本地 Ollama, DeepSeek API, or OpenAI API.": "选择本地 Ollama、DeepSeek API 或 OpenAI API。",
+    "Select Local Ollama, DeepSeek API, OpenAI API, or OrcaRouter.": "选择本地 Ollama、DeepSeek API、OpenAI API 或 OrcaRouter。",
 }
 _MANUAL_ZH = {
     "AI ANSWER": "AI 答案",
@@ -83,6 +85,7 @@ _MANUAL_ZH = {
     "Save & Test Connection": "保存并测试连接",
     "Save & Test DeepSeek": "保存并测试 DeepSeek",
     "Save & Test OpenAI": "保存并测试 OpenAI",
+    "Save & Test OrcaRouter": "使用并测试 OrcaRouter",
     "Test Local Ollama": "测试本地 Ollama",
     "Model": "模型",
     "Key question": "关键问题",

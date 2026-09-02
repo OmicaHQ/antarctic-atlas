@@ -52,6 +52,7 @@ enum AIProvider: String, CaseIterable, Identifiable, Codable, Sendable {
     case evidenceOnly
     case deepSeek
     case openAI
+    case orcaRouter
     case ollama
 
     var id: String { rawValue }
@@ -61,16 +62,17 @@ enum AIProvider: String, CaseIterable, Identifiable, Codable, Sendable {
         case .evidenceOnly: "checkmark.shield"
         case .deepSeek: "sparkles"
         case .openAI: "brain.head.profile"
+        case .orcaRouter: "arrow.triangle.2.circlepath"
         case .ollama: "desktopcomputer"
         }
     }
 
     var requiresCredential: Bool {
-        self == .deepSeek || self == .openAI
+        self == .deepSeek || self == .openAI || self == .orcaRouter
     }
 
     var sendsDataOffDevice: Bool {
-        self == .deepSeek || self == .openAI
+        self == .deepSeek || self == .openAI || self == .orcaRouter
     }
 
     var defaultEndpoint: String {
@@ -78,6 +80,7 @@ enum AIProvider: String, CaseIterable, Identifiable, Codable, Sendable {
         case .evidenceOnly: ""
         case .deepSeek: "https://api.deepseek.com"
         case .openAI: "https://api.openai.com/v1"
+        case .orcaRouter: "https://api.orcarouter.ai/v1"
         case .ollama: "http://127.0.0.1:11434"
         }
     }
@@ -87,6 +90,7 @@ enum AIProvider: String, CaseIterable, Identifiable, Codable, Sendable {
         case .evidenceOnly: ""
         case .deepSeek: "deepseek-chat"
         case .openAI: "gpt-4.1-mini"
+        case .orcaRouter: "gpt-4o"
         case .ollama: "qwen3:8b"
         }
     }
@@ -97,6 +101,7 @@ enum AIProvider: String, CaseIterable, Identifiable, Codable, Sendable {
         case (.evidenceOnly, .simplifiedChinese): "仅论文证据"
         case (.deepSeek, _): "DeepSeek"
         case (.openAI, _): "OpenAI"
+        case (.orcaRouter, _): "OrcaRouter"
         case (.ollama, _): "Ollama"
         }
     }
@@ -111,6 +116,10 @@ enum AIProvider: String, CaseIterable, Identifiable, Codable, Sendable {
             "Questions and selected paper passages are sent to this provider when you ask for an AI answer."
         case (.deepSeek, .simplifiedChinese), (.openAI, .simplifiedChinese):
             "仅在请求 AI 回答时，问题和选中的论文段落会发送给该服务商。"
+        case (.orcaRouter, .english):
+            "An optional OpenAI-compatible provider. Questions and selected paper passages are sent only when you ask for an AI answer."
+        case (.orcaRouter, .simplifiedChinese):
+            "可选的 OpenAI 兼容服务商。仅在请求 AI 回答时发送问题和选中的论文段落。"
         case (.ollama, .english):
             "Use a model served by Ollama on this Mac or your private network."
         case (.ollama, .simplifiedChinese):

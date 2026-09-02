@@ -16,3 +16,10 @@ DEEPSEEK_MODEL = "deepseek-v4-pro"
 OPENAI_BASE_URL = "https://api.openai.com/v1"
 OPENAI_MODEL = "gpt-4o"
 OPENAI_MODEL_OPTIONS = ["gpt-4o", "gpt-4.1"]
+
+# OrcaRouter exposes an OpenAI-compatible Chat Completions endpoint. Keep the
+# referral URL in documentation only; credentials are supplied per session or
+# through ORCAROUTER_API_KEY and are never committed to the repository.
+ORCAROUTER_BASE_URL = "https://api.orcarouter.ai/v1"
+ORCAROUTER_MODEL = "gpt-4o"
+ORCAROUTER_MODEL_OPTIONS = ["gpt-4o"]

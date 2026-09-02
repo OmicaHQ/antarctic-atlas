@@ -6,6 +6,8 @@
 
 **Antarctic Atlas is an interactive educational and research platform for exploring the Antarctic Ice Sheet.**
 
+[![Powered by OrcaRouter](https://img.shields.io/badge/Powered_by-OrcaRouter-2563eb)](https://www.orcarouter.ai/ref/ref_1805b7cd8efbec534770)
+
 Available editions:
 
 - **macOS:** [v3.2.2 drag-to-install release for Apple Silicon](https://github.com/OmicaChow/antarctic-atlas/releases/tag/v3.2.2)
@@ -221,7 +223,7 @@ historical tags and Git history preserve the earlier implementation record.
 
 ---
 
-## Privacy and Optional AI in macOS v3.2.2
+## Privacy and Optional AI in the desktop source
 
 **Evidence-only mode is local and offline.** It searches the bundled paper,
 does not call an AI provider, and sends no telemetry. The app contains no usage
@@ -231,7 +233,7 @@ AI support is optional:
 
 - **Local Ollama** sends the question and retrieved paper passages only to the
   Ollama service on `127.0.0.1`.
-- **DeepSeek API** or **OpenAI API** sends the question and locally retrieved
+- **DeepSeek API**, **OpenAI API**, or **OrcaRouter** sends the question and locally retrieved
   paper passages to the selected online provider. That provider's terms and
   privacy policy apply.
 - API keys entered in the app remain in memory for the current run only. The
@@ -240,6 +242,27 @@ AI support is optional:
 
 The current DeepSeek V4 choices are `deepseek-v4-pro` and
 `deepseek-v4-flash`. Local Ollama targets `gemma4:e4b`.
+
+### Optional OrcaRouter provider
+
+The current source includes OrcaRouter as an optional OpenAI-compatible backend
+for Research Universe classification and paper-grounded answers. It is off by
+default and only receives a question plus the passages selected for that
+request; evidence-only mode remains local and offline.
+
+OrcaRouter uses `https://api.orcarouter.ai/v1` and defaults to `gpt-4o`. Set a
+key in the launching environment, or enter it in the Research Universe
+provider control for the current session:
+
+```zsh
+export ORCAROUTER_API_KEY="sk-orca-your-key"
+```
+
+Never commit a real key, add it to screenshots, or paste it into an issue. Get
+an OrcaRouter key or learn more through the project's
+[OrcaRouter referral link](https://www.orcarouter.ai/ref/ref_1805b7cd8efbec534770).
+The implementation details and a copyable cURL probe are documented in
+[`docs/integrations/orcarouter.md`](docs/integrations/orcarouter.md).
 
 ---
 

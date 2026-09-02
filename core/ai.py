@@ -1,4 +1,4 @@
-"""Dependency-free AI backend client for Ollama / DeepSeek / OpenAI.
+"""Dependency-free AI backend client for Ollama / DeepSeek / OpenAI / OrcaRouter.
 
 The Qt presentation layer is handled by the caller. All functions take plain
 values and return plain values, so they can run on any thread.
@@ -15,6 +15,8 @@ from config import (
     DEEPSEEK_MODEL,
     OLLAMA_MODEL,
     OLLAMA_URL,
+    ORCAROUTER_BASE_URL,
+    ORCAROUTER_MODEL,
     OPENAI_BASE_URL,
     OPENAI_MODEL,
 )
@@ -22,11 +24,13 @@ from config import (
 BACKEND_OLLAMA = "Local Ollama"
 BACKEND_DEEPSEEK = "DeepSeek API"
 BACKEND_OPENAI = "OpenAI API"
-BACKENDS = (BACKEND_OLLAMA, BACKEND_DEEPSEEK, BACKEND_OPENAI)
+BACKEND_ORCAROUTER = "OrcaRouter"
+BACKENDS = (BACKEND_OLLAMA, BACKEND_DEEPSEEK, BACKEND_OPENAI, BACKEND_ORCAROUTER)
 
 _ENV_KEY = {
     BACKEND_DEEPSEEK: "DEEPSEEK_API_KEY",
     BACKEND_OPENAI: "OPENAI_API_KEY",
+    BACKEND_ORCAROUTER: "ORCAROUTER_API_KEY",
 }
 
 
@@ -35,6 +39,8 @@ def default_model(backend):
         return DEEPSEEK_MODEL
     if backend == BACKEND_OPENAI:
         return OPENAI_MODEL
+    if backend == BACKEND_ORCAROUTER:
+        return ORCAROUTER_MODEL
     return OLLAMA_MODEL
 
 
@@ -105,8 +111,18 @@ def extract_openai_text(response_json):
 def extract_backend_text(backend, response_json):
     if backend == BACKEND_OLLAMA:
         return str(response_json.get("response", "")).strip()
-    if backend == BACKEND_DEEPSEEK:
-        return str(response_json.get("choices", [{}])[0].get("message", {}).get("content", "")).strip()
+    if backend in (BACKEND_DEEPSEEK, BACKEND_ORCAROUTER):
+        choices = response_json.get("choices", []) or []
+        if not choices:
+            return ""
+        content = choices[0].get("message", {}).get("content", "")
+        if isinstance(content, list):
+            content = "".join(
+                str(part.get("text", ""))
+                for part in content
+                if isinstance(part, dict)
+            )
+        return str(content).strip()
     if backend == BACKEND_OPENAI:
         return extract_openai_text(response_json)
     return ""
@@ -137,6 +153,19 @@ def _deepseek_payload(model, prompt, system, temperature, max_tokens, stream):
         "stream": stream,
     }
     return apply_deepseek_v4_defaults(payload, model or DEEPSEEK_MODEL)
+
+
+def _chat_completion_payload(model, prompt, system, temperature, max_tokens, stream):
+    return {
+        "model": model or ORCAROUTER_MODEL,
+        "messages": [
+            {"role": "system", "content": system or "You are a careful scientific reading assistant."},
+            {"role": "user", "content": prompt},
+        ],
+        "temperature": temperature,
+        "max_tokens": max_tokens,
+        "stream": stream,
+    }
 
 
 def _openai_payload(model, prompt, system, max_tokens):
@@ -174,10 +203,9 @@ def _chat_ollama(prompt, system, model, temperature, timeout, on_chunk=None):
         return answer.strip()
 
 
-def _chat_deepseek(prompt, system, model, api_key, max_tokens, temperature, timeout, on_chunk=None):
-    payload = _deepseek_payload(model, prompt, system, temperature, max_tokens, stream=on_chunk is not None)
+def _chat_completion(base_url, backend, payload, api_key, timeout, on_chunk=None):
     with requests.post(
-        f"{DEEPSEEK_BASE_URL}/chat/completions",
+        f"{base_url.rstrip('/')}/chat/completions",
         headers=_headers(api_key),
         json=payload,
         stream=on_chunk is not None,
@@ -186,7 +214,7 @@ def _chat_deepseek(prompt, system, model, api_key, max_tokens, temperature, time
         if r.status_code != 200:
             raise RuntimeError(f"HTTP {r.status_code}: {r.text[:500]}")
         if on_chunk is None:
-            return extract_backend_text(BACKEND_DEEPSEEK, r.json())
+            return extract_backend_text(backend, r.json())
         answer = ""
         for raw_line in r.iter_lines(decode_unicode=True):
             if not raw_line:
@@ -201,11 +229,50 @@ def _chat_deepseek(prompt, system, model, api_key, max_tokens, temperature, time
                 data = json.loads(data_str)
             except Exception:
                 continue
-            piece = data.get("choices", [{}])[0].get("delta", {}).get("content", "") or ""
+            choices = data.get("choices", []) or []
+            delta = choices[0].get("delta", {}) if choices else {}
+            piece = (delta or {}).get("content", "") or ""
+            if isinstance(piece, list):
+                piece = "".join(
+                    str(part.get("text", ""))
+                    for part in piece
+                    if isinstance(part, dict)
+                )
             if piece:
                 answer += piece
                 on_chunk(piece)
         return answer.strip()
+
+
+def _chat_deepseek(prompt, system, model, api_key, max_tokens, temperature, timeout, on_chunk=None):
+    payload = _deepseek_payload(model, prompt, system, temperature, max_tokens, stream=on_chunk is not None)
+    return _chat_completion(
+        DEEPSEEK_BASE_URL,
+        BACKEND_DEEPSEEK,
+        payload,
+        api_key,
+        timeout,
+        on_chunk=on_chunk,
+    )
+
+
+def _chat_orcarouter(prompt, system, model, api_key, max_tokens, temperature, timeout, on_chunk=None):
+    payload = _chat_completion_payload(
+        model,
+        prompt,
+        system,
+        temperature,
+        max_tokens,
+        stream=on_chunk is not None,
+    )
+    return _chat_completion(
+        ORCAROUTER_BASE_URL,
+        BACKEND_ORCAROUTER,
+        payload,
+        api_key,
+        timeout,
+        on_chunk=on_chunk,
+    )
 
 
 def _chat_openai(prompt, system, model, api_key, max_tokens, timeout, on_chunk=None):
@@ -235,6 +302,17 @@ def chat(backend, prompt, *, system="", model=None, api_key="", max_tokens=1200,
         return _chat_deepseek(prompt, system=system, model=model, api_key=key, max_tokens=max_tokens, temperature=temperature, timeout=timeout, on_chunk=on_chunk)
     if backend == BACKEND_OPENAI:
         return _chat_openai(prompt, system=system, model=model, api_key=key, max_tokens=max_tokens, timeout=timeout, on_chunk=on_chunk)
+    if backend == BACKEND_ORCAROUTER:
+        return _chat_orcarouter(
+            prompt,
+            system=system,
+            model=model,
+            api_key=key,
+            max_tokens=max_tokens,
+            temperature=temperature,
+            timeout=timeout,
+            on_chunk=on_chunk,
+        )
     raise RuntimeError("AI backend is not enabled.")
 
 

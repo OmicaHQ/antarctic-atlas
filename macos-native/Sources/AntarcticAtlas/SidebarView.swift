@@ -335,7 +335,7 @@ private struct SidebarFooter: View {
     private var statusColor: Color {
         switch model.aiProvider {
         case .evidenceOnly: theme.iceBlue
-        case .deepSeek, .openAI: .orange
+        case .deepSeek, .openAI, .orcaRouter: .orange
         case .ollama: .green
         }
     }

@@ -263,8 +263,8 @@ private struct PrivacySettingsPane: View {
 
                 Text(
                     model.text(
-                        "When enabled and selected, the current question and relevant paper passages may be sent to DeepSeek or OpenAI. Antarctic Atlas never sends the whole PDF.",
-                        "启用并选择在线服务后，当前问题和相关论文段落可能会发送给 DeepSeek 或 OpenAI。Antarctic Atlas 不会发送整份 PDF。"
+                        "When enabled and selected, the current question and relevant paper passages may be sent to DeepSeek, OpenAI, or OrcaRouter. Antarctic Atlas never sends the whole PDF.",
+                        "启用并选择在线服务后，当前问题和相关论文段落可能会发送给 DeepSeek、OpenAI 或 OrcaRouter。Antarctic Atlas 不会发送整份 PDF。"
                     )
                 )
                 .font(.caption)

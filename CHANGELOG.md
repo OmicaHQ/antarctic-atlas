@@ -2,6 +2,18 @@
 
 All notable changes to Antarctic Atlas are documented here.
 
+## Unreleased — OrcaRouter provider integration
+
+### Added
+
+- Added an optional OrcaRouter backend using its OpenAI-compatible
+  `https://api.orcarouter.ai/v1/chat/completions` endpoint.
+- Added provider-scoped `ORCAROUTER_API_KEY` handling, complete and streamed
+  responses, Research Universe setup and connection testing, native macOS
+  provider configuration, and integration documentation.
+- Added a Powered by OrcaRouter badge and referral link while keeping all
+  credentials out of source, tests, screenshots, and release artifacts.
+
 ## Version Line Summary
 
 - `v1`: Original Streamlit research atlas. Established the review-paper exploration product: Research Universe, Antarctic System Explorer, AI Visualizer, Mini Research Lab, Research Compass, and raw-paper access.

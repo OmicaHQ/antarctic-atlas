@@ -1,6 +1,7 @@
 from desktop_qt_app import *
 
 from core.ai import (
+    BACKEND_ORCAROUTER,
     chat as ai_chat,
     classify as ai_classify,
     extract_backend_text,
@@ -8,6 +9,14 @@ from core.ai import (
 )
 from core.paper import extract_search_window
 from core.universe import match_topic
+
+
+_REMOTE_BACKENDS = {"DeepSeek API", "OpenAI API", BACKEND_ORCAROUTER}
+_BACKEND_ENV_KEYS = {
+    "DeepSeek API": "DEEPSEEK_API_KEY",
+    "OpenAI API": "OPENAI_API_KEY",
+    BACKEND_ORCAROUTER: "ORCAROUTER_API_KEY",
+}
 
 def _u_zh():
     return current_locale().startswith("zh")
@@ -30,8 +39,8 @@ def _u_display_module(parent, topic):
 
 
 def _research_universe_page(self):
-    self._universe_saved_keys = {"DeepSeek API": "", "OpenAI API": ""}
-    self._universe_draft_keys = {"DeepSeek API": "", "OpenAI API": ""}
+    self._universe_saved_keys = {backend: "" for backend in _REMOTE_BACKENDS}
+    self._universe_draft_keys = {backend: "" for backend in _REMOTE_BACKENDS}
     self._universe_key_field_backend = ""
     page, layout = self._page_shell(
         "🌌 Research Universe Explorer",
@@ -63,7 +72,13 @@ def _research_universe_page(self):
     backend_label.setObjectName("SmallLabel")
     self.universe_backend = QComboBox()
     self.universe_backend.setAccessibleName(_u_text("AI backend", "AI 后端"))
-    self.universe_backend.addItems(["Evidence only", "Local Ollama", "DeepSeek API", "OpenAI API"])
+    self.universe_backend.addItems([
+        "Evidence only",
+        "Local Ollama",
+        "DeepSeek API",
+        "OpenAI API",
+        BACKEND_ORCAROUTER,
+    ])
     self.universe_backend.currentTextChanged.connect(self._update_universe_backend_controls)
     self.universe_backend_info = QLabel(_u_text(
         "Evidence-only mode is active. Questions will focus the map and retrieve relevant passages without calling an AI API.",
@@ -247,19 +262,19 @@ def _show_current_universe_connection_status(self):
         return
     typed_key = (
         self.universe_api_key.text().strip()
-        if backend in ["DeepSeek API", "OpenAI API"]
+        if backend in _REMOTE_BACKENDS
         and getattr(self, "_universe_key_field_backend", "") == backend
         and hasattr(self, "universe_api_key")
         else ""
     )
-    saved_key = getattr(self, "_universe_saved_keys", {}).get(backend, "") if backend in ["DeepSeek API", "OpenAI API"] else ""
-    if backend in ["DeepSeek API", "OpenAI API"] and not self._universe_api_key(backend):
+    saved_key = getattr(self, "_universe_saved_keys", {}).get(backend, "") if backend in _REMOTE_BACKENDS else ""
+    if backend in _REMOTE_BACKENDS and not self._universe_api_key(backend):
         self._set_universe_backend_info(_u_text(
             f"{backend} / {model}: enter your API key, then Use & Test to enable AI module matching.",
             f"{backend} / {model}：请输入 API 密钥，然后在本次会话中使用并测试，以启用 AI 模块匹配。",
         ), "neutral")
         return
-    if backend in ["DeepSeek API", "OpenAI API"] and typed_key and typed_key != saved_key:
+    if backend in _REMOTE_BACKENDS and typed_key and typed_key != saved_key:
         self._set_universe_backend_info(_u_text(
             f"{backend} / {model}: key entered for this provider. Use & Test verifies it for this session.",
             f"{backend} / {model}：已为当前服务商输入密钥。使用并测试会在本次会话中验证它。",
@@ -312,6 +327,10 @@ def _update_universe_backend_controls(self):
         model_options = OPENAI_MODEL_OPTIONS or [OPENAI_MODEL]
         configured = bool(os.environ.get("OPENAI_API_KEY") or self._universe_saved_keys.get("OpenAI API", ""))
         status = _u_text("An OpenAI key is available for this session. Use & Test verifies the connection.", "本次会话已有 OpenAI 密钥。使用并测试会验证连接。") if configured else _u_text("OpenAI API key is not configured.", "OpenAI API 密钥尚未配置。")
+    elif backend == BACKEND_ORCAROUTER:
+        model_options = ORCAROUTER_MODEL_OPTIONS or [ORCAROUTER_MODEL]
+        configured = bool(os.environ.get("ORCAROUTER_API_KEY") or self._universe_saved_keys.get(BACKEND_ORCAROUTER, ""))
+        status = _u_text("An OrcaRouter key is available for this session. Use & Test verifies the connection.", "本次会话已有 OrcaRouter 密钥。使用并测试会验证连接。") if configured else _u_text("OrcaRouter API key is not configured.", "OrcaRouter API 密钥尚未配置。")
     else:
         status = _u_text(
             "Evidence-only mode is active. Questions will focus the map and retrieve relevant passages without calling an AI API.",
@@ -327,7 +346,7 @@ def _update_universe_backend_controls(self):
     self.universe_model_combo.clear()
     self.universe_model_combo.addItems(model_options)
     self.universe_model_combo.blockSignals(False)
-    needs_key = backend in ["DeepSeek API", "OpenAI API"]
+    needs_key = backend in _REMOTE_BACKENDS
     for widget in [self.universe_api_label, self.universe_api_key]:
         widget.setVisible(needs_key)
     self._switch_universe_key_field(backend)
@@ -336,6 +355,8 @@ def _update_universe_backend_controls(self):
         self.universe_save_key.setText("Test Local Ollama")
     elif backend == "DeepSeek API":
         self.universe_save_key.setText(_u_text("Use & Test DeepSeek", "使用并测试 DeepSeek"))
+    elif backend == BACKEND_ORCAROUTER:
+        self.universe_save_key.setText(_u_text("Use & Test OrcaRouter", "使用并测试 OrcaRouter"))
     else:
         self.universe_save_key.setText(_u_text("Use & Test OpenAI", "使用并测试 OpenAI"))
     self._show_current_universe_connection_status()
@@ -400,9 +421,9 @@ def _switch_universe_key_field(self, backend):
     if not hasattr(self, "universe_api_key"):
         return
     previous = getattr(self, "_universe_key_field_backend", "")
-    if previous in ["DeepSeek API", "OpenAI API"]:
+    if previous in _REMOTE_BACKENDS:
         self._universe_draft_keys[previous] = self.universe_api_key.text().strip()
-    self._universe_key_field_backend = backend if backend in ["DeepSeek API", "OpenAI API"] else ""
+    self._universe_key_field_backend = backend if backend in _REMOTE_BACKENDS else ""
     value = ""
     if self._universe_key_field_backend:
         value = (
@@ -412,7 +433,11 @@ def _switch_universe_key_field(self, backend):
     self.universe_api_key.blockSignals(True)
     self.universe_api_key.setText(value)
     self.universe_api_key.setPlaceholderText(
-        "DeepSeek API key" if backend == "DeepSeek API" else "OpenAI API key"
+        {
+            "DeepSeek API": "DeepSeek API key",
+            "OpenAI API": "OpenAI API key",
+            BACKEND_ORCAROUTER: "OrcaRouter API key",
+        }.get(backend, "API key")
     )
     self.universe_api_key.blockSignals(False)
 
@@ -465,13 +490,12 @@ def _test_universe_backend_connection(self):
         if getattr(self, "_universe_key_field_backend", "") == backend
         else ""
     )
-    needs_key = backend in ["DeepSeek API", "OpenAI API"]
+    needs_key = backend in _REMOTE_BACKENDS
     saved_key = getattr(self, "_universe_saved_keys", {}).get(backend, "")
     env_key = ""
-    if backend == "DeepSeek API":
-        env_key = os.environ.get("DEEPSEEK_API_KEY", "")
-    elif backend == "OpenAI API":
-        env_key = os.environ.get("OPENAI_API_KEY", "")
+    env_key_name = _BACKEND_ENV_KEYS.get(backend, "")
+    if env_key_name:
+        env_key = os.environ.get(env_key_name, "")
     if needs_key and not key and not saved_key and not env_key:
         self._set_universe_backend_info(_u_text(
             f"{backend}: enter an API key first, or set the matching environment variable.",
@@ -601,6 +625,8 @@ def _universe_model(self, backend):
         return DEEPSEEK_MODEL
     if backend == "OpenAI API":
         return OPENAI_MODEL
+    if backend == BACKEND_ORCAROUTER:
+        return ORCAROUTER_MODEL
     return OLLAMA_MODEL
 
 
@@ -738,7 +764,7 @@ def _focus_universe_topic(self):
     backend = combo_current_key(self.universe_backend) if hasattr(self, "universe_backend") else "Evidence only"
     source = "keyword_fallback"
     if backend != "Evidence only":
-        if backend in ["DeepSeek API", "OpenAI API"] and not self._universe_api_key(backend):
+        if backend in _REMOTE_BACKENDS and not self._universe_api_key(backend):
             self._set_universe_backend_info(_u_text(
                 f"{backend} cannot classify this question yet because the API key is not configured.",
                 f"{backend} 暂时无法分类这个问题，因为 API 密钥尚未配置。",
@@ -767,7 +793,7 @@ def _start_universe_ai_classification(self, raw_query, backend, fallback_name, f
     self._universe_classifier_token += 1
     token = self._universe_classifier_token
     model = self._universe_model(backend)
-    api_key = self._universe_api_key(backend) if backend in ("DeepSeek API", "OpenAI API") else ""
+    api_key = self._universe_api_key(backend) if backend in _REMOTE_BACKENDS else ""
     self.universe_focus_button.setEnabled(False)
     self.universe_match_label.setText(_u_text(
         f"{backend} / {model} is identifying the best knowledge module...",
@@ -939,7 +965,7 @@ def _render_universe_context(self, topic, query="", best_score=0, classifier_sou
             )
             self._universe_stream_answer = ""
             self._set_universe_answer_markdown(self._universe_stream_prefix)
-            answer_api_key = self._universe_api_key(backend) if backend in ("DeepSeek API", "OpenAI API") else ""
+            answer_api_key = self._universe_api_key(backend) if backend in _REMOTE_BACKENDS else ""
             worker = StreamWorker(
                 self._stream_universe_answer,
                 backend,
@@ -967,7 +993,7 @@ def _render_universe_context(self, topic, query="", best_score=0, classifier_sou
             self._set_universe_work_status("", False)
             self.universe_answer.setHtml(
                 "<div class='ios-kicker'>AI ANSWER</div><h3>Evidence-only mode</h3>"
-                f"<p>{html.escape(_u_text('Select Local Ollama, DeepSeek API, or OpenAI API to generate an answer from the retrieved passages.', '请选择本地 Ollama、DeepSeek API 或 OpenAI API，以基于检索段落生成回答。'))}</p>"
+                f"<p>{html.escape(_u_text('Select Local Ollama, DeepSeek API, OpenAI API, or OrcaRouter to generate an answer from the retrieved passages.', '请选择本地 Ollama、DeepSeek API、OpenAI API 或 OrcaRouter，以基于检索段落生成回答。'))}</p>"
             )
         self.universe_answer.setVisible(True)
 
